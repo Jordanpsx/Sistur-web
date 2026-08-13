@@ -57,22 +57,22 @@ the `sistur_landing_pages_revalidate()` trigger.
 Server-only. Never prefix these with `NEXT_PUBLIC_`.
 
 ```bash
-SISTUR_API_URL=http://sistur-flask:5000       # internal Docker DNS — unreachable from a browser
+SISTUR_API_URL=http://<internal-host>:<port>  # private network — not reachable from a browser
 SISTUR_PUBLIC_TOKEN=<token>                   # Authorization: Bearer
 REVALIDATE_SECRET=<hmac shared secret>        # verifies the Sistur → Next webhook
 ```
 
-The API base URL is internal Docker DNS, so **every call to Sistur must go through a Server Action
+The API base URL is on a private network, so **every call to Sistur must go through a Server Action
 or Route Handler** — the browser cannot reach it, and the token must never be sent to the client.
 
 ## Design notes
 
 Full architecture, the audit that shaped it, and the phasing live in `Landing_plan.md` in the
-Sistur repository. Two constraints worth repeating here:
+Sistur repository. One constraint worth repeating here, because it is easy to get wrong from this
+side:
 
-- **The revalidation worker must not run inside Gunicorn.** Sistur runs eventlet with a single
-  worker, and psycopg reaches Postgres through libpq, which eventlet cannot instrument. A blocking
-  `LISTEN` there would freeze the entire ERP.
-- **Production is the apex domain**, `cachoeiradogirassol.com.br`. WordPress `home` and `siteurl`
-  point there, so it is the indexed host. Legacy permalinks end in `/`, so `trailingSlash: true`
-  is required or every old URL 404s.
+- **Production is the apex domain**, `cachoeiradogirassol.com.br`. It is the indexed host, and the
+  legacy permalinks it inherits end in `/` — so `trailingSlash: true` is required, or every old URL
+  404s at once.
+
+The webhook sender runs as its own service on the Sistur side, for reasons documented there.
