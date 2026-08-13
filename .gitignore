@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Build output
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment — never commit these.
+# SISTUR_PUBLIC_TOKEN, SISTUR_INTERNAL_TOKEN, REVALIDATE_SECRET and
+# SESSION_COOKIE_SECRET all belong here, never in the repository.
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# Testing
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# Editors / OS
+.DS_Store
+*.swp
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Logs
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# Deploy
+.vercel
