@@ -10,8 +10,13 @@ import "./globals.css";
  */
 
 export const metadata: Metadata = {
+  // Server-only on purpose. `NEXT_PUBLIC_*` is inlined into the bundle at BUILD
+  // time, so a public var here would freeze the canonical host into the image —
+  // and the same image could never be promoted from staging to production.
+  // `metadataBase` is evaluated server-side, so a runtime variable works and one
+  // image serves both environments.
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://cachoeiradogirassol.com.br",
+    process.env.SITE_URL ?? "https://cachoeiradogirassol.com.br",
   ),
   title: {
     default: "Cachoeira do Girassol",
