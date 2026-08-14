@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Block } from "@/lib/sistur/pages";
+import { resolverPreco, formatarBRL } from "@/lib/sistur/catalog";
 
 /**
  * Block components — the only place presentation exists.
@@ -114,6 +115,45 @@ function Faq({ title, items }: PropsOf<"faq">) {
   );
 }
 
+/**
+ * Live price table. The CMS supplies only the item slug and the day tier; every
+ * number rendered here comes from Sistur at request time.
+ *
+ * A row whose price cannot be resolved renders nothing at all. Showing a stale
+ * or invented figure is worse than showing none — under CDC Art. 30 an
+ * advertised price binds the supplier, and the WordPress home page was already
+ * advertising R$ 35,00 for a weekend that the engine charges R$ 40,00 for.
+ */
+async function PriceTable({ title, nota, rows }: PropsOf<"price_table">) {
+  const resolvidas = await Promise.all(
+    rows.map(async (r) => ({ ...r, valor: await resolverPreco(r.slug, r.dia) })),
+  );
+  const visiveis = resolvidas.filter((r) => r.valor !== null);
+  if (visiveis.length === 0) return null;
+
+  return (
+    <section className="mx-auto max-w-3xl px-4 py-12">
+      {title && <h2 className="mb-6 text-2xl font-semibold">{title}</h2>}
+      <dl className="divide-y divide-[var(--c-border)]">
+        {visiveis.map((r, i) => (
+          <div key={i} className="flex items-baseline justify-between gap-4 py-3">
+            <dt className="text-[var(--c-fg)]">{r.label}</dt>
+            <dd className="shrink-0 font-medium tabular-nums">
+              {r.prefixo && (
+                <span className="mr-1 text-sm font-normal text-[var(--c-muted)]">
+                  {r.prefixo}
+                </span>
+              )}
+              {formatarBRL(r.valor as number)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {nota && <p className="mt-4 text-sm text-[var(--c-muted)]">{nota}</p>}
+    </section>
+  );
+}
+
 /** Gallery pulls images from the reservas API, keyed by resource_id. */
 function Gallery({ title, resource_id }: PropsOf<"gallery">) {
   return (
@@ -143,5 +183,7 @@ export function renderBlock(block: Block, key: number) {
       return <Faq key={key} {...block.props} />;
     case "gallery":
       return <Gallery key={key} {...block.props} />;
+    case "price_table":
+      return <PriceTable key={key} {...block.props} />;
   }
 }

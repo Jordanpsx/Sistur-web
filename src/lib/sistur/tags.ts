@@ -17,9 +17,22 @@ export const TAGS = {
 
   /** One specific page. `slug` is stored WITHOUT leading slash; home is "". */
   page: (slug: string) => `page:${slug}`,
+
+  /**
+   * Reservas catalogue — item names, prices and the `price_holiday` tier, plus
+   * every `simular` quote derived from them.
+   *
+   * ⚠️ Nothing emits this tag yet. The landing pages already *consume* it, so a
+   * price change in Sistur is only picked up when the 300s TTL lapses. Closing
+   * that gap needs triggers on the reservas tables — the half of F2 (§6.2) that
+   * is still open.
+   */
+  catalog: "catalog",
 } as const;
 
 /** Tags accepted from the webhook. Anything else is rejected, not ignored. */
 export function isKnownTag(tag: string): boolean {
-  return tag === TAGS.pagesIndex || tag.startsWith("page:");
+  return (
+    tag === TAGS.pagesIndex || tag === TAGS.catalog || tag.startsWith("page:")
+  );
 }

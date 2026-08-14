@@ -76,6 +76,24 @@ const BlockSchema = z.discriminatedUnion("type", [
     }),
   }),
   z.object({
+    type: z.literal("price_table"),
+    props: z.object({
+      title: z.string().optional(),
+      nota: z.string().optional(),
+      rows: z
+        .array(
+          z.object({
+            slug: z.string(),
+            label: z.string(),
+            // Mirrors LandingPageService.BLOCK_SCHEMAS["price_table"].enum.dia
+            dia: z.enum(["semana", "fds", "feriado"]),
+            prefixo: z.string().optional(),
+          }),
+        )
+        .max(20),
+    }),
+  }),
+  z.object({
     type: z.literal("faq"),
     props: z.object({
       title: z.string().optional(),
