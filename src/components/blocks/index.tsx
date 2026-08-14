@@ -32,13 +32,13 @@ function Hero({ title, subtitle, image, cta_label, cta_href }: PropsOf<"hero">) 
           {title}
         </h1>
         {subtitle && (
-          <p className="text-base text-[--c-muted] sm:text-lg">{subtitle}</p>
+          <p className="text-base text-[var(--c-muted)] sm:text-lg">{subtitle}</p>
         )}
         {cta_label && cta_href && (
           <div className="mt-2">
             <Link
               href={cta_href}
-              className="inline-flex min-h-[44px] items-center rounded-lg bg-[--c-primary] px-6 text-sm font-medium text-[--c-on-primary]"
+              className="inline-flex min-h-[44px] items-center rounded-lg bg-[var(--c-primary)] px-6 text-sm font-medium text-[var(--c-on-primary)]"
             >
               {cta_label}
             </Link>
@@ -55,10 +55,10 @@ function FeatureGrid({ title, items }: PropsOf<"feature_grid">) {
       {title && <h2 className="mb-6 text-2xl font-semibold">{title}</h2>}
       <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item, i) => (
-          <li key={i} className="rounded-xl border border-[--c-border] p-5">
+          <li key={i} className="rounded-xl border border-[var(--c-border)] p-5">
             <h3 className="font-medium">{item.title}</h3>
             {item.description && (
-              <p className="mt-2 text-sm text-[--c-muted]">{item.description}</p>
+              <p className="mt-2 text-sm text-[var(--c-muted)]">{item.description}</p>
             )}
           </li>
         ))}
@@ -73,7 +73,7 @@ function RichText({ title, paragraphs }: PropsOf<"rich_text">) {
       {title && <h2 className="mb-4 text-2xl font-semibold">{title}</h2>}
       {/* Plain text nodes — React escapes them. No HTML path exists. */}
       {paragraphs.map((p, i) => (
-        <p key={i} className="mb-4 leading-relaxed text-[--c-fg]">
+        <p key={i} className="mb-4 leading-relaxed text-[var(--c-fg)]">
           {p}
         </p>
       ))}
@@ -83,13 +83,13 @@ function RichText({ title, paragraphs }: PropsOf<"rich_text">) {
 
 function CtaBanner({ title, subtitle, cta_label, cta_href }: PropsOf<"cta_banner">) {
   return (
-    <section className="bg-[--c-surface] px-4 py-14">
+    <section className="bg-[var(--c-surface)] px-4 py-14">
       <div className="mx-auto flex max-w-3xl flex-col items-center gap-3 text-center">
         <h2 className="text-2xl font-semibold">{title}</h2>
-        {subtitle && <p className="text-[--c-muted]">{subtitle}</p>}
+        {subtitle && <p className="text-[var(--c-muted)]">{subtitle}</p>}
         <Link
           href={cta_href}
-          className="mt-2 inline-flex min-h-[44px] items-center rounded-lg bg-[--c-primary] px-6 text-sm font-medium text-[--c-on-primary]"
+          className="mt-2 inline-flex min-h-[44px] items-center rounded-lg bg-[var(--c-primary)] px-6 text-sm font-medium text-[var(--c-on-primary)]"
         >
           {cta_label}
         </Link>
@@ -102,11 +102,11 @@ function Faq({ title, items }: PropsOf<"faq">) {
   return (
     <section className="mx-auto max-w-3xl px-4 py-12">
       {title && <h2 className="mb-6 text-2xl font-semibold">{title}</h2>}
-      <dl className="divide-y divide-[--c-border]">
+      <dl className="divide-y divide-[var(--c-border)]">
         {items.map((item, i) => (
           <div key={i} className="py-4">
             <dt className="font-medium">{item.question}</dt>
-            <dd className="mt-1 text-sm text-[--c-muted]">{item.answer}</dd>
+            <dd className="mt-1 text-sm text-[var(--c-muted)]">{item.answer}</dd>
           </div>
         ))}
       </dl>

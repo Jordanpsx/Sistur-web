@@ -28,12 +28,29 @@ function toSlug(params: Params): string {
 }
 
 export async function generateStaticParams(): Promise<Params[]> {
-  const pages = await getPublishedSlugs();
-  return pages.map((p) => ({
-    // "" must become undefined, otherwise Next builds the route as "/%20" style
-    // garbage instead of the index route.
-    slug: p.slug === "" ? undefined : p.slug.split("/"),
-  }));
+  // The build must NOT require Sistur to be reachable.
+  //
+  // Docker builds run on an isolated network, so the builder cannot resolve
+  // sistur-teste-sistur-flask-1 — and more importantly, a backend outage must
+  // never block deploying the frontend. On failure we pre-render nothing;
+  // `dynamicParams` is true, so every page still renders on first request and
+  // is then cached by ISR. The only thing lost is build-time pre-rendering,
+  // which matters little for content that is invalidated by webhook anyway.
+  try {
+    const pages = await getPublishedSlugs();
+    return pages.map((p) => ({
+      // "" must become undefined, otherwise Next builds the route as "/%20"
+      // style garbage instead of the index route.
+      slug: p.slug === "" ? undefined : p.slug.split("/"),
+    }));
+  } catch (err) {
+    console.warn(
+      "[generateStaticParams] Sistur unreachable at build time — " +
+        "pre-rendering nothing, pages will render on demand.",
+      err instanceof Error ? err.message : err,
+    );
+    return [];
+  }
 }
 
 export async function generateMetadata({
@@ -46,7 +63,11 @@ export async function generateMetadata({
 
   const { seo } = page;
   return {
-    title: seo.title ?? undefined,
+    // `absolute` bypasses the root layout's "%s · Cachoeira do Girassol"
+    // template. The CMS title is authoritative and already complete — without
+    // this, a page titled "Cachoeira do Girassol" renders as
+    // "Cachoeira do Girassol · Cachoeira do Girassol".
+    title: seo.title ? { absolute: seo.title } : undefined,
     description: seo.description ?? undefined,
     // Canonical is what actually protects rankings during the WordPress
     // migration — it tells Google the new URL supersedes the old one.

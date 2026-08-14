@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens.
+ *
+ * These mirror the `--c-*` vocabulary already used by the Sistur ERP templates,
+ * so the two surfaces can converge visually without sharing a build. They are
+ * plain custom properties rather than Tailwind theme values on purpose: the ERP
+ * consumes them from Jinja2, which has no Tailwind build step.
+ *
+ * Components reference them as `bg-[var(--c-primary)]` — the explicit `var()`
+ * form, which is stable across Tailwind 3 and 4. The bare `[--c-primary]`
+ * shorthand changed syntax between majors and is avoided.
+ */
+
+:root {
+  --c-bg: #ffffff;
+  --c-fg: #0f172a;
+  --c-muted: #64748b;
+  --c-border: #e2e8f0;
+  --c-surface: #f8fafc;
+  --c-primary: #0d9488;
+  --c-primary-dark: #0f766e;
+  --c-on-primary: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-bg: #0f172a;
+    --c-fg: #f1f5f9;
+    --c-muted: #94a3b8;
+    --c-border: #1e293b;
+    --c-surface: #1e293b;
+    --c-primary: #14b8a6;
+    --c-primary-dark: #0d9488;
+    --c-on-primary: #042f2e;
+  }
+}
+
+/* Mobile-first is a project rule (see .claude/skills/architecture.md §4).
+   Nothing may cause horizontal overflow at 375px. */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
