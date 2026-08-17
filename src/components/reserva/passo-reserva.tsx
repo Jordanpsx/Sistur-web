@@ -210,7 +210,7 @@ export function PassoReserva({
 
         {/* ── Ingressos ─────────────────────────────────────────────── */}
         <h2 className="mt-8">Ingressos</h2>
-        <ListaItens itens={ingressos} qtds={qtds} onQtd={setQtd} noites={noites} />
+        <ListaItens itens={ingressos} qtds={qtds} onQtd={setQtd} />
 
         {/* ── Adicionais ────────────────────────────────────────────── */}
         {adicionais.length > 0 && (
@@ -219,12 +219,7 @@ export function PassoReserva({
               Adicionais
               <span className="f-det-n">{adicionais.length} opções</span>
             </summary>
-            <ListaItens
-              itens={adicionais}
-              qtds={qtds}
-              onQtd={setQtd}
-              noites={noites}
-            />
+            <ListaItens itens={adicionais} qtds={qtds} onQtd={setQtd} />
           </details>
         )}
 
@@ -256,17 +251,26 @@ export function PassoReserva({
   );
 }
 
-/** One row per item: name, unit price, quantity. */
+/**
+ * One row per item: name and quantity — deliberately no unit price.
+ *
+ * The row used to print "a partir de {price}". That number is Sistur's `price`
+ * column, and for the admissions it is never what gets charged: Inteira has all
+ * three day tiers filled (30,01 weekday / 35,00 weekend / 40,03 holiday), so the
+ * 30,00 shown was a fallback the engine never reaches. A figure beside the field
+ * that disagrees with the total below it reads as a bug in the site.
+ *
+ * The price now appears once, in the summary, resolved by Sistur for the date
+ * actually chosen — which is the only place it can be stated correctly.
+ */
 function ListaItens({
   itens,
   qtds,
   onQtd,
-  noites,
 }: {
   itens: Item[];
   qtds: Quantidades;
   onQtd: (id: number, v: number) => void;
-  noites: number;
 }) {
   if (itens.length === 0) {
     return <p className="f-hint">Nada disponível para esta experiência.</p>;
@@ -274,27 +278,15 @@ function ListaItens({
   return (
     <ul className="f-itens">
       {itens.map((i) => {
-        const porDia = i.billing_type !== "FIXED";
         // Sistur stores R$ 0,01 as the sentinel for a free admission — the
-        // "Isento" tier for small children. Printing it as a price makes the
-        // form look broken, so it is labelled for what it is. The threshold is
-        // a cent rather than zero because that is the value actually stored.
+        // "Isento" tier for small children. Worth saying out loud, since a
+        // visitor otherwise cannot tell it from a paid ticket.
         const gratuito = i.price <= 0.01;
         return (
           <li key={i.id} className="f-item">
             <div className="f-item-txt">
               <span className="f-item-nome">{i.name}</span>
-              <span className="f-item-preco">
-                {gratuito ? (
-                  "Sem custo"
-                ) : (
-                  <>
-                    a partir de {formatarBRL(i.price)}
-                    {porDia ? " por dia" : ""}
-                    {porDia && noites > 1 ? ` · ${noites} diárias` : ""}
-                  </>
-                )}
-              </span>
+              {gratuito && <span className="f-item-preco">Sem custo</span>}
             </div>
             <input
               className="f-qtd"
