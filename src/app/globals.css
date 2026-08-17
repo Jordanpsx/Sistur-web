@@ -3,41 +3,46 @@
 /*
  * Design tokens.
  *
+ * The palette is taken from the live WordPress site rather than invented:
+ * #4CAF50 is the brand green used throughout it, #2c3e50 its dark slate.
+ * An earlier revision used a teal placeholder, which made the migrated page
+ * read as a different site.
+ *
  * These mirror the `--c-*` vocabulary already used by the Sistur ERP templates,
- * so the two surfaces can converge visually without sharing a build. They are
- * plain custom properties rather than Tailwind theme values on purpose: the ERP
- * consumes them from Jinja2, which has no Tailwind build step.
+ * so the two surfaces can converge without sharing a build. They are plain
+ * custom properties rather than Tailwind theme values on purpose: the ERP
+ * consumes them from Jinja2, which has no Tailwind step.
  *
  * Components reference them as `bg-[var(--c-primary)]` — the explicit `var()`
- * form, which is stable across Tailwind 3 and 4. The bare `[--c-primary]`
- * shorthand changed syntax between majors and is avoided.
+ * form is stable across Tailwind 3 and 4; the bare `[--c-primary]` shorthand
+ * changed syntax between majors.
  */
 
 :root {
   --c-bg: #ffffff;
-  --c-fg: #0f172a;
-  --c-muted: #64748b;
-  --c-border: #e2e8f0;
-  --c-surface: #f8fafc;
-  --c-primary: #0d9488;
-  --c-primary-dark: #0f766e;
+  --c-fg: #2c3e50;
+  --c-muted: #5b6b7c;
+  --c-border: #e0e0e0;
+  --c-surface: #f4f7f4;
+  --c-primary: #4caf50;
+  --c-primary-dark: #45a049;
   --c-on-primary: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --c-bg: #0f172a;
-    --c-fg: #f1f5f9;
-    --c-muted: #94a3b8;
-    --c-border: #1e293b;
-    --c-surface: #1e293b;
-    --c-primary: #14b8a6;
-    --c-primary-dark: #0d9488;
-    --c-on-primary: #042f2e;
+    --c-bg: #14201a;
+    --c-fg: #eef4ef;
+    --c-muted: #a3b3a6;
+    --c-border: #26382c;
+    --c-surface: #1b2a21;
+    --c-primary: #5cc463;
+    --c-primary-dark: #4caf50;
+    --c-on-primary: #0c1a10;
   }
 }
 
-/* Mobile-first is a project rule (see .claude/skills/architecture.md §4).
+/* Mobile-first is a project rule (.claude/skills/architecture.md §4).
    Nothing may cause horizontal overflow at 375px. */
 html {
   -webkit-text-size-adjust: 100%;
@@ -46,4 +51,10 @@ html {
 body {
   min-height: 100dvh;
   overflow-x: hidden;
+}
+
+/* Touch targets ≥ 44px — same rule the ERP templates follow. */
+a[class*="min-h-[44px]"],
+button {
+  touch-action: manipulation;
 }

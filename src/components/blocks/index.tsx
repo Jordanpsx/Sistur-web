@@ -19,21 +19,41 @@ function Hero({ title, subtitle, image, cta_label, cta_href }: PropsOf<"hero">) 
   return (
     <section className="relative isolate overflow-hidden">
       {image && (
-        <Image
-          src={image}
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="absolute inset-0 -z-10 object-cover"
-        />
+        <>
+          <Image
+            src={image}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="absolute inset-0 -z-20 object-cover"
+          />
+          {/* Without this the headline sits directly on a photo and becomes
+              unreadable at some scroll positions. Fixed overlay, not a filter
+              on the image, so the text keeps full contrast. */}
+          <div className="absolute inset-0 -z-10 bg-black/50" />
+        </>
       )}
-      <div className="mx-auto flex max-w-4xl flex-col gap-4 px-4 py-20 text-center sm:py-28">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
+      <div
+        className={`mx-auto flex max-w-4xl flex-col gap-4 px-4 text-center ${
+          image ? "py-28 sm:py-40" : "py-20 sm:py-28"
+        }`}
+      >
+        <h1
+          className={`text-3xl font-semibold tracking-tight sm:text-5xl ${
+            image ? "text-white" : ""
+          }`}
+        >
           {title}
         </h1>
         {subtitle && (
-          <p className="text-base text-[var(--c-muted)] sm:text-lg">{subtitle}</p>
+          <p
+            className={`text-base sm:text-lg ${
+              image ? "text-white/90" : "text-[var(--c-muted)]"
+            }`}
+          >
+            {subtitle}
+          </p>
         )}
         {cta_label && cta_href && (
           <div className="mt-2">
@@ -56,11 +76,29 @@ function FeatureGrid({ title, items }: PropsOf<"feature_grid">) {
       {title && <h2 className="mb-6 text-2xl font-semibold">{title}</h2>}
       <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item, i) => (
-          <li key={i} className="rounded-xl border border-[var(--c-border)] p-5">
-            <h3 className="font-medium">{item.title}</h3>
-            {item.description && (
-              <p className="mt-2 text-sm text-[var(--c-muted)]">{item.description}</p>
+          <li
+            key={i}
+            className="overflow-hidden rounded-xl border border-[var(--c-border)] bg-[var(--c-bg)]"
+          >
+            {item.image && (
+              <div className="relative aspect-[4/3] w-full">
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  fill
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  className="object-cover"
+                />
+              </div>
             )}
+            <div className="p-5">
+              <h3 className="font-medium">{item.title}</h3>
+              {item.description && (
+                <p className="mt-2 text-sm text-[var(--c-muted)]">
+                  {item.description}
+                </p>
+              )}
+            </div>
           </li>
         ))}
       </ul>

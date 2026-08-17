@@ -47,6 +47,7 @@ const BlockSchema = z.discriminatedUnion("type", [
             title: z.string(),
             description: z.string().optional(),
             icon: z.string().optional(),
+            image: HrefSchema.optional(),
           }),
         )
         .max(12),
@@ -159,6 +160,11 @@ const IndexSchema = z.object({
       slug: z.string(),
       updated_at: z.string().nullable(),
       noindex: z.boolean(),
+      title: z.string().nullable().optional(),
+      // A page joins the menu by declaring a label. Without one it still
+      // exists and is indexable, it simply is not navigated to.
+      nav_label: z.string().nullable().optional(),
+      nav_order: z.number().optional(),
     }),
   ),
 });
@@ -171,4 +177,26 @@ export async function getPublishedSlugs() {
   });
   if (!res.ok) throw new Error(`Sistur ${res.status} for /api/public/pages`);
   return IndexSchema.parse(await res.json()).pages;
+}
+
+/**
+ * Menu entries, ordered.
+ *
+ * The navigation is CMS data, not a hardcoded list in the layout: goal G7 is
+ * that publishing content never requires editing a `.tsx`. Adding a page to the
+ * menu is setting `nav_label` on it.
+ *
+ * Never throws — a menu is chrome, and failing to build one must not take the
+ * page with it.
+ */
+export async function getNav() {
+  try {
+    const pages = await getPublishedSlugs();
+    return pages
+      .filter((p) => p.nav_label)
+      .sort((a, b) => (a.nav_order ?? 0) - (b.nav_order ?? 0))
+      .map((p) => ({ href: `/${p.slug}`, label: p.nav_label as string }));
+  } catch {
+    return [];
+  }
 }
