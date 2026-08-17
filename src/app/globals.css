@@ -3,6 +3,10 @@
 /*
  * Design tokens, taken from the live site rather than invented.
  *
+ * Light only, deliberately. The live site has no dark variant, and a
+ * `prefers-color-scheme` block here meant a visitor whose system was set to dark
+ * saw a dark page that matched nothing. Colours are stated once.
+ *
  * The key correction: **amber is the primary action colour**, not green. Every
  * call to action on the real page — the header button, the hero button, the
  * price-table headline — is amber. Green is the secondary action ("Selecionar
@@ -39,28 +43,6 @@
   --c-footer-fg: #d6d6d6;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --c-bg: #14181c;
-    --c-fg: #eef2f5;
-    --c-muted: #a3b0bb;
-    --c-border: #2a323a;
-    --c-surface: #1b2127;
-    --c-primary: #f5b301;
-    --c-primary-dark: #d99e00;
-    --c-on-primary: #1f2937;
-    --c-accent: #5cc463;
-    --c-accent-dark: #4caf50;
-    --c-on-accent: #0c1a10;
-    --c-panel: #1c4a22;
-    --c-on-panel: #ffffff;
-    --c-note-bg: #2e2a17;
-    --c-note-border: #f5b301;
-    --c-footer-bg: #0f0f0f;
-    --c-footer-fg: #cfcfcf;
-  }
-}
-
 /* Mobile-first is a project rule (.claude/skills/architecture.md §4).
    Nothing may cause horizontal overflow at 375px. */
 html {
@@ -70,6 +52,8 @@ html {
 body {
   min-height: 100dvh;
   overflow-x: hidden;
+  background: #ffffff;
+  color: var(--c-fg);
 }
 
 button,

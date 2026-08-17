@@ -27,15 +27,18 @@ export default async function PublicLayout({
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-[var(--c-border)] bg-[var(--c-bg)]">
-        <div className="mx-auto flex h-20 max-w-6xl items-center justify-between gap-4 px-4">
+        <div className="mx-auto flex h-28 max-w-6xl items-center justify-between gap-4 px-4">
           <Link href="/" className="shrink-0">
+            {/* O arquivo é 500x500 — QUADRADO. Declarar 160x48 fazia o
+                object-contain encaixotar o logo numa faixa larga, e ele
+                aparecia pequeno dentro dela. A proporção correta é 1:1. */}
             <Image
               src={LOGO}
               alt="Cachoeira do Girassol"
-              width={160}
-              height={48}
+              width={500}
+              height={500}
               priority
-              className="h-11 w-auto object-contain"
+              className="h-20 w-20 object-contain"
             />
           </Link>
 
