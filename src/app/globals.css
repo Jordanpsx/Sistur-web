@@ -1,44 +1,63 @@
 @import "tailwindcss";
 
 /*
- * Design tokens.
+ * Design tokens, taken from the live site rather than invented.
  *
- * The palette is taken from the live WordPress site rather than invented:
- * #4CAF50 is the brand green used throughout it, #2c3e50 its dark slate.
- * An earlier revision used a teal placeholder, which made the migrated page
- * read as a different site.
- *
- * These mirror the `--c-*` vocabulary already used by the Sistur ERP templates,
- * so the two surfaces can converge without sharing a build. They are plain
- * custom properties rather than Tailwind theme values on purpose: the ERP
- * consumes them from Jinja2, which has no Tailwind step.
- *
- * Components reference them as `bg-[var(--c-primary)]` — the explicit `var()`
- * form is stable across Tailwind 3 and 4; the bare `[--c-primary]` shorthand
- * changed syntax between majors.
+ * The key correction: **amber is the primary action colour**, not green. Every
+ * call to action on the real page — the header button, the hero button, the
+ * price-table headline — is amber. Green is the secondary action ("Selecionar
+ * Day Use") and the colour of the structure-card titles. An earlier revision had
+ * these swapped, which made the page read as a different brand.
  */
 
 :root {
   --c-bg: #ffffff;
   --c-fg: #2c3e50;
   --c-muted: #5b6b7c;
-  --c-border: #e0e0e0;
-  --c-surface: #f4f7f4;
-  --c-primary: #4caf50;
-  --c-primary-dark: #45a049;
-  --c-on-primary: #ffffff;
+  --c-border: #e5e7eb;
+  --c-surface: #f7f7f7;
+
+  /* Primary = amber. Used for every CTA and for headings on dark ground. */
+  --c-primary: #f5b301;
+  --c-primary-dark: #d99e00;
+  --c-on-primary: #1f2937;
+
+  /* Secondary = green. "Selecionar" buttons and structure-card titles. */
+  --c-accent: #4caf50;
+  --c-accent-dark: #45a049;
+  --c-on-accent: #ffffff;
+
+  /* Deep green panel behind the price table. */
+  --c-panel: #245c2b;
+  --c-on-panel: #ffffff;
+
+  /* Cream callout behind the house rules. */
+  --c-note-bg: #fdf3d0;
+  --c-note-border: #f5b301;
+
+  --c-footer-bg: #1a1a1a;
+  --c-footer-fg: #d6d6d6;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --c-bg: #14201a;
-    --c-fg: #eef4ef;
-    --c-muted: #a3b3a6;
-    --c-border: #26382c;
-    --c-surface: #1b2a21;
-    --c-primary: #5cc463;
-    --c-primary-dark: #4caf50;
-    --c-on-primary: #0c1a10;
+    --c-bg: #14181c;
+    --c-fg: #eef2f5;
+    --c-muted: #a3b0bb;
+    --c-border: #2a323a;
+    --c-surface: #1b2127;
+    --c-primary: #f5b301;
+    --c-primary-dark: #d99e00;
+    --c-on-primary: #1f2937;
+    --c-accent: #5cc463;
+    --c-accent-dark: #4caf50;
+    --c-on-accent: #0c1a10;
+    --c-panel: #1c4a22;
+    --c-on-panel: #ffffff;
+    --c-note-bg: #2e2a17;
+    --c-note-border: #f5b301;
+    --c-footer-bg: #0f0f0f;
+    --c-footer-fg: #cfcfcf;
   }
 }
 
@@ -53,8 +72,43 @@ body {
   overflow-x: hidden;
 }
 
-/* Touch targets ≥ 44px — same rule the ERP templates follow. */
-a[class*="min-h-[44px]"],
-button {
+button,
+a[class*="min-h-[44px]"] {
   touch-action: manipulation;
+}
+
+/*
+ * Section heading: uppercase, centred, with the short amber rule beneath it.
+ * A utility class rather than repeated Tailwind because it appears in every
+ * block component and the accent is part of the brand, not of one section.
+ */
+.sec-title {
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  font-weight: 400;
+  color: var(--c-fg);
+  position: relative;
+  padding-bottom: 0.75rem;
+}
+
+.sec-title::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 3.5rem;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--c-primary);
+}
+
+.sec-title--on-panel {
+  color: var(--c-primary);
+}
+
+.sec-title--on-panel::after {
+  background: var(--c-on-panel);
+  opacity: 0.35;
 }
