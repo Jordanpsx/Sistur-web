@@ -70,6 +70,43 @@ export function formatarBRL(v: number): string {
  * erroring: an unreachable pricing service must not block someone from picking
  * their dates.
  */
+/**
+ * Per-item unit price for one date, resolved by Sistur.
+ *
+ * Asks `/simular` for every item at quantity 1 and keeps `unit_price`. That
+ * value already carries the day tier — a Day Use ticket answers 35,00 for a
+ * Sunday and 30,01 for a Wednesday — which is why this is a round trip rather
+ * than arithmetic over `price_weekday`/`weekend`/`holiday`: whether a given date
+ * counts as a special date lives in Sistur's global calendar, and no column in
+ * the catalogue can answer it.
+ *
+ * Depends only on the dates, so callers refresh it when the dates change, not
+ * when quantities do.
+ *
+ * Returns an empty map on failure. Rows then show no price, which is the state
+ * they were already in before a date was picked.
+ */
+export function precosDoBreakdown(o: Orcamento | null): Record<number, number> {
+  const out: Record<number, number> = {};
+  for (const l of o?.items_breakdown ?? []) out[l.item_id] = l.unit_price;
+  return out;
+}
+
+export async function precosDoDia(params: {
+  sourceId: number;
+  entrada: string;
+  saida: string;
+  itemIds: number[];
+}): Promise<Record<number, number>> {
+  const o = await simular({
+    sourceId: params.sourceId,
+    entrada: params.entrada,
+    saida: params.saida,
+    quantidades: Object.fromEntries(params.itemIds.map((id) => [id, 1])),
+  });
+  return precosDoBreakdown(o);
+}
+
 export async function simular(params: {
   sourceId: number;
   entrada: string;

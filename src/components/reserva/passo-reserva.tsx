@@ -6,6 +6,7 @@ import type { Item } from "@/lib/sistur/catalog";
 import {
   escreverQuantidades,
   formatarBRL,
+  precosDoBreakdown,
   type Orcamento,
   type Quantidades,
 } from "@/lib/reserva/itens";
@@ -44,6 +45,7 @@ export function PassoReserva({
   adicionais,
   inicial,
   orcamentoInicial,
+  precosIniciais,
 }: {
   slug: string;
   nome: string;
@@ -54,6 +56,7 @@ export function PassoReserva({
   adicionais: Item[];
   inicial: { entrada?: string; saida?: string; quantidades: Quantidades };
   orcamentoInicial: Orcamento | null;
+  precosIniciais: Record<number, number>;
 }) {
   const [entrada, setEntrada] = useState(inicial.entrada ?? "");
   const [saida, setSaida] = useState(inicial.saida ?? "");
@@ -61,6 +64,10 @@ export function PassoReserva({
   const [orcamento, setOrcamento] = useState<Orcamento | null>(orcamentoInicial);
   const [carregando, setCarregando] = useState(false);
   const [falhou, setFalhou] = useState(false);
+  // Unit price per item for the chosen date. Empty until a date is complete —
+  // before that there is no correct number to show, only the base column, which
+  // for the admissions is never what gets charged.
+  const [precos, setPrecos] = useState<Record<number, number>>(precosIniciais);
 
   const min = hoje();
   const selecao = validarSelecao(entrada || undefined, saida || undefined, {
@@ -131,6 +138,42 @@ export function PassoReserva({
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entrada, saida, JSON.stringify(qtds), selecao.completa, totalItens]);
+
+  // Prices depend on the dates alone, so this does not re-run when a quantity
+  // changes — that would be one Sistur call per keystroke for no new answer.
+  const todosIds = [...ingressos, ...adicionais].map((i) => i.id).join(",");
+  useEffect(() => {
+    if (!selecao.completa || !selecao.entrada) {
+      setPrecos({});
+      return;
+    }
+    let vivo = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/simular/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            source_id: sourceId,
+            check_in_date: selecao.entrada,
+            check_out_date: diaUnico ? selecao.entrada : selecao.saida,
+            items: todosIds.split(",").map((id) => ({
+              item_id: Number(id),
+              quantity: 1,
+            })),
+          }),
+        });
+        if (!vivo) return;
+        setPrecos(res.ok ? precosDoBreakdown(await res.json()) : {});
+      } catch {
+        if (vivo) setPrecos({});
+      }
+    })();
+    return () => {
+      vivo = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selecao.entrada, selecao.saida, selecao.completa, todosIds]);
 
   const setQtd = (id: number, valor: number) =>
     setQtds((atual) => {
@@ -210,7 +253,7 @@ export function PassoReserva({
 
         {/* ── Ingressos ─────────────────────────────────────────────── */}
         <h2 className="mt-8">Ingressos</h2>
-        <ListaItens itens={ingressos} qtds={qtds} onQtd={setQtd} />
+        <ListaItens itens={ingressos} qtds={qtds} onQtd={setQtd} precos={precos} noites={noites} />
 
         {/* ── Adicionais ────────────────────────────────────────────── */}
         {adicionais.length > 0 && (
@@ -219,7 +262,7 @@ export function PassoReserva({
               Adicionais
               <span className="f-det-n">{adicionais.length} opções</span>
             </summary>
-            <ListaItens itens={adicionais} qtds={qtds} onQtd={setQtd} />
+            <ListaItens itens={adicionais} qtds={qtds} onQtd={setQtd} precos={precos} noites={noites} />
           </details>
         )}
 
@@ -267,10 +310,14 @@ function ListaItens({
   itens,
   qtds,
   onQtd,
+  precos,
+  noites,
 }: {
   itens: Item[];
   qtds: Quantidades;
   onQtd: (id: number, v: number) => void;
+  precos: Record<number, number>;
+  noites: number;
 }) {
   if (itens.length === 0) {
     return <p className="f-hint">Nada disponível para esta experiência.</p>;
@@ -282,11 +329,23 @@ function ListaItens({
         // "Isento" tier for small children. Worth saying out loud, since a
         // visitor otherwise cannot tell it from a paid ticket.
         const gratuito = i.price <= 0.01;
+        const unit = precos[i.id];
+        const porDia = i.billing_type !== "FIXED";
         return (
           <li key={i.id} className="f-item">
             <div className="f-item-txt">
               <span className="f-item-nome">{i.name}</span>
-              {gratuito && <span className="f-item-preco">Sem custo</span>}
+              {gratuito ? (
+                <span className="f-item-preco">Sem custo</span>
+              ) : unit !== undefined ? (
+                <span className="f-item-preco">
+                  {formatarBRL(unit)}
+                  {porDia ? " por diária" : " nesta data"}
+                  {porDia && noites > 1
+                    ? ` · ${noites} diárias = ${formatarBRL(unit * noites)}`
+                    : ""}
+                </span>
+              ) : null}
             </div>
             <input
               className="f-qtd"

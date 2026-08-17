@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getExperiencia, getItensDaExperiencia } from "@/lib/sistur/catalog";
 import { validarSelecao } from "@/lib/reserva/datas";
-import { lerQuantidades, simular } from "@/lib/reserva/itens";
+import { lerQuantidades, precosDoDia, simular } from "@/lib/reserva/itens";
 import { PassoReserva } from "@/components/reserva/passo-reserva";
 
 /**
@@ -79,15 +79,25 @@ export default async function FormularioReserva({
 
   // Priced on the server so the first paint is already correct. Day use is a
   // single date, and Sistur accepts check_out equal to check_in.
-  const orcamento =
-    selecao.completa && selecao.entrada
-      ? await simular({
+  const datado = selecao.completa && selecao.entrada;
+  const entrada = selecao.entrada!;
+  const saida = e.single_day_only ? entrada : selecao.saida!;
+
+  // Two calls, not one. The quote covers what the visitor actually selected; the
+  // price list covers every item so each row can state its own figure for the
+  // date. They are separate because the second depends only on the dates, so it
+  // is not repeated when a quantity changes.
+  const [orcamento, precos] = datado
+    ? await Promise.all([
+        simular({ sourceId: e.sourceId, entrada, saida, quantidades }),
+        precosDoDia({
           sourceId: e.sourceId,
-          entrada: selecao.entrada,
-          saida: e.single_day_only ? selecao.entrada : selecao.saida!,
-          quantidades,
-        })
-      : null;
+          entrada,
+          saida,
+          itemIds: [...ingressos, ...adicionais].map((i) => i.id),
+        }),
+      ])
+    : [null, {}];
 
   return (
     <section className="py-8 sm:py-12">
@@ -111,6 +121,7 @@ export default async function FormularioReserva({
           quantidades,
         }}
         orcamentoInicial={orcamento}
+        precosIniciais={precos}
       />
     </section>
   );
