@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getExperiencia } from "@/lib/sistur/catalog";
@@ -72,28 +71,19 @@ export default async function FormularioReserva({
   });
 
   return (
-    <section className="py-14">
-      <nav className="mb-8 text-sm">
-        <Link href="/reservar/" className="text-[var(--c-muted)] hover:underline">
-          ← Voltar para a seleção
-        </Link>
-      </nav>
-
-      <h1 className="text-2xl uppercase text-[var(--c-fg)] sm:text-3xl">
-        {e.name}
-      </h1>
-      <p className="mt-1 text-xs uppercase tracking-wide text-[var(--c-muted)]">
-        {e.venue}
-      </p>
-
+    <section className="py-8 sm:py-12">
+      {/* The experience description belongs above the card, not inside it: the
+          card is the form, and mixing marketing copy into it is what makes the
+          current page read as two things stacked. */}
       {e.description && (
-        <div className="mt-6 rounded-md border-l-4 border-[#2f6fd0] bg-[#eef4fb] p-4">
-          <p className="text-sm leading-relaxed">{e.description}</p>
-        </div>
+        <p className="mb-5 text-sm leading-relaxed text-[var(--c-muted)]">
+          {e.description}
+        </p>
       )}
 
       <PassoDatas
         slug={slug}
+        nome={e.name}
         diaUnico={e.single_day_only}
         cutoff={e.same_day_cutoff_time}
         selecao={selecao}

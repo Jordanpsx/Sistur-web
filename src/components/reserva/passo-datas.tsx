@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { hoje, formatarData, diasEntre, type Selecao } from "@/lib/reserva/datas";
+import { Passos } from "./passos";
 
 /**
  * Step 2 — dates.
@@ -17,14 +19,19 @@ import { hoje, formatarData, diasEntre, type Selecao } from "@/lib/reserva/datas
  * The cost is a full round trip per submission. That is acceptable here: the
  * route is `force-dynamic` anyway, and correctness under back-navigation was the
  * stated priority over interaction latency.
+ *
+ * The layout follows the WordPress day-use form: a green header, numbered steps,
+ * paired fields, and back/advance separated at the footer rule.
  */
 export function PassoDatas({
   slug,
+  nome,
   diaUnico,
   cutoff,
   selecao,
 }: {
   slug: string;
+  nome: string;
   diaUnico: boolean;
   cutoff?: string | null;
   selecao: Selecao;
@@ -36,93 +43,95 @@ export function PassoDatas({
       : 0;
 
   return (
-    <div className="mt-8">
-      <ol className="mb-8 flex gap-2 text-xs uppercase tracking-wide">
-        <li className="text-[var(--c-muted)]">1. Experiência</li>
-        <li className="text-[var(--c-muted)]">›</li>
-        <li className="font-semibold text-[var(--c-fg)]">2. Datas</li>
-        <li className="text-[var(--c-muted)]">›</li>
-        <li className="text-[var(--c-muted)]">3. Ingressos</li>
-      </ol>
+    <div className="f-card">
+      <div className="f-head">
+        <h1>Reserva {nome}</h1>
+        <p>Preencha os dados abaixo para continuar</p>
+        <Passos atual={2} />
+      </div>
 
-      <form
-        method="get"
-        action={`/reservar/${slug}/`}
-        className="rounded-lg border border-[var(--c-border)] p-6"
-      >
-        <div className={diaUnico ? "" : "grid gap-4 sm:grid-cols-2"}>
-          <label className="block">
-            <span className="mb-1 block text-sm font-medium">
-              {diaUnico ? "Data da visita" : "Entrada"}
-            </span>
-            <input
-              type="date"
-              name="entrada"
-              required
-              min={min}
-              defaultValue={selecao.entrada ?? ""}
-              className="w-full rounded-md border border-[var(--c-border)] px-3 py-2 text-base"
-            />
-          </label>
+      <div className="f-body">
+        <h2>{diaUnico ? "Data da visita" : "Período da estadia"}</h2>
 
-          {!diaUnico && (
-            <label className="block">
-              <span className="mb-1 block text-sm font-medium">Saída</span>
+        <form method="get" action={`/reservar/${slug}/`}>
+          <div className={diaUnico ? "f-row" : "f-row f-row--2"}>
+            <div>
+              <label className="f-label" data-req htmlFor="entrada">
+                {diaUnico ? "Data" : "Entrada"}
+              </label>
               <input
+                className="f-input"
                 type="date"
-                name="saida"
+                id="entrada"
+                name="entrada"
                 required
-                min={selecao.entrada ?? min}
-                defaultValue={selecao.saida ?? ""}
-                className="w-full rounded-md border border-[var(--c-border)] px-3 py-2 text-base"
+                min={min}
+                defaultValue={selecao.entrada ?? ""}
               />
-            </label>
-          )}
-        </div>
+            </div>
 
-        {cutoff && (
-          <p className="mt-3 text-xs text-[var(--c-muted)]">
-            Reservas para o mesmo dia até às {cutoff}.
-          </p>
-        )}
-
-        {selecao.erro && (
-          <p
-            role="alert"
-            className="mt-4 rounded-md bg-[#fdecea] px-3 py-2 text-sm text-[#8a1c14]"
-          >
-            {selecao.erro}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          className="mt-6 min-h-[44px] w-full rounded-md bg-[var(--c-primary)] px-6 font-semibold text-[#1a1a1a] sm:w-auto"
-        >
-          {selecao.completa ? "Alterar datas" : "Continuar"}
-        </button>
-      </form>
-
-      {selecao.completa && selecao.entrada && (
-        <div className="mt-6 rounded-lg border border-[var(--c-border)] bg-[var(--c-surface)] p-6">
-          <p className="text-sm">
-            <strong>{formatarData(selecao.entrada)}</strong>
-            {selecao.saida && (
-              <>
-                {" até "}
-                <strong>{formatarData(selecao.saida)}</strong>
-                <span className="text-[var(--c-muted)]">
-                  {" "}
-                  · {noites} {noites === 1 ? "noite" : "noites"}
-                </span>
-              </>
+            {!diaUnico && (
+              <div>
+                <label className="f-label" data-req htmlFor="saida">
+                  Saída
+                </label>
+                <input
+                  className="f-input"
+                  type="date"
+                  id="saida"
+                  name="saida"
+                  required
+                  min={selecao.entrada ?? min}
+                  defaultValue={selecao.saida ?? ""}
+                />
+              </div>
             )}
-          </p>
-          <p className="mt-4 text-sm text-[var(--c-muted)]">
-            Próxima etapa: escolha dos ingressos.
-          </p>
-        </div>
-      )}
+          </div>
+
+          {cutoff && (
+            <div className="f-info">
+              <strong>Reserva para o mesmo dia</strong>
+              <p>
+                Para chegar hoje, a reserva precisa ser feita até às {cutoff}.
+                Depois desse horário, escolha a partir de amanhã.
+              </p>
+            </div>
+          )}
+
+          {selecao.erro && (
+            <p role="alert" className="f-erro">
+              {selecao.erro}
+            </p>
+          )}
+
+          {selecao.completa && selecao.entrada && (
+            <div className="f-info" style={{ borderLeftColor: "var(--c-accent)" }}>
+              <strong style={{ color: "var(--c-accent-dark)" }}>
+                {diaUnico ? "Data escolhida" : "Período escolhido"}
+              </strong>
+              <p>
+                {formatarData(selecao.entrada)}
+                {selecao.saida && (
+                  <>
+                    {" até "}
+                    {formatarData(selecao.saida)} · {noites}{" "}
+                    {noites === 1 ? "noite" : "noites"}
+                  </>
+                )}
+              </p>
+            </div>
+          )}
+
+          <div className="f-nav">
+            <Link className="f-btn f-btn--voltar" href="/reservar/">
+              ← Voltar
+            </Link>
+            <button type="submit" className="f-btn f-btn--ir">
+              {selecao.completa ? "Continuar →" : "Confirmar datas →"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

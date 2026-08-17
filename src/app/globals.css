@@ -41,6 +41,33 @@
 
   --c-footer-bg: #1a1a1a;
   --c-footer-fg: #d6d6d6;
+
+  /*
+   * Booking form. Taken from the WordPress day-use form
+   * (templates/forms/day-use-form.php), which is the layout customers already
+   * know — matching it keeps the migration from feeling like a different site.
+   *
+   * Note the form does NOT use the landing page's amber. Its actions are green,
+   * as they are today. Amber marks "come book"; green marks "advance inside the
+   * booking". Keeping that split means the button that takes money never looks
+   * like the button that opened the page.
+   */
+  --f-head-from: #e6f7ed;
+  --f-head-to: #c8f0d9;
+  --f-head-fg: #2e7d32;
+
+  --f-step-idle: #e0e6ed;
+  --f-step-now: #ef4444;
+  --f-step-done: #22c55e;
+
+  --f-info-from: #e3f2fd;
+  --f-info-to: #bbdefb;
+  --f-info-bar: #2196f3;
+  --f-info-title: #1976d2;
+
+  --f-err-bg: #fef2f2;
+  --f-err-fg: #b91c1c;
+  --f-err-bd: #fecaca;
 }
 
 /* Mobile-first is a project rule (.claude/skills/architecture.md §4).
@@ -96,3 +123,253 @@ a[class*="min-h-[44px]"] {
   background: var(--c-on-panel);
   opacity: 0.35;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Booking form
+ *
+ * Written as classes rather than Tailwind utilities because the whole point is
+ * that every step looks identical. Utilities repeated across five step files
+ * drift; one class does not.
+ * ───────────────────────────────────────────────────────────────────────── */
+
+.f-card {
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.f-head {
+  background: linear-gradient(135deg, var(--f-head-from) 0%, var(--f-head-to) 100%);
+  padding: 1.25rem 1rem 0.5rem;
+}
+
+.f-head h1 {
+  color: var(--f-head-fg);
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: center;
+  margin: 0 0 0.25rem;
+}
+
+.f-head p {
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--f-head-fg);
+  opacity: 0.8;
+  margin: 0;
+}
+
+/* Numbered steps joined by a rule, as on the current form. The rule is drawn
+   behind the circles and stops short of the row's edges so it never pokes out
+   past the first and last markers. */
+.f-steps {
+  display: flex;
+  position: relative;
+  margin: 1.25rem 0 0.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.f-steps::before {
+  content: "";
+  position: absolute;
+  top: 1.125rem;
+  left: 12%;
+  right: 12%;
+  height: 2px;
+  background: var(--f-step-idle);
+  z-index: 0;
+}
+
+.f-step {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  position: relative;
+  z-index: 1;
+}
+
+.f-step-n {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: var(--f-step-idle);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.12);
+  flex-shrink: 0;
+}
+
+.f-step-t {
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--c-fg);
+  padding: 0 0.125rem;
+  /* Five steps on a 375px screen leave ~70px each. "Experiência" is one long
+     word and would push the row past the viewport without this. */
+  overflow-wrap: anywhere;
+}
+
+.f-step[data-estado="atual"] .f-step-n {
+  background: var(--f-step-now);
+  transform: scale(1.08);
+}
+
+.f-step[data-estado="feito"] .f-step-n {
+  background: var(--f-step-done);
+}
+
+.f-step[data-estado="atual"] .f-step-t,
+.f-step[data-estado="feito"] .f-step-t {
+  font-weight: 600;
+}
+
+@media (min-width: 640px) {
+  .f-head h1 { font-size: 1.5rem; }
+  .f-step-n { width: 2.75rem; height: 2.75rem; font-size: 1rem; }
+  .f-step-t { font-size: 0.8125rem; }
+  .f-steps::before { top: 1.375rem; }
+}
+
+.f-body {
+  padding: 1.25rem 1rem;
+}
+
+.f-body h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--c-fg);
+  margin: 0 0 1rem;
+}
+
+/* Two fields side by side from 640px, stacked below — the project's mobile-first
+   rule forbids side-by-side inputs on a 375px screen. */
+.f-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .f-row--2 { grid-template-columns: 1fr 1fr; }
+}
+
+.f-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-fg);
+  margin-bottom: 0.375rem;
+}
+
+.f-label[data-req]::after {
+  content: " *";
+  color: var(--f-err-fg);
+}
+
+.f-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  font-size: 1rem;
+  color: var(--c-fg);
+  background: #fff;
+}
+
+.f-input:focus {
+  outline: none;
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px rgb(76 175 80 / 0.18);
+}
+
+.f-hint {
+  font-size: 0.75rem;
+  color: var(--c-muted);
+  margin-top: 0.375rem;
+}
+
+.f-info {
+  background: linear-gradient(135deg, var(--f-info-from) 0%, var(--f-info-to) 100%);
+  border-left: 4px solid var(--f-info-bar);
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  margin: 1rem 0;
+}
+
+.f-info strong {
+  display: block;
+  color: var(--f-info-title);
+  font-size: 0.9375rem;
+  margin-bottom: 0.25rem;
+}
+
+.f-info p { margin: 0; font-size: 0.875rem; line-height: 1.55; }
+
+.f-erro {
+  background: var(--f-err-bg);
+  border: 1px solid var(--f-err-bd);
+  color: var(--f-err-fg);
+  border-radius: 6px;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  margin-top: 1rem;
+}
+
+/* Footer rule + buttons: back on the left, advance pushed right. */
+.f-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--c-border);
+}
+
+.f-btn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.f-btn--ir {
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+  margin-left: auto;
+}
+
+.f-btn--ir:hover { background: var(--c-accent-dark); transform: translateY(-1px); }
+
+.f-btn--voltar {
+  background: transparent;
+  color: var(--c-muted);
+  padding: 0 0.75rem;
+}
+
+.f-btn--voltar:hover { color: var(--c-fg); }
