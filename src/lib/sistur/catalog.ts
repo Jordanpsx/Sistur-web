@@ -32,10 +32,57 @@ const ItemSchema = z.object({
   billing_type: z.string(),
 });
 
+const CategorySchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  // Stable reference for the booking route. Renaming the category must not
+  // break a link a customer saved, which is why this exists rather than
+  // slugifying the name.
+  slug: z.string().nullable(),
+  description: z.string().nullable(),
+  // Parameterises the form: a single date (day use) versus a range with an
+  // overnight stay (camping).
+  single_day_only: z.boolean().default(false),
+  same_day_cutoff_time: z.string().nullable().optional(),
+});
+
 const CatalogSchema = z.object({
-  sources: z.array(z.object({ id: z.number(), name: z.string() })),
+  sources: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+      categories: z.array(CategorySchema).default([]),
+    }),
+  ),
   items: z.array(ItemSchema),
 });
+
+export type Experiencia = z.infer<typeof CategorySchema> & {
+  sourceId: number;
+  venue: string;
+};
+
+/**
+ * Bookable experiences, flattened across venues.
+ *
+ * Read from Sistur rather than hardcoded: there are already three (Day Use,
+ * Camping and Enoturismo at the Vinhedo), and a selector with two fixed buttons
+ * would have been wrong on the day it shipped. A category without a slug is
+ * skipped — it has no stable route to point at.
+ */
+export async function getExperiencias(): Promise<Experiencia[]> {
+  const cat = await getCatalog();
+  return cat.sources.flatMap((s) =>
+    s.categories
+      .filter((c) => c.slug)
+      .map((c) => ({ ...c, sourceId: s.id, venue: s.name })),
+  );
+}
+
+export async function getExperiencia(slug: string): Promise<Experiencia | null> {
+  const todas = await getExperiencias();
+  return todas.find((e) => e.slug === slug) ?? null;
+}
 
 export async function getCatalog() {
   const res = await fetch(`${API}/api/public/reservas/catalogo`, {
