@@ -140,3 +140,115 @@ descreve("home", () => {
     expect(res.headers.get("cache-control")).toMatch(/s-maxage/);
   });
 });
+
+descreve("pagamento", () => {
+  /** Cria uma reserva de verdade e devolve o group_id. */
+  async function reservar(): Promise<string> {
+    const api = process.env.SISTUR_API_URL!;
+    const chave = process.env.SISTUR_WEB_API_KEY!;
+    const d = daqui(70);
+    const sim = await (
+      await fetch(`${api}/reservas/api/public/simular`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source_id: 1,
+          category_id: 1,
+          check_in_date: d,
+          check_out_date: d,
+          items: [{ item_id: 1, quantity: 1 }],
+        }),
+      })
+    ).json();
+
+    const { ratearTotal } = await import("./itens");
+    const res = await fetch(`${api}/api/public/reservas/criar`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Web-Api-Key": chave },
+      body: JSON.stringify({
+        source_id: 1,
+        category_id: 1,
+        customer_name: "Regressao Pagamento Silva",
+        customer_document: "529.982.247-25",
+        email: "pagamento@exemplo.com.br",
+        telefone: "(64) 99999-0000",
+        check_in_date: d,
+        check_out_date: d,
+        items: ratearTotal(sim),
+      }),
+    });
+    return (await res.json()).group_id;
+  }
+
+  it("a página monta o Brick com a chave pública e o total", async () => {
+    const g = await reservar();
+    const html = await (await fetch(`${SITE}/reservar/day-use/pagamento/?r=${g}`)).text();
+    expect(html).toContain("brick-pagamento");
+    expect(html).toMatch(/APP_USR-/); // public key do Mercado Pago
+    expect(html).toMatch(/Total a pagar/);
+  });
+
+  it("não expõe o CPF de quem reservou", async () => {
+    // O group_id viaja na URL; qualquer coisa impressa aqui é legível por quem
+    // tiver o link.
+    const g = await reservar();
+    const html = await (await fetch(`${SITE}/reservar/day-use/pagamento/?r=${g}`)).text();
+    expect(html).not.toContain("52998224725");
+    expect(html).not.toContain("529.982.247-25");
+  });
+
+  it("código inexistente não vira formulário de pagamento", async () => {
+    const t = await texto(
+      "/reservar/day-use/pagamento/?r=00000000-0000-0000-0000-000000000000",
+    );
+    expect(t).toMatch(/não encontrada/i);
+    const html = await (
+      await fetch(`${SITE}/reservar/day-use/pagamento/?r=00000000-0000-0000-0000-000000000000`)
+    ).text();
+    expect(html).not.toContain("brick-pagamento");
+  });
+
+  it("sem código, não monta o Brick", async () => {
+    const html = await (await fetch(`${SITE}/reservar/day-use/pagamento/`)).text();
+    expect(html).not.toContain("brick-pagamento");
+  });
+
+  it("o proxy recusa payload malformado antes de cobrar", async () => {
+    for (const corpo of [{}, { group_id: "nao-e-uuid" }]) {
+      const res = await fetch(`${SITE}/api/pagamento/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(corpo),
+      });
+      expect(res.status).toBe(400);
+    }
+  });
+
+  it("o proxy recusa reserva inexistente", async () => {
+    const res = await fetch(`${SITE}/api/pagamento/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        group_id: "00000000-0000-0000-0000-000000000000",
+        payment_method_id: "pix",
+      }),
+    });
+    expect(res.status).toBe(404);
+  });
+
+  it("o token interno do Sistur nunca chega ao navegador", async () => {
+    const g = await reservar();
+    const html = await (await fetch(`${SITE}/reservar/day-use/pagamento/?r=${g}`)).text();
+    const token = process.env.SISTUR_INTERNAL_TOKEN;
+    if (token) expect(html).not.toContain(token);
+    expect(html).not.toContain(process.env.SISTUR_WEB_API_KEY!);
+  });
+
+  it("a confirmação não acredita no status vindo da URL", async () => {
+    // ?s=approved numa reserva não paga não pode produzir "confirmada".
+    const g = await reservar();
+    const t = await texto(`/reservar/day-use/confirmacao/?r=${g}&s=approved`);
+    expect(t).not.toMatch(/Pagamento aprovado/i);
+    expect(t).toMatch(/Ainda não está paga|Aguardando/i);
+  });
+});

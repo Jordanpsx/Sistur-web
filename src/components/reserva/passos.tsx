@@ -26,6 +26,9 @@ export const PASSOS = [
   "Datas e ingressos",
   "Seus dados",
   "Pagamento",
+  // Só alcançado quando o pagamento é aprovado. Uma reserva registrada e não
+  // paga para na etapa 4, que é a verdade da situação dela.
+  "Confirmada",
 ] as const;
 
 export function Passos({ atual }: { atual: number }) {

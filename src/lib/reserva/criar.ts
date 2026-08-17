@@ -107,5 +107,8 @@ export async function criarReserva(
   // redirect() throws by design — it must sit outside the try above, or the
   // catch would swallow it and the visitor would stay on a form whose
   // reservation was already created.
-  redirect(`/reservar/${slug}/confirmacao/?r=${dados.group_id}`);
+  //
+  // Goes straight to payment: the reservation now holds its resources, and the
+  // hold lapses in 15 minutes.
+  redirect(`/reservar/${slug}/pagamento/?r=${dados.group_id}`);
 }

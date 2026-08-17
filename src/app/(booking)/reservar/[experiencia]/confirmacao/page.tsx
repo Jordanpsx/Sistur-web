@@ -3,42 +3,72 @@ import type { Metadata } from "next";
 import { Passos } from "@/components/reserva/passos";
 
 /**
- * Step 4 — placeholder while payment is not built.
+ * The end of the funnel.
  *
- * The reservation already exists in Sistur as `PENDING` by the time this
- * renders, so the page must say so plainly. Showing a cheerful "all done"
- * would be false: nothing is paid, and the hold lapses.
+ * Mercado Pago answers with one of three outcomes, and this page must not
+ * flatten them into "thank you". A PIX charge is `pending` until the transfer
+ * clears, and a card can be rejected — telling someone their booking is
+ * confirmed when it is not costs them a trip.
  *
- * It deliberately shows **only the reservation code**. The `?r=` parameter is
- * an opaque UUID, so anyone with the link could otherwise read a stranger's
- * name, CPF and phone — which is exactly the failure mode of the WordPress
- * lookup endpoint this migration is meant to retire. Displaying the customer's
- * own data here would need the customer to prove who they are first.
+ * The status is re-read from Sistur rather than trusted from the query string,
+ * so editing `?s=approved` in the address bar does not produce a page claiming
+ * payment. It shows only the code and the outcome: the reservation code travels
+ * in the URL, so anything printed here is readable by anyone holding the link.
  */
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Reserva registrada",
+  title: "Sua reserva",
   robots: { index: false, follow: false },
 };
 
+const API = process.env.SISTUR_API_URL!;
+const CHAVE = process.env.SISTUR_WEB_API_KEY ?? "";
+
+async function obterStatus(groupId: string): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `${API}/api/public/reservas/${encodeURIComponent(groupId)}/pagamento`,
+      { headers: { "X-Web-Api-Key": CHAVE }, cache: "no-store" },
+    );
+    if (!res.ok) return null;
+    return (await res.json()).status ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export default async function Confirmacao({
+  params,
   searchParams,
 }: {
+  params: Promise<{ experiencia: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const slug = (await params).experiencia;
   const sp = await searchParams;
-  const bruto = sp.r;
-  const codigo = Array.isArray(bruto) ? bruto[0] : bruto;
+  const um = (k: string) => {
+    const v = sp[k];
+    return Array.isArray(v) ? v[0] : v;
+  };
+
+  const codigo = um("r");
+  // `?s=` is only a hint about which message to prepare; the authority is the
+  // reservation's own status, fetched below.
+  const sugerido = um("s");
+  const status = codigo ? await obterStatus(codigo) : null;
+
+  const pago = status === "PAID" || status === "EM_USO" || status === "PARTIALLY_PAID";
+  const aguardando = !pago && (sugerido === "pending" || sugerido === "in_process");
 
   return (
     <section className="py-8 sm:py-12">
       <div className="f-card">
         <div className="f-head">
-          <h1>Reserva registrada</h1>
+          <h1>{pago ? "Reserva confirmada" : "Reserva registrada"}</h1>
           <p>Guarde o código abaixo</p>
-          <Passos atual={4} />
+          <Passos atual={pago ? 5 : 4} />
         </div>
 
         <div className="f-body">
@@ -58,16 +88,41 @@ export default async function Confirmacao({
             </p>
           )}
 
-          <div className="f-info" style={{ borderLeftColor: "var(--f-step-now)" }}>
-            <strong style={{ color: "var(--f-err-fg)" }}>Ainda não está paga</strong>
-            <p>
-              O pagamento online ainda não está disponível nesta página. Sua vaga
-              fica reservada por 15 minutos — depois disso ela volta a ficar
-              disponível para outras pessoas. Entre em contato para concluir.
-            </p>
-          </div>
+          {pago ? (
+            <div className="f-info" style={{ borderLeftColor: "var(--c-accent)" }}>
+              <strong style={{ color: "var(--c-accent-dark)" }}>Pagamento aprovado</strong>
+              <p>
+                Sua reserva está confirmada. Apresente este código na entrada.
+              </p>
+            </div>
+          ) : aguardando ? (
+            <div className="f-info">
+              <strong>Aguardando confirmação do pagamento</strong>
+              <p>
+                O PIX pode levar alguns instantes para compensar. Assim que o
+                Mercado Pago confirmar, sua reserva é liberada automaticamente —
+                não é preciso pagar de novo.
+              </p>
+            </div>
+          ) : (
+            <div className="f-info" style={{ borderLeftColor: "var(--f-step-now)" }}>
+              <strong style={{ color: "var(--f-err-fg)" }}>Ainda não está paga</strong>
+              <p>
+                Sua vaga fica reservada por 15 minutos. Depois disso ela volta a
+                ficar disponível para outras pessoas.
+              </p>
+            </div>
+          )}
 
           <div className="f-nav">
+            {!pago && !aguardando && codigo && (
+              <Link
+                className="f-btn f-btn--ir"
+                href={`/reservar/${slug}/pagamento/?r=${codigo}`}
+              >
+                Pagar agora →
+              </Link>
+            )}
             <Link className="f-btn f-btn--voltar" href="/">
               ← Voltar ao início
             </Link>
