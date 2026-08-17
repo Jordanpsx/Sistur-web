@@ -82,7 +82,13 @@ export function validarSelecao(
   if (!entrada) return { completa: false };
 
   if (!ehDataValida(entrada)) {
-    return { erro: "Data de entrada inválida.", completa: false };
+    // `entrada` volta mesmo sendo inválida, e isso importa: o passo 2 é um
+    // componente cliente que re-deriva a seleção do próprio estado. Sem o valor
+    // aqui, o estado nascia vazio, a re-derivação não via nada errado e a
+    // mensagem sumia — quem digitasse uma data impossível não recebia aviso
+    // nenhum. O <input type="date"> ignora o valor inválido e aparece vazio,
+    // que é o comportamento certo: erro à vista e campo pronto para redigitar.
+    return { entrada, erro: "Data de entrada inválida.", completa: false };
   }
 
   const min = hoje();

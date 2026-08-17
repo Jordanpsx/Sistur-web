@@ -29,7 +29,13 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Faça sua reserva",
-  description: "Escolha a experiência: day use, camping ou enoturismo.",
+  // As experiências não são listadas aqui de propósito: elas vêm do catálogo do
+  // Sistur, e esta linha já ficou desatualizada uma vez — citava enoturismo
+  // depois de a categoria ter perdido o slug e sumido da página.
+  description: "Escolha a experiência e reserve online.",
+  // Indexável, ao contrário das etapas seguintes. É por onde chega quem vem de
+  // anúncio ou link direto; as etapas com seleção na URL é que não podem virar
+  // resultado de busca.
 };
 
 export default async function EscolherExperiencia() {

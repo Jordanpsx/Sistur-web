@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { lerQuantidades, simular, type Orcamento } from "./itens";
+import { lerQuantidades, ratearTotal, simular } from "./itens";
 
 /**
  * Creates the reservation in Sistur — step 3's submit.
@@ -27,43 +27,6 @@ const API = process.env.SISTUR_API_URL!;
 const CHAVE = process.env.SISTUR_WEB_API_KEY ?? "";
 
 export type EstadoCriacao = { erro?: string; campo?: string };
-
-/**
- * Spreads the final total across the item lines.
- *
- * `criar()` sums every `price_override` and compares the result against its own
- * recalculated **total**, refusing anything more than a cent apart. So the
- * overrides have to add up to the total *after* discount and service fee — not
- * to the subtotal, which is what `items_breakdown` reports. Sending the
- * breakdown verbatim is rejected the moment any discount applies:
- *
- *     Divergência de preço: servidor 49,00, enviado 70,00
- *
- * Each line is scaled by `total / subtotal` and the last one absorbs the
- * rounding, so the sum matches to the cent. Rounding each line independently
- * would drift by a few centavos on a long list and trip the same guard.
- */
-function ratearTotal(o: Orcamento) {
-  const linhas = o.items_breakdown;
-  const base = linhas.reduce((s, l) => s + l.item_total, 0);
-  const cents = (v: number) => Math.round(v * 100);
-
-  let restante = cents(o.total);
-  return linhas.map((l, i) => {
-    const ultimo = i === linhas.length - 1;
-    const valor = ultimo
-      ? restante
-      : base > 0
-        ? Math.round((cents(o.total) * l.item_total) / base)
-        : 0;
-    restante -= valor;
-    return {
-      item_id: l.item_id,
-      quantity: l.quantity,
-      price_override: valor / 100,
-    };
-  });
-}
 
 export async function criarReserva(
   _anterior: EstadoCriacao,
