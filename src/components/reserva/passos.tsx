@@ -5,16 +5,25 @@
  * forgotten in another — the current form's breadcrumb is hand-written per pane
  * and already disagrees with itself between day use and camping.
  *
- * The order differs from WordPress on purpose. There, step 1 asks for name, CPF,
- * e-mail and phone, and dates only come at step 2 — so a visitor types their
- * document before finding out whether the date is even available. Here dates
- * come first and personal data last, right before payment.
+ * The order is deliberately not WordPress's, which runs
+ * *dados pessoais → dados da reserva → confirmação → pagamento*. Two problems
+ * with that:
+ *
+ *   1. It asks for name, CPF, e-mail and phone **first**. A visitor types their
+ *      document before learning what the trip costs or whether the date is even
+ *      open — the highest-friction field guarding the answer they came for.
+ *   2. It separates dates from items, so neither screen can show a price.
+ *      Cost depends on both, which is exactly the question being asked.
+ *
+ * Here the order is: pick the experience, then everything that determines the
+ * price on one screen with a live total, then identify yourself, then pay.
+ * Effort rises as commitment rises, and no personal data is collected until the
+ * visitor has seen the number.
  */
 
 export const PASSOS = [
   "Experiência",
-  "Datas",
-  "Ingressos",
+  "Datas e ingressos",
   "Seus dados",
   "Pagamento",
 ] as const;

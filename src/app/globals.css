@@ -373,3 +373,163 @@ a[class*="min-h-[44px]"] {
 }
 
 .f-btn--voltar:hover { color: var(--c-fg); }
+
+.f-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Item rows ─────────────────────────────────────────────────────────── */
+
+.f-itens {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.f-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.f-item:last-child { border-bottom: none; }
+.f-item:nth-child(odd) { background: #fbfbfb; }
+
+.f-item-txt {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.f-item-nome {
+  font-size: 0.9375rem;
+  color: var(--c-fg);
+}
+
+.f-item-preco {
+  font-size: 0.75rem;
+  color: var(--c-muted);
+}
+
+/* 44px tall to stay a valid touch target; wide enough for two digits plus the
+   native spinner without clipping. */
+.f-qtd {
+  width: 5rem;
+  min-height: 44px;
+  flex-shrink: 0;
+  padding: 0.375rem 0.5rem;
+  text-align: center;
+  font-size: 1rem;
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--c-fg);
+}
+
+.f-qtd:focus {
+  outline: none;
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px rgb(76 175 80 / 0.18);
+}
+
+/* ── Optional extras ───────────────────────────────────────────────────── */
+
+.f-det {
+  margin-top: 1.5rem;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+}
+
+.f-det > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.875rem;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--c-fg);
+  list-style: none;
+}
+
+.f-det > summary::-webkit-details-marker { display: none; }
+
+.f-det > summary::before {
+  content: "▸";
+  color: var(--c-muted);
+  transition: transform 0.15s ease;
+}
+
+.f-det[open] > summary::before { transform: rotate(90deg); }
+
+.f-det-n {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--c-muted);
+}
+
+.f-det > .f-itens {
+  border: none;
+  border-top: 1px solid var(--c-border);
+  border-radius: 0;
+}
+
+/* ── Running total ─────────────────────────────────────────────────────── */
+
+.f-total {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+}
+
+.f-total h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--c-muted);
+}
+
+.f-total-data {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--c-fg);
+}
+
+/* Dimmed while a newer figure is in flight, so a stale number never looks
+   settled. Kept subtle: the old total stays readable rather than flashing. */
+.f-total-box[data-carregando] { opacity: 0.5; }
+.f-total-box { transition: opacity 0.15s ease; }
+
+.f-linha {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.875rem;
+  padding: 0.25rem 0;
+  color: var(--c-fg);
+}
+
+.f-linha--desc { color: var(--c-accent-dark); }
+
+.f-linha--total {
+  margin-top: 0.5rem;
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--c-border);
+  font-size: 1.125rem;
+  font-weight: 700;
+}

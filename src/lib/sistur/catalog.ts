@@ -22,6 +22,10 @@ const ItemSchema = z.object({
   id: z.number(),
   name: z.string(),
   internal_slug: z.string().nullable(),
+  // Which experience the item belongs to. Without these the catalogue is 35
+  // loose items with no way to tell a Day Use ticket from a camping pitch.
+  category_id: z.number().nullable(),
+  source_id: z.number().nullable(),
   price: z.number(),
   // Per-day-tier overrides. These are the same columns an operator edits under
   // "Tarifas por tipo de dia"; null means "fall back to the base price", which
@@ -82,6 +86,31 @@ export async function getExperiencias(): Promise<Experiencia[]> {
 export async function getExperiencia(slug: string): Promise<Experiencia | null> {
   const todas = await getExperiencias();
   return todas.find((e) => e.slug === slug) ?? null;
+}
+
+export type Item = z.infer<typeof ItemSchema>;
+
+/**
+ * Bookable items for one experience, split into admissions and add-ons.
+ *
+ * The split reads `internal_slug`: an item whose slug contains `_entrada_` is an
+ * admission (`dayuse_entrada_inteira`, `camping_entrada_meia`), everything else
+ * is an optional extra. This mirrors how the current WordPress form is laid out —
+ * headcount fields first, then opt-in extras — and it is a naming convention the
+ * operators already maintain, not a second list to keep in sync.
+ *
+ * Items with no slug fall into add-ons, which is the safe side: an unrecognised
+ * item shows up as optional rather than being presented as a required ticket.
+ */
+export async function getItensDaExperiencia(
+  e: Experiencia,
+): Promise<{ ingressos: Item[]; adicionais: Item[] }> {
+  const cat = await getCatalog();
+  const meus = cat.items.filter((i) => i.category_id === e.id);
+  return {
+    ingressos: meus.filter((i) => i.internal_slug?.includes("_entrada_")),
+    adicionais: meus.filter((i) => !i.internal_slug?.includes("_entrada_")),
+  };
 }
 
 export async function getCatalog() {

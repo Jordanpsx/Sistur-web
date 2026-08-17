@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getExperiencia } from "@/lib/sistur/catalog";
+import { getExperiencia, getItensDaExperiencia } from "@/lib/sistur/catalog";
 import { validarSelecao } from "@/lib/reserva/datas";
-import { PassoDatas } from "@/components/reserva/passo-datas";
+import { lerQuantidades, simular } from "@/lib/reserva/itens";
+import { PassoReserva } from "@/components/reserva/passo-reserva";
 
 /**
  * The booking form itself — one component, parameterised by experience.
@@ -16,20 +17,24 @@ import { PassoDatas } from "@/components/reserva/passo-datas";
  * survive, comes from two rules:
  *
  *   1. The chosen experience lives in the URL path, and every later selection
- *      will live in `searchParams`. A step can therefore render from the URL
- *      alone — on a cold load, after a cache eviction, or when someone pastes
- *      the link tomorrow.
+ *      lives in `searchParams` — dates as `entrada`/`saida`, quantities as
+ *      `i<id>`. A step therefore renders from the URL alone: on a cold load,
+ *      after a cache eviction, or when someone pastes the link tomorrow.
  *   2. Nothing is held in memory between steps except the customer's personal
  *      data, which must never enter a URL. Going back is an ordinary navigation
  *      rather than a state rewind, so there is no half-updated state to corrupt.
  *
- * Steps 2 onward (dates, items, customer, review, payment) are not built yet.
+ * The price shown on the first paint is computed here, on the server, so the
+ * page is correct before hydration and with scripting disabled.
+ *
+ * Steps 3 and 4 (customer, payment) are not built yet.
  */
 
 // Never cached, never prerendered — see §3.1 and the note on the selector.
 export const dynamic = "force-dynamic";
 
 type Params = { experiencia: string };
+type Search = Record<string, string | string[] | undefined>;
 
 export async function generateMetadata({
   params,
@@ -51,15 +56,15 @@ export default async function FormularioReserva({
   searchParams,
 }: {
   params: Promise<Params>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+  searchParams: Promise<Search>;
 }) {
   const slug = (await params).experiencia;
   const e = await getExperiencia(slug);
   if (!e) notFound();
 
+  const sp = await searchParams;
   // Only the first value is read: `?entrada=a&entrada=b` is either a crafted URL
   // or a stale link, and picking one deterministically beats rejecting it.
-  const sp = await searchParams;
   const um = (k: string) => {
     const v = sp[k];
     return Array.isArray(v) ? v[0] : v;
@@ -69,24 +74,43 @@ export default async function FormularioReserva({
     diaUnico: e.single_day_only,
     cutoff: e.same_day_cutoff_time,
   });
+  const quantidades = lerQuantidades(sp);
+  const { ingressos, adicionais } = await getItensDaExperiencia(e);
+
+  // Priced on the server so the first paint is already correct. Day use is a
+  // single date, and Sistur accepts check_out equal to check_in.
+  const orcamento =
+    selecao.completa && selecao.entrada
+      ? await simular({
+          sourceId: e.sourceId,
+          entrada: selecao.entrada,
+          saida: e.single_day_only ? selecao.entrada : selecao.saida!,
+          quantidades,
+        })
+      : null;
 
   return (
     <section className="py-8 sm:py-12">
-      {/* The experience description belongs above the card, not inside it: the
-          card is the form, and mixing marketing copy into it is what makes the
-          current page read as two things stacked. */}
       {e.description && (
         <p className="mb-5 text-sm leading-relaxed text-[var(--c-muted)]">
           {e.description}
         </p>
       )}
 
-      <PassoDatas
+      <PassoReserva
         slug={slug}
         nome={e.name}
         diaUnico={e.single_day_only}
         cutoff={e.same_day_cutoff_time}
-        selecao={selecao}
+        sourceId={e.sourceId}
+        ingressos={ingressos}
+        adicionais={adicionais}
+        inicial={{
+          entrada: selecao.entrada,
+          saida: selecao.saida,
+          quantidades,
+        }}
+        orcamentoInicial={orcamento}
       />
     </section>
   );
