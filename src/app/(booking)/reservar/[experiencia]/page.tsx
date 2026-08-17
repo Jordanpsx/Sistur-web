@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getExperiencia } from "@/lib/sistur/catalog";
+import { validarSelecao } from "@/lib/reserva/datas";
+import { PassoDatas } from "@/components/reserva/passo-datas";
 
 /**
  * The booking form itself — one component, parameterised by experience.
@@ -47,12 +49,27 @@ export async function generateMetadata({
 
 export default async function FormularioReserva({
   params,
+  searchParams,
 }: {
   params: Promise<Params>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const slug = (await params).experiencia;
   const e = await getExperiencia(slug);
   if (!e) notFound();
+
+  // Only the first value is read: `?entrada=a&entrada=b` is either a crafted URL
+  // or a stale link, and picking one deterministically beats rejecting it.
+  const sp = await searchParams;
+  const um = (k: string) => {
+    const v = sp[k];
+    return Array.isArray(v) ? v[0] : v;
+  };
+
+  const selecao = validarSelecao(um("entrada"), um("saida"), {
+    diaUnico: e.single_day_only,
+    cutoff: e.same_day_cutoff_time,
+  });
 
   return (
     <section className="py-14">
@@ -75,18 +92,12 @@ export default async function FormularioReserva({
         </div>
       )}
 
-      <div className="mt-10 rounded-lg border border-dashed border-[var(--c-border)] p-8 text-center">
-        <p className="text-sm text-[var(--c-muted)]">
-          Próxima etapa: escolha de{" "}
-          {e.single_day_only ? "data" : "datas de entrada e saída"}.
-        </p>
-        <p className="mt-2 text-xs text-[var(--c-muted)]">
-          Experiência {e.slug} · categoria {e.id} · venue {e.sourceId}
-          {e.same_day_cutoff_time
-            ? ` · corte para o mesmo dia às ${e.same_day_cutoff_time}`
-            : ""}
-        </p>
-      </div>
+      <PassoDatas
+        slug={slug}
+        diaUnico={e.single_day_only}
+        cutoff={e.same_day_cutoff_time}
+        selecao={selecao}
+      />
     </section>
   );
 }

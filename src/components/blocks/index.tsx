@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Block } from "@/lib/sistur/pages";
-import { resolverPreco, formatarBRL } from "@/lib/sistur/catalog";
+import { resolverPreco, formatarBRL, getExperiencias } from "@/lib/sistur/catalog";
 
 /**
  * Block components — the only place presentation exists.
@@ -259,6 +259,64 @@ async function PriceTable({ title, nota, rows }: PropsOf<"price_table">) {
   );
 }
 
+/**
+ * Experience selector — the bridge from the landing page into the funnel.
+ *
+ * The options are read from Sistur, never declared in the CMS. Listing them as
+ * content would mean a new category stays invisible until someone edits a page,
+ * and a retired one leaves a button pointing at a dead route. A category joins
+ * this selector by having an internal_slug; that is also how Enoturismo is kept
+ * out of it while remaining in the catalogue.
+ *
+ * The choice navigates rather than expanding in place. Each experience is its
+ * own route, so only one form ever exists on a page — which is the structural
+ * version of the reason the WordPress site needed a selector at all — and the
+ * home stays cacheable because nothing here depends on live availability.
+ */
+async function ExperienceSelector({ title, subtitle }: PropsOf<"experience_selector">) {
+  const experiencias = await getExperiencias();
+  if (experiencias.length === 0) return null;
+
+  return (
+    <section className="mx-auto max-w-5xl px-4 py-14">
+      {title && <SectionTitle>{title}</SectionTitle>}
+      {subtitle && (
+        <p className="-mt-4 mb-10 text-center text-lg font-semibold uppercase text-[var(--c-fg)]">
+          {subtitle}
+        </p>
+      )}
+      <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        {experiencias.map((e) => (
+          <li
+            key={e.slug}
+            className="flex flex-col rounded-lg bg-[var(--c-bg)] p-7 shadow-[0_2px_10px_rgba(0,0,0,0.08)]"
+          >
+            <h3 className="text-center text-lg uppercase text-[var(--c-fg)]">
+              {e.name}
+            </h3>
+            <div className="mt-5 flex-1 rounded-md border-l-4 border-[#2f6fd0] bg-[#eef4fb] p-4">
+              <p className="text-sm leading-relaxed text-[var(--c-fg)]">
+                {e.description ?? "Detalhes desta experiência em breve."}
+              </p>
+              <p className="mt-3 text-xs text-[var(--c-muted)]">
+                {e.single_day_only
+                  ? "Reserva para um único dia."
+                  : "Permite reserva com mais de um dia."}
+              </p>
+            </div>
+            <Link
+              href={`/reservar/${e.slug}/`}
+              className="mt-6 inline-flex min-h-[44px] items-center justify-center rounded-full bg-[var(--c-accent)] px-6 text-sm font-semibold text-[var(--c-on-accent)] transition-colors hover:bg-[var(--c-accent-dark)]"
+            >
+              Selecionar {e.name}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 /** Gallery pulls images from the reservas API, keyed by resource_id. */
 function Gallery({ title, resource_id }: PropsOf<"gallery">) {
   return (
@@ -290,5 +348,7 @@ export function renderBlock(block: Block, key: number) {
       return <Gallery key={key} {...block.props} />;
     case "price_table":
       return <PriceTable key={key} {...block.props} />;
+    case "experience_selector":
+      return <ExperienceSelector key={key} {...block.props} />;
   }
 }

@@ -77,6 +77,13 @@ const BlockSchema = z.discriminatedUnion("type", [
     }),
   }),
   z.object({
+    type: z.literal("experience_selector"),
+    props: z.object({
+      title: z.string().optional(),
+      subtitle: z.string().optional(),
+    }),
+  }),
+  z.object({
     type: z.literal("price_table"),
     props: z.object({
       title: z.string().optional(),
