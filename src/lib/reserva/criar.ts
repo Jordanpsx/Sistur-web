@@ -1,0 +1,148 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { lerQuantidades, simular, type Orcamento } from "./itens";
+
+/**
+ * Creates the reservation in Sistur — step 3's submit.
+ *
+ * A Server Action rather than a form posting to a route handler, for one
+ * reason: **personal data must never reach a URL.** Every step before this one
+ * keeps its state in the query string, which is what makes back-navigation and
+ * reload work. That trick stops here. A CPF in a query string lands in the
+ * access log, the browser history and the `Referer` header sent to any third
+ * party the next page happens to load.
+ *
+ * Dates and quantities stay in the URL because they are not personal data — a
+ * date and a count identify nobody. Name, CPF, e-mail and phone travel in the
+ * POST body only.
+ *
+ * The action re-prices server-side before submitting. It does not trust the
+ * total the page was showing: minutes may have passed, and Sistur's own
+ * anti-fraud check would reject a stale figure anyway. Better to send the
+ * current number and handle a genuine change explicitly.
+ */
+
+const API = process.env.SISTUR_API_URL!;
+const CHAVE = process.env.SISTUR_WEB_API_KEY ?? "";
+
+export type EstadoCriacao = { erro?: string; campo?: string };
+
+/**
+ * Spreads the final total across the item lines.
+ *
+ * `criar()` sums every `price_override` and compares the result against its own
+ * recalculated **total**, refusing anything more than a cent apart. So the
+ * overrides have to add up to the total *after* discount and service fee — not
+ * to the subtotal, which is what `items_breakdown` reports. Sending the
+ * breakdown verbatim is rejected the moment any discount applies:
+ *
+ *     Divergência de preço: servidor 49,00, enviado 70,00
+ *
+ * Each line is scaled by `total / subtotal` and the last one absorbs the
+ * rounding, so the sum matches to the cent. Rounding each line independently
+ * would drift by a few centavos on a long list and trip the same guard.
+ */
+function ratearTotal(o: Orcamento) {
+  const linhas = o.items_breakdown;
+  const base = linhas.reduce((s, l) => s + l.item_total, 0);
+  const cents = (v: number) => Math.round(v * 100);
+
+  let restante = cents(o.total);
+  return linhas.map((l, i) => {
+    const ultimo = i === linhas.length - 1;
+    const valor = ultimo
+      ? restante
+      : base > 0
+        ? Math.round((cents(o.total) * l.item_total) / base)
+        : 0;
+    restante -= valor;
+    return {
+      item_id: l.item_id,
+      quantity: l.quantity,
+      price_override: valor / 100,
+    };
+  });
+}
+
+export async function criarReserva(
+  _anterior: EstadoCriacao,
+  form: FormData,
+): Promise<EstadoCriacao> {
+  const texto = (k: string) => String(form.get(k) ?? "").trim();
+
+  const slug = texto("slug");
+  const sourceId = Number(form.get("source_id"));
+  const categoryId = Number(form.get("category_id"));
+  const entrada = texto("entrada");
+  const saida = texto("saida") || entrada;
+
+  // Quantities arrive as the same `i<id>` keys the URL uses, so one parser
+  // serves both and the two cannot drift apart.
+  const quantidades = lerQuantidades(
+    Object.fromEntries([...form.entries()].map(([k, v]) => [k, String(v)])),
+  );
+
+  if (!slug || !entrada || Object.keys(quantidades).length === 0) {
+    return { erro: "Sua seleção expirou. Volte e escolha as datas novamente." };
+  }
+
+  // Cheap checks first, so an obvious typo does not cost a round trip. The
+  // authoritative validation is Sistur's — this only shortens the loop.
+  const nome = texto("customer_name");
+  if (nome.split(/\s+/).filter(Boolean).length < 2) {
+    return { erro: "Informe seu nome completo.", campo: "customer_name" };
+  }
+  if (!/^\S+@\S+\.\S+$/.test(texto("email"))) {
+    return { erro: "Informe um e-mail válido.", campo: "email" };
+  }
+
+  const orcamento = await simular({
+    sourceId,
+    categoryId,
+    entrada,
+    saida,
+    quantidades,
+  });
+  if (!orcamento) {
+    return {
+      erro: "Não foi possível confirmar os valores agora. Tente novamente em instantes.",
+    };
+  }
+
+  let resposta: Response;
+  try {
+    resposta = await fetch(`${API}/api/public/reservas/criar`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Web-Api-Key": CHAVE },
+      cache: "no-store",
+      signal: AbortSignal.timeout(15000),
+      body: JSON.stringify({
+        source_id: sourceId,
+        category_id: categoryId,
+        customer_name: nome,
+        customer_document: texto("customer_document"),
+        email: texto("email"),
+        telefone: texto("telefone"),
+        observacoes: texto("observacoes"),
+        check_in_date: entrada,
+        check_out_date: saida,
+        items: ratearTotal(orcamento),
+      }),
+    });
+  } catch {
+    return { erro: "Não conseguimos falar com o sistema de reservas. Tente novamente." };
+  }
+
+  const dados = await resposta.json().catch(() => null);
+  if (!resposta.ok) {
+    // Sistur's validation messages are written in pt-BR for the end user, so
+    // they are shown as-is. The generic fallback covers 5xx.
+    return { erro: dados?.erro || "Não foi possível concluir a reserva." };
+  }
+
+  // redirect() throws by design — it must sit outside the try above, or the
+  // catch would swallow it and the visitor would stay on a form whose
+  // reservation was already created.
+  redirect(`/reservar/${slug}/confirmacao/?r=${dados.group_id}`);
+}

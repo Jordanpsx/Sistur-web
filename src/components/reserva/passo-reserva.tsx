@@ -41,6 +41,7 @@ export function PassoReserva({
   diaUnico,
   cutoff,
   sourceId,
+  categoryId,
   ingressos,
   adicionais,
   inicial,
@@ -52,6 +53,7 @@ export function PassoReserva({
   diaUnico: boolean;
   cutoff?: string | null;
   sourceId: number;
+  categoryId: number;
   ingressos: Item[];
   adicionais: Item[];
   inicial: { entrada?: string; saida?: string; quantidades: Quantidades };
@@ -108,6 +110,7 @@ export function PassoReserva({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             source_id: sourceId,
+            category_id: categoryId,
             check_in_date: selecao.entrada,
             // Day use is a single date; Sistur accepts check_out equal to
             // check_in and prices the FIXED items once.
@@ -155,6 +158,7 @@ export function PassoReserva({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             source_id: sourceId,
+            category_id: categoryId,
             check_in_date: selecao.entrada,
             check_out_date: diaUnico ? selecao.entrada : selecao.saida,
             items: todosIds.split(",").map((id) => ({
@@ -196,7 +200,7 @@ export function PassoReserva({
         <Passos atual={2} />
       </div>
 
-      <form className="f-body" method="get" action={`/reservar/${slug}/`}>
+      <form className="f-body" method="get" action={`/reservar/${slug}/dados/`}>
         {/* ── Datas ─────────────────────────────────────────────────── */}
         <h2>{diaUnico ? "Data da visita" : "Período da estadia"}</h2>
 
@@ -451,11 +455,16 @@ function Resumo({
         </div>
       )}
 
-      {/* Without JavaScript nothing recalculates on change, so the button has to
-          be reachable. With JavaScript the total is already current and it is
-          just a second way to submit. */}
+      {/* Without JavaScript the total does not refresh on change. The form now
+          submits forward to step 3, so recalculating needs its own control that
+          returns here instead. */}
       <noscript>
-        <button type="submit" className="f-btn f-btn--ir" style={{ marginTop: "1rem" }}>
+        <button
+          type="submit"
+          formAction=""
+          className="f-btn f-btn--ir"
+          style={{ marginTop: "1rem" }}
+        >
           Atualizar valores
         </button>
       </noscript>

@@ -89,9 +89,10 @@ export default async function FormularioReserva({
   // is not repeated when a quantity changes.
   const [orcamento, precos] = datado
     ? await Promise.all([
-        simular({ sourceId: e.sourceId, entrada, saida, quantidades }),
+        simular({ sourceId: e.sourceId, categoryId: e.id, entrada, saida, quantidades }),
         precosDoDia({
           sourceId: e.sourceId,
+          categoryId: e.id,
           entrada,
           saida,
           itemIds: [...ingressos, ...adicionais].map((i) => i.id),
@@ -113,6 +114,7 @@ export default async function FormularioReserva({
         diaUnico={e.single_day_only}
         cutoff={e.same_day_cutoff_time}
         sourceId={e.sourceId}
+        categoryId={e.id}
         ingressos={ingressos}
         adicionais={adicionais}
         inicial={{

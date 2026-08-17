@@ -38,8 +38,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ erro: "Corpo inválido." }, { status: 400 });
   }
 
-  const { source_id, check_in_date, check_out_date, items } = (corpo ?? {}) as {
+  const { source_id, category_id, check_in_date, check_out_date, items } =
+    (corpo ?? {}) as {
     source_id?: unknown;
+    category_id?: unknown;
     check_in_date?: unknown;
     check_out_date?: unknown;
     items?: unknown;
@@ -48,6 +50,7 @@ export async function POST(req: Request) {
   const dataOk = (v: unknown) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
   if (
     typeof source_id !== "number" ||
+    typeof category_id !== "number" ||
     !dataOk(check_in_date) ||
     !dataOk(check_out_date) ||
     !Array.isArray(items) ||
@@ -75,7 +78,13 @@ export async function POST(req: Request) {
     const res = await fetch(`${API}/reservas/api/public/simular`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ source_id, check_in_date, check_out_date, items: linhas }),
+      body: JSON.stringify({
+        source_id,
+        category_id,
+        check_in_date,
+        check_out_date,
+        items: linhas,
+      }),
       cache: "no-store",
       signal: AbortSignal.timeout(8000),
     });

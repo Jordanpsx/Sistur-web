@@ -94,12 +94,14 @@ export function precosDoBreakdown(o: Orcamento | null): Record<number, number> {
 
 export async function precosDoDia(params: {
   sourceId: number;
+  categoryId: number;
   entrada: string;
   saida: string;
   itemIds: number[];
 }): Promise<Record<number, number>> {
   const o = await simular({
     sourceId: params.sourceId,
+    categoryId: params.categoryId,
     entrada: params.entrada,
     saida: params.saida,
     quantidades: Object.fromEntries(params.itemIds.map((id) => [id, 1])),
@@ -109,6 +111,7 @@ export async function precosDoDia(params: {
 
 export async function simular(params: {
   sourceId: number;
+  categoryId: number;
   entrada: string;
   saida: string;
   quantidades: Quantidades;
@@ -126,6 +129,9 @@ export async function simular(params: {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           source_id: params.sourceId,
+          // Without this the discount rules attached to the category never
+          // apply, and the quote comes back ABOVE what will be charged.
+          category_id: params.categoryId,
           check_in_date: params.entrada,
           check_out_date: params.saida,
           items,
