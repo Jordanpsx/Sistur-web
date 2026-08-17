@@ -31,7 +31,7 @@ export async function generateStaticParams(): Promise<Params[]> {
   // The build must NOT require Sistur to be reachable.
   //
   // Docker builds run on an isolated network, so the builder cannot resolve
-  // sistur-teste-sistur-flask-1 — and more importantly, a backend outage must
+  // the backend container — and more importantly, a backend outage must
   // never block deploying the frontend. On failure we pre-render nothing;
   // `dynamicParams` is true, so every page still renders on first request and
   // is then cached by ISR. The only thing lost is build-time pre-rendering,

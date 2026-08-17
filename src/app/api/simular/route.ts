@@ -3,10 +3,10 @@ import { NextResponse } from "next/server";
 /**
  * Price preview — proxies to Sistur's `POST /reservas/api/public/simular`.
  *
- * **Why a proxy and not a direct call from the browser.** `SISTUR_API_URL` is
- * internal Docker DNS (`http://sistur-flask:5000`); a visitor's browser cannot
- * resolve it, and publishing a public URL for the ERP to make it reachable would
- * expose the whole admin surface to reach one endpoint.
+ * **Why a proxy and not a direct call from the browser.** `SISTUR_API_URL` points
+ * at a private network name that a visitor's browser cannot resolve, and giving
+ * the ERP a public address just to make it reachable would expose its whole
+ * admin surface for the sake of one endpoint.
  *
  * **Why the total is not computed here.** The obvious shortcut is to multiply
  * price by quantity in the client and skip the round trip. That produces the
