@@ -533,3 +533,65 @@ a[class*="min-h-[44px]"] {
   font-size: 1.125rem;
   font-weight: 700;
 }
+
+/* ── PIX ───────────────────────────────────────────────────────────────── */
+
+.pix-qr {
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  margin: 0.5rem 0;
+  background: #fff;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+}
+
+/* O QR precisa de contraste e área de silêncio para o leitor do banco
+   funcionar; nada de filtro ou fundo colorido atrás dele. */
+.pix-qr img {
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.pix-codigo {
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  resize: vertical;
+  word-break: break-all;
+}
+
+.pix-copiar {
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+.pix-esperando {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  font-size: 0.875rem;
+  color: var(--c-muted);
+}
+
+.pix-pulso {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background: var(--c-accent);
+  animation: pix-pulsar 1.4s ease-in-out infinite;
+}
+
+@keyframes pix-pulsar {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50%      { opacity: 1;    transform: scale(1); }
+}
+
+/* Respeita quem pediu menos animação; o texto já comunica a espera. */
+@media (prefers-reduced-motion: reduce) {
+  .pix-pulso { animation: none; opacity: 0.8; }
+}

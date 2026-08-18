@@ -252,3 +252,25 @@ descreve("pagamento", () => {
     expect(t).toMatch(/Ainda não está paga|Aguardando/i);
   });
 });
+
+descreve("status do pagamento (polling do PIX)", () => {
+  it("pagamento sem webhook ainda responde pending, não erro", async () => {
+    // Enquanto o webhook do Mercado Pago não chega, o Sistur devolve 404. A tela
+    // precisa continuar esperando em vez de anunciar falha para quem já pagou.
+    const res = await fetch(`${SITE}/api/pagamento/status/?p=999999999`);
+    expect(res.status).toBe(200);
+    expect((await res.json()).status).toBe("pending");
+  });
+
+  it("id malformado é recusado sem consultar o Sistur", async () => {
+    for (const p of ["", "abc", "'; DROP TABLE", "1e9"]) {
+      const r = await fetch(`${SITE}/api/pagamento/status/?p=${encodeURIComponent(p)}`);
+      expect(r.status, `p=${p}`).toBe(400);
+    }
+  });
+
+  it("a resposta do status nunca é cacheada", async () => {
+    const res = await fetch(`${SITE}/api/pagamento/status/?p=123456789`);
+    expect(res.headers.get("cache-control")).toMatch(/no-store/);
+  });
+});

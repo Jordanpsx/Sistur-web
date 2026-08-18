@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatarBRL } from "@/lib/reserva/itens";
+import { PixAguardando, type DadosPix } from "./pix-aguardando";
+import { interpretarResposta } from "@/lib/reserva/resposta-pagamento";
 
 /**
  * Mercado Pago Payment Brick.
@@ -73,6 +75,10 @@ export function BrickPagamento({
   const router = useRouter();
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
+  // Quando preenchido, o Brick sai de cena e o painel do PIX assume. Um PIX não
+  // termina no submit: o Mercado Pago devolve `pending` com um QR code, e o
+  // cliente precisa continuar nesta tela até o pagamento cair.
+  const [pix, setPix] = useState<DadosPix | null>(null);
   // React 18 mounts effects twice in development; without this the Brick is
   // created twice in the same container and the second one renders empty.
   const montado = useRef(false);
@@ -130,9 +136,25 @@ export function BrickPagamento({
                 throw new Error(dados?.erro || "falha");
               }
 
+              const desfecho = interpretarResposta(dados);
+
+              // PIX: mostrar o código e esperar. A primeira versão redirecionava
+              // aqui em `pending` e jogava o QR code fora — o Sistur criava a
+              // cobrança certinha e o cliente nunca via como pagá-la.
+              if (desfecho.tipo === "pix") {
+                // Desmontar ANTES de trocar de tela: o painel do PIX substitui
+                // este componente, e o React removeria a div onde o SDK do
+                // Mercado Pago ainda mantém o iframe montado.
+                brick?.unmount();
+                brick = null;
+                setPix(desfecho);
+                return;
+              }
+
+              // Cartão: o desfecho já é definitivo, aprovado ou recusado.
               const p = new URLSearchParams({ r: groupId });
-              if (dados?.status) p.set("s", String(dados.status));
-              if (dados?.payment_id) p.set("p", String(dados.payment_id));
+              if (desfecho.status) p.set("s", desfecho.status);
+              if (desfecho.payment_id) p.set("p", desfecho.payment_id);
               router.push(`/reservar/${slug}/confirmacao/?${p}`);
             },
           },
@@ -153,6 +175,10 @@ export function BrickPagamento({
       brick?.unmount();
     };
   }, [publicKey, groupId, slug, total, email, router]);
+
+  if (pix) {
+    return <PixAguardando dados={pix} total={total} groupId={groupId} slug={slug} />;
+  }
 
   return (
     <div>
