@@ -91,9 +91,10 @@ export default async function Confirmacao({
           {pago ? (
             <div className="f-info" style={{ borderLeftColor: "var(--c-accent)" }}>
               <strong style={{ color: "var(--c-accent-dark)" }}>Pagamento aprovado</strong>
-              <p>
-                Sua reserva está confirmada. Apresente este código na entrada.
-              </p>
+              {/* Sem instrução de apresentar o código na entrada — a portaria
+                  não o pede. Mandar guardar algo que ninguém vai cobrar cria uma
+                  exigência inexistente e preocupa quem perder o print. */}
+              <p>Sua reserva está confirmada.</p>
             </div>
           ) : aguardando ? (
             <div className="f-info">
