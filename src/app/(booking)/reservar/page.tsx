@@ -65,12 +65,13 @@ export default async function EscolherExperiencia() {
             key={e.slug}
             className="flex flex-col rounded-lg bg-[var(--c-bg)] p-7 shadow-[0_2px_10px_rgba(0,0,0,0.08)]"
           >
+            {/* O venue não é exibido: hoje as duas experiências ficam no mesmo
+                lugar, então repetir "Cachoeira" em cada cartão só ocupa espaço
+                sem distinguir nada. `Experiencia.venue` continua existindo para
+                quando houver reserva em mais de um local. */}
             <h2 className="text-center text-lg uppercase text-[var(--c-fg)]">
               {e.name}
             </h2>
-            <p className="mt-1 text-center text-xs uppercase tracking-wide text-[var(--c-muted)]">
-              {e.venue}
-            </p>
 
             <div className="mt-5 flex-1 rounded-md border-l-4 border-[#2f6fd0] bg-[#eef4fb] p-4">
               <p className="text-sm leading-relaxed text-[var(--c-fg)]">
