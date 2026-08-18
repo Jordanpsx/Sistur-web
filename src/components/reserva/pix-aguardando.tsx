@@ -64,7 +64,11 @@ export function PixAguardando({
       }
       try {
         const res = await fetch(
-          `/api/pagamento/status/?p=${encodeURIComponent(dados.payment_id)}`,
+          // Pergunta pelas duas fontes: a transação e a própria reserva. Uma
+          // reserva marcada como paga fora do webhook — reprocessada à mão, ou
+          // baixada no balcão — precisa encerrar esta espera do mesmo jeito.
+          `/api/pagamento/status/?p=${encodeURIComponent(dados.payment_id)}` +
+            `&r=${encodeURIComponent(groupId)}`,
           { cache: "no-store" },
         );
         const r = await res.json();

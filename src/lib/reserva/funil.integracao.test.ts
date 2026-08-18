@@ -23,6 +23,44 @@ async function texto(caminho: string): Promise<string> {
   return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ");
 }
 
+/** Cria uma reserva de verdade e devolve o group_id. */
+async function reservar(): Promise<string> {
+  const api = process.env.SISTUR_API_URL!;
+  const chave = process.env.SISTUR_WEB_API_KEY!;
+  const d = daqui(70);
+  const sim = await (
+    await fetch(`${api}/reservas/api/public/simular`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source_id: 1,
+        category_id: 1,
+        check_in_date: d,
+        check_out_date: d,
+        items: [{ item_id: 1, quantity: 1 }],
+      }),
+    })
+  ).json();
+
+  const { ratearTotal } = await import("./itens");
+  const res = await fetch(`${api}/api/public/reservas/criar`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Web-Api-Key": chave },
+    body: JSON.stringify({
+      source_id: 1,
+      category_id: 1,
+      customer_name: "Regressao Pagamento Silva",
+      customer_document: "529.982.247-25",
+      email: "pagamento@exemplo.com.br",
+      telefone: "(64) 99999-0000",
+      check_in_date: d,
+      check_out_date: d,
+      items: ratearTotal(sim),
+    }),
+  });
+  return (await res.json()).group_id;
+}
+
 function daqui(dias: number): string {
   const d = new Date();
   d.setUTCDate(d.getUTCDate() + dias);
@@ -142,44 +180,6 @@ descreve("home", () => {
 });
 
 descreve("pagamento", () => {
-  /** Cria uma reserva de verdade e devolve o group_id. */
-  async function reservar(): Promise<string> {
-    const api = process.env.SISTUR_API_URL!;
-    const chave = process.env.SISTUR_WEB_API_KEY!;
-    const d = daqui(70);
-    const sim = await (
-      await fetch(`${api}/reservas/api/public/simular`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          source_id: 1,
-          category_id: 1,
-          check_in_date: d,
-          check_out_date: d,
-          items: [{ item_id: 1, quantity: 1 }],
-        }),
-      })
-    ).json();
-
-    const { ratearTotal } = await import("./itens");
-    const res = await fetch(`${api}/api/public/reservas/criar`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Web-Api-Key": chave },
-      body: JSON.stringify({
-        source_id: 1,
-        category_id: 1,
-        customer_name: "Regressao Pagamento Silva",
-        customer_document: "529.982.247-25",
-        email: "pagamento@exemplo.com.br",
-        telefone: "(64) 99999-0000",
-        check_in_date: d,
-        check_out_date: d,
-        items: ratearTotal(sim),
-      }),
-    });
-    return (await res.json()).group_id;
-  }
-
   it("a página monta o Brick com a chave pública e o total", async () => {
     const g = await reservar();
     const html = await (await fetch(`${SITE}/reservar/day-use/pagamento/?r=${g}`)).text();
@@ -267,6 +267,41 @@ descreve("status do pagamento (polling do PIX)", () => {
       const r = await fetch(`${SITE}/api/pagamento/status/?p=${encodeURIComponent(p)}`);
       expect(r.status, `p=${p}`).toBe(400);
     }
+  });
+
+  it("também aceita consulta só pela reserva", async () => {
+    // A reserva é a fonte autoritativa: ela vira paga por webhook, por
+    // reprocessamento manual ou no balcão. Só perguntar pelo payment_id deixava
+    // o cliente olhando um QR de algo já quitado.
+    const g = await reservar();
+    const res = await fetch(`${SITE}/api/pagamento/status/?r=${g}`);
+    expect(res.status).toBe(200);
+    expect((await res.json()).status).toBe("pending");
+  });
+
+  it("responde pela reserva sem exigir um payment_id", async () => {
+    const g = await reservar();
+    const api = process.env.SISTUR_API_URL!;
+    const antes = await (
+      await fetch(`${api}/api/public/reservas/${g}/pagamento`, {
+        headers: { "X-Web-Api-Key": process.env.SISTUR_WEB_API_KEY! },
+      })
+    ).json();
+    expect(antes.status).toBe("PENDING");
+
+    // Marcar a reserva como paga exige ação de operador, fora do alcance deste
+    // teste. O que fica travado aqui é o caminho: a rota consulta a reserva e
+    // responde por ela mesmo sem payment_id nenhum.
+    const res = await fetch(`${SITE}/api/pagamento/status/?r=${g}`);
+    const corpo = await res.json();
+    expect(corpo.payment_id).toBeNull();
+    expect(corpo.status).toBe("pending");
+    expect(corpo.indisponivel).toBe(false);
+  });
+
+  it("sem nenhum parâmetro válido, recusa", async () => {
+    const r = await fetch(`${SITE}/api/pagamento/status/?r=nao-e-uuid`);
+    expect(r.status).toBe(400);
   });
 
   it("a resposta do status nunca é cacheada", async () => {
