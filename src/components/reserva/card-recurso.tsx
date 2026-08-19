@@ -65,7 +65,12 @@ export function CardRecurso({
               src={capa}
               alt={recurso.name}
               fill
-              sizes="(min-width: 640px) 300px, 50vw"
+              // Acompanha a grade abaixo: uma coluna no celular, duas a partir
+              // de 640px dentro de um container de 896px.
+              sizes="(min-width: 640px) 430px, 100vw"
+              // Acima do padrão 75: a foto é o que decide qual churrasqueira a
+              // pessoa aluga, e o original tem 1600x1200 para gastar.
+              quality={85}
               className="object-cover transition-transform group-hover:scale-105"
             />
             {recurso.images.length > 1 && (

@@ -405,7 +405,7 @@ export function PassoReserva({
           const livres = todos.filter((r) => r.is_available).length;
 
           const grade = (lista: Recurso[]) => (
-            <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+            <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {lista.map((r) => (
                 <CardRecurso
                   key={r.id}

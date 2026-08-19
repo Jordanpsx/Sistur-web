@@ -105,6 +105,32 @@ descreve("funil de reserva", () => {
     expect(t.slice(t.indexOf("Ingressos"))).toMatch(/R\$/);
   });
 
+  it("os ingressos vêm do mais caro para o mais barato", async () => {
+    // Inteira, Meia-Entrada, Isento — a ordem de uma bilheteria. Sai do preço
+    // BASE, não do preço do dia: a tarifa por tipo de dia faz um passar o outro
+    // (a Inteira está com price_weekday de R$ 0,01 agora), e a lista mudaria de
+    // ordem conforme a data.
+    for (const d of [daqui(40), daqui(41), daqui(45)]) {
+      const t = await texto(`/reservar/day-use/?entrada=${d}`);
+      const trecho = t.slice(t.indexOf("Ingressos"));
+      const posicoes = ["Inteira", "Meia-Entrada", "Isento"].map((n) =>
+        trecho.indexOf(n),
+      );
+      expect(posicoes.every((p) => p >= 0), `faltou ingresso em ${d}`).toBe(true);
+      expect(posicoes, `ordem errada em ${d}`).toEqual([...posicoes].sort((a, b) => a - b));
+    }
+  });
+
+  it("as fotos são pedidas em tamanho e qualidade decentes", async () => {
+    // Cartão pequeno demais e qualidade 75 tornavam a foto inútil para escolher
+    // uma churrasqueira. O original tem 1600x1200 para gastar.
+    const html = await (await fetch(`${SITE}/reservar/day-use/?entrada=${daqui(40)}`)).text();
+    expect(html).toMatch(/wp-content%2Fuploads[^"&]*&amp;w=\d+&amp;q=85/);
+    // Uma coluna no celular: duas fotos lado a lado num aparelho de 375px dão
+    // 170px cada, pequeno demais para julgar o espaço.
+    expect(html).toContain("grid-cols-1");
+  });
+
   it("os ingressos explicam quem paga meia e quem não paga", async () => {
     // A regra vem do bot_description no Sistur, editável pelo operador. O
     // formulário do WordPress explicava; o novo tinha perdido isso.

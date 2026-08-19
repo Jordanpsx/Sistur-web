@@ -73,6 +73,7 @@ export function Galeria({
           alt={`${titulo} — foto ${atual + 1} de ${imagens.length}`}
           fill
           sizes="(min-width: 768px) 768px, 100vw"
+          quality={90}
           className="object-contain"
           priority
         />

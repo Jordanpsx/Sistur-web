@@ -128,7 +128,17 @@ export async function getItensDaExperiencia(
   const cat = await getCatalog();
   const meus = cat.items.filter((i) => i.category_id === e.id);
   return {
-    ingressos: meus.filter((i) => i.is_entry_ticket),
+    // Do mais caro para o mais barato: Inteira, Meia-Entrada, Isento. É a ordem
+    // que as pessoas esperam de uma bilheteria, e sai do dado em vez de uma
+    // lista fixa de nomes.
+    //
+    // Ordena pelo `price` base de propósito, nunca pelo preço resolvido do dia.
+    // A tarifa por tipo de dia faz um ingresso passar o outro — hoje mesmo a
+    // Inteira está com price_weekday de R$ 0,01 —, e a lista mudaria de ordem
+    // conforme a data escolhida.
+    ingressos: meus
+      .filter((i) => i.is_entry_ticket)
+      .sort((a, b) => b.price - a.price),
     adicionais: meus.filter((i) => !i.is_entry_ticket),
     grupos: cat.groups,
   };
