@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
+import { descartarDepois, faxinar } from "@/testes/reserva-descartavel";
 import { ratearTotal, type Orcamento } from "./itens";
 
 /**
@@ -48,8 +49,14 @@ async function criar(corpo: Record<string, unknown>) {
     headers: { "Content-Type": "application/json", "X-Web-Api-Key": CHAVE! },
     body: JSON.stringify(corpo),
   });
-  return { status: res.status, corpo: await res.json().catch(() => null) };
+  const devolvido = await res.json().catch(() => null);
+  // Registra no ponto único por onde toda criação passa: quem recusa não
+  // devolve group_id, então só o que existe de fato entra na faxina.
+  descartarDepois(devolvido?.group_id);
+  return { status: res.status, corpo: devolvido };
 }
+
+afterAll(faxinar);
 
 const soma = (itens: Array<{ price_override: number }>) =>
   Math.round(itens.reduce((s, i) => s + i.price_override, 0) * 100) / 100;

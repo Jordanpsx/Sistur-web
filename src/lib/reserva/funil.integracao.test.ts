@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
+import { descartarDepois, faxinar } from "@/testes/reserva-descartavel";
 
 /**
  * Smoke tests over the running site.
@@ -23,8 +24,22 @@ async function texto(caminho: string): Promise<string> {
   return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ");
 }
 
+/**
+ * Uma reserva de verdade, criada no máximo uma vez por arquivo.
+ *
+ * Seis testes precisam de um `group_id` que exista e esteja PENDING, e todos
+ * apenas *leem* a página — nenhum altera a reserva. Criar seis era gerar seis
+ * linhas na lista do operador para exercitar exatamente o mesmo estado.
+ */
+let reservaCompartilhada: Promise<string> | null = null;
+
+function reservar(): Promise<string> {
+  reservaCompartilhada ??= criarReserva();
+  return reservaCompartilhada;
+}
+
 /** Cria uma reserva de verdade e devolve o group_id. */
-async function reservar(): Promise<string> {
+async function criarReserva(): Promise<string> {
   const api = process.env.SISTUR_API_URL!;
   const chave = process.env.SISTUR_WEB_API_KEY!;
   const d = daqui(70);
@@ -58,8 +73,14 @@ async function reservar(): Promise<string> {
       items: ratearTotal(sim),
     }),
   });
-  return (await res.json()).group_id;
+  const groupId = (await res.json()).group_id;
+  // Anotada para o afterAll cancelar. Sem isto cada rodada deixa seis
+  // reservas pendentes na lista do operador — e deixou.
+  descartarDepois(groupId);
+  return groupId;
 }
+
+afterAll(faxinar);
 
 function daqui(dias: number): string {
   const d = new Date();
