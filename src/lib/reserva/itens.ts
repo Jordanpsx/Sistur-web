@@ -162,13 +162,17 @@ export async function simular(params: {
  * rounding, so the sum matches to the cent. Rounding each line independently
  * would drift by a few centavos on a long list and trip the same guard.
  */
-export function ratearTotal(o: Orcamento) {
+export function ratearTotal(
+  o: Orcamento,
+  /** Recursos escolhidos por tarifa, quando o cliente pegou espaços específicos. */
+  recursosPorTarifa: Record<number, number[]> = {},
+) {
   const linhas = o.items_breakdown;
   const base = linhas.reduce((s, l) => s + l.item_total, 0);
   const cents = (v: number) => Math.round(v * 100);
 
   let restante = cents(o.total);
-  return linhas.map((l, i) => {
+  const porItem = linhas.map((l, i) => {
     const ultimo = i === linhas.length - 1;
     const valor = ultimo
       ? restante
@@ -176,10 +180,30 @@ export function ratearTotal(o: Orcamento) {
         ? Math.round((cents(o.total) * l.item_total) / base)
         : 0;
     restante -= valor;
-    return {
-      item_id: l.item_id,
-      quantity: l.quantity,
-      price_override: valor / 100,
-    };
+    return { item_id: l.item_id, quantity: l.quantity, centavos: valor };
+  });
+
+  // Uma churrasqueira específica precisa viajar com o `resource_id`, senão o
+  // Sistur escolhe outra do grupo pela atribuição automática — e o cliente
+  // recebe a A1 depois de reservar a A4.
+  //
+  // A linha da tarifa se divide entre os recursos escolhidos; o último absorve o
+  // arredondamento, pela mesma razão que a última linha absorve acima.
+  return porItem.flatMap((l) => {
+    const ids = recursosPorTarifa[l.item_id] ?? [];
+    if (ids.length === 0) {
+      return [{ item_id: l.item_id, quantity: l.quantity, price_override: l.centavos / 100 }];
+    }
+    let sobra = l.centavos;
+    return ids.map((resource_id, i) => {
+      const v = i === ids.length - 1 ? sobra : Math.round(l.centavos / ids.length);
+      sobra -= v;
+      return {
+        item_id: l.item_id,
+        quantity: 1,
+        resource_id,
+        price_override: v / 100,
+      };
+    });
   });
 }

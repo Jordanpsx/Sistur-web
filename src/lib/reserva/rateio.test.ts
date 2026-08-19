@@ -105,3 +105,39 @@ describe("ratearTotal", () => {
     expect(soma(ratearTotal(orcamento([[1, 3, 90]], 63)))).toBe(63);
   });
 });
+
+describe("ratearTotal com recursos físicos", () => {
+  it("emite uma linha por churrasqueira, com resource_id", () => {
+    // Sem o resource_id o Sistur escolhe outra do grupo pela atribuição
+    // automática, e o cliente recebe a A1 depois de reservar a A4.
+    const o = orcamento([[7, 2, 240]], 168);
+    const r = ratearTotal(o, { 7: [6, 4] });
+    expect(r).toHaveLength(2);
+    expect(r.map((x) => x.resource_id)).toEqual([6, 4]);
+    expect(r.every((x) => x.quantity === 1)).toBe(true);
+    expect(soma(r)).toBe(168);
+  });
+
+  it("mistura ingressos sem recurso e churrasqueiras com recurso", () => {
+    const o = orcamento([[1, 2, 70], [7, 1, 120]], 133);
+    const r = ratearTotal(o, { 7: [6] });
+    expect(r.find((x) => x.item_id === 1)?.resource_id).toBeUndefined();
+    expect(r.find((x) => x.item_id === 7)?.resource_id).toBe(6);
+    expect(soma(r)).toBe(133);
+  });
+
+  it("a divisão entre recursos não perde centavo", () => {
+    // Três recursos e um valor que não divide por três.
+    const o = orcamento([[7, 3, 100]], 100);
+    const r = ratearTotal(o, { 7: [1, 2, 3] });
+    expect(soma(r)).toBe(100);
+  });
+
+  it("sem recursos, o comportamento antigo é preservado", () => {
+    const o = orcamento([[1, 2, 70]], 49);
+    const r = ratearTotal(o);
+    expect(r).toHaveLength(1);
+    expect(r[0].resource_id).toBeUndefined();
+    expect(soma(r)).toBe(49);
+  });
+});

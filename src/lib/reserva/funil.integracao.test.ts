@@ -113,6 +113,30 @@ descreve("funil de reserva", () => {
     expect(t).toMatch(/n[ãa]o pagam/);
   });
 
+  it("o formulário oferece a churrasqueira física, não a tarifa", async () => {
+    // Trocar "Churrasqueira Grande (A)" por "Churrasqueira A4" é o que permite
+    // dizer se AQUELA está livre e mostrar as fotos DELA.
+    const t = await texto(`/reservar/day-use/?entrada=${daqui(40)}`);
+    expect(t).toMatch(/Churrasqueira A\d/);
+    expect(t).toMatch(/Churrasqueira B\d/);
+    expect(t).not.toMatch(/Churrasqueira Grande \(A\)/);
+  });
+
+  it("cada churrasqueira traz suas próprias fotos", async () => {
+    const html = await (await fetch(`${SITE}/reservar/day-use/?entrada=${daqui(40)}`)).text();
+    expect(html).toContain("wp-content/uploads");
+    // No HTML cru o React separa {n} de " fotos" com um comentário; comparar no
+    // texto já limpo em vez de casar a marcação.
+    expect(await texto(`/reservar/day-use/?entrada=${daqui(40)}`)).toMatch(/\d+ fotos/);
+  });
+
+  it("esportes e estacionamento saíram do formulário", async () => {
+    const t = await texto(`/reservar/day-use/?entrada=${daqui(40)}`);
+    for (const fora of [/tirolesa/i, /arvorismo/i, /estacionamento/i]) {
+      expect(t).not.toMatch(fora);
+    }
+  });
+
   it("os adicionais aparecem nas seções que o Sistur mantém", async () => {
     // "Permitido som" vs "Sossego" é o que decide a escolha da churrasqueira, e
     // estava só no banco.
@@ -120,7 +144,6 @@ descreve("funil de reserva", () => {
     expect(t).toMatch(/Churrasqueiras/);
     expect(t).toMatch(/Permitido som/);
     expect(t).toMatch(/Proibido som/);
-    expect(t).toMatch(/Esportes e aventuras/);
   });
 
   it("churrasqueiras vêm em acordeão; ingressos e esportes ficam abertos", async () => {
@@ -133,19 +156,33 @@ descreve("funil de reserva", () => {
     expect(html.match(/<details/g) ?? []).toHaveLength(3);
     // Nada escolhido: todos fechados.
     expect(html).not.toContain("<details open");
-    // Esportes e ingressos não estão atrás de cabeçalho.
-    expect(t).toMatch(/Tirolesa/);
+    // Ingressos ficam fora do mecanismo — são o ponto da etapa.
     expect(t).toMatch(/Meia-Entrada/);
   });
 
-  it("o acordeão abre sozinho quando já há item escolhido dentro", async () => {
-    // Item 7 é uma churrasqueira da Área A. Deixar a escolha atrás de um
-    // cabeçalho fechado esconderia do cliente o que ele acabou de selecionar.
+  it("o acordeão abre sozinho quando já há churrasqueira escolhida dentro", async () => {
+    // Descobre um recurso real da Área A e o seleciona por `r<id>`. Deixar a
+    // escolha atrás de um cabeçalho fechado esconderia o que a pessoa acabou de
+    // marcar.
+    const d = daqui(40);
+    const api = process.env.SISTUR_API_URL!;
+    const disp = await (
+      await fetch(
+        `${api}/api/public/reservas/disponibilidade?source_id=1&category_id=1` +
+          `&check_in=${d}&check_out=${d}`,
+      )
+    ).json();
+    const areaA = disp.resources.find((r: { group_name: string }) =>
+      /grandes \(A\)/i.test(r.group_name),
+    );
+    expect(areaA, "esperava uma churrasqueira da Área A").toBeTruthy();
+
     const html = await (await fetch(
-      `${SITE}/reservar/day-use/?entrada=${daqui(40)}&i1=1&i7=1`,
+      `${SITE}/reservar/day-use/?entrada=${d}&i1=1&r${areaA.id}=1`,
     )).text();
+    // Churrasqueiras + a área que contém a escolhida.
     expect(html.match(/<details open/g) ?? []).toHaveLength(2);
-    expect(html.replace(/<[^>]*>/g, " ")).toMatch(/1 selecionado/);
+    expect(html.replace(/<[^>]*>/g, " ")).toMatch(/1 selecionada/);
   });
 
   it("estacionamento interno não aparece no formulário", async () => {
@@ -154,10 +191,9 @@ descreve("funil de reserva", () => {
     expect(t).not.toMatch(/estacionamento/i);
   });
 
-  it("as churrasqueiras mostram capacidade e foto", async () => {
+  it("as churrasqueiras mostram capacidade", async () => {
     const html = await (await fetch(`${SITE}/reservar/day-use/?entrada=${daqui(40)}`)).text();
     expect(html).toMatch(/capacidade para at[ée]/);
-    expect(html).toContain("wp-content/uploads");
   });
 
   it("o carrinho fixo traz o total e o botão de avançar", async () => {

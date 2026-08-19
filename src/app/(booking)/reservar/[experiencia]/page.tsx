@@ -3,6 +3,11 @@ import type { Metadata } from "next";
 import { getExperiencia, getItensDaExperiencia } from "@/lib/sistur/catalog";
 import { validarSelecao } from "@/lib/reserva/datas";
 import { lerQuantidades, precosDoDia, simular } from "@/lib/reserva/itens";
+import {
+  buscarRecursos,
+  lerRecursos,
+  quantidadesPorTarifa,
+} from "@/lib/reserva/recursos";
 import { PassoReserva } from "@/components/reserva/passo-reserva";
 
 /**
@@ -75,7 +80,8 @@ export default async function FormularioReserva({
     cutoff: e.same_day_cutoff_time,
   });
   const quantidades = lerQuantidades(sp);
-  const { ingressos, adicionais, grupos } = await getItensDaExperiencia(e);
+  const recursosSel = lerRecursos(sp);
+  const { ingressos, grupos } = await getItensDaExperiencia(e);
 
   // Priced on the server so the first paint is already correct. Day use is a
   // single date, and Sistur accepts check_out equal to check_in.
@@ -87,15 +93,39 @@ export default async function FormularioReserva({
   // price list covers every item so each row can state its own figure for the
   // date. They are separate because the second depends only on the dates, so it
   // is not repeated when a quantity changes.
+  // Os espaços físicos disponíveis na data, com foto e tarifa do grupo.
+  const recursos = datado
+    ? await buscarRecursos({ sourceId: e.sourceId, categoryId: e.id, entrada, saida })
+    : [];
+
+  // O que o /simular precisa: tarifa e quantidade. As churrasqueiras escolhidas
+  // viram quantidade na tarifa do grupo delas.
+  const porTarifa = quantidadesPorTarifa(recursosSel, recursos);
+  const quantidadesCompletas = { ...quantidades };
+  for (const [id, q] of Object.entries(porTarifa)) {
+    quantidadesCompletas[Number(id)] = (quantidadesCompletas[Number(id)] ?? 0) + q;
+  }
+
+  const idsParaPrecificar = [
+    ...ingressos.map((i) => i.id),
+    ...new Set(recursos.map((r) => r.item_id)),
+  ];
+
   const [orcamento, precos] = datado
     ? await Promise.all([
-        simular({ sourceId: e.sourceId, categoryId: e.id, entrada, saida, quantidades }),
+        simular({
+          sourceId: e.sourceId,
+          categoryId: e.id,
+          entrada,
+          saida,
+          quantidades: quantidadesCompletas,
+        }),
         precosDoDia({
           sourceId: e.sourceId,
           categoryId: e.id,
           entrada,
           saida,
-          itemIds: [...ingressos, ...adicionais].map((i) => i.id),
+          itemIds: idsParaPrecificar,
         }),
       ])
     : [null, {}];
@@ -116,15 +146,16 @@ export default async function FormularioReserva({
         sourceId={e.sourceId}
         categoryId={e.id}
         ingressos={ingressos}
-        adicionais={adicionais}
         grupos={grupos}
         inicial={{
           entrada: selecao.entrada,
           saida: selecao.saida,
           quantidades,
+          recursos: recursosSel,
         }}
         orcamentoInicial={orcamento}
         precosIniciais={precos}
+        recursosIniciais={recursos}
       />
     </section>
   );

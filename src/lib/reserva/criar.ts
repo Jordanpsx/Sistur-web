@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { lerQuantidades, ratearTotal, simular } from "./itens";
+import { lerRecursos, quantidadesPorTarifa, buscarRecursos } from "./recursos";
 
 /**
  * Creates the reservation in Sistur — step 3's submit.
@@ -42,11 +43,13 @@ export async function criarReserva(
 
   // Quantities arrive as the same `i<id>` keys the URL uses, so one parser
   // serves both and the two cannot drift apart.
-  const quantidades = lerQuantidades(
-    Object.fromEntries([...form.entries()].map(([k, v]) => [k, String(v)])),
+  const campos = Object.fromEntries(
+    [...form.entries()].map(([k, v]) => [k, String(v)]),
   );
+  const quantidades = lerQuantidades(campos);
+  const recursosSel = lerRecursos(campos);
 
-  if (!slug || !entrada || Object.keys(quantidades).length === 0) {
+  if (!slug || !entrada || (Object.keys(quantidades).length === 0 && recursosSel.length === 0)) {
     return { erro: "Sua seleção expirou. Volte e escolha as datas novamente." };
   }
 
@@ -60,12 +63,30 @@ export async function criarReserva(
     return { erro: "Informe um e-mail válido.", campo: "email" };
   }
 
+  // Os espaços escolhidos viram quantidade na tarifa do grupo deles, que é a
+  // linguagem do /simular; o `resource_id` volta a aparecer no rateio.
+  const recursos = recursosSel.length
+    ? await buscarRecursos({ sourceId, categoryId, entrada, saida })
+    : [];
+  const porTarifa = quantidadesPorTarifa(recursosSel, recursos);
+  const quantidadesCompletas = { ...quantidades };
+  for (const [id, q] of Object.entries(porTarifa)) {
+    quantidadesCompletas[Number(id)] = (quantidadesCompletas[Number(id)] ?? 0) + q;
+  }
+
+  const recursosPorTarifa: Record<number, number[]> = {};
+  for (const id of recursosSel) {
+    const r = recursos.find((x) => x.id === id);
+    if (!r) continue;
+    (recursosPorTarifa[r.item_id] ??= []).push(id);
+  }
+
   const orcamento = await simular({
     sourceId,
     categoryId,
     entrada,
     saida,
-    quantidades,
+    quantidades: quantidadesCompletas,
   });
   if (!orcamento) {
     return {
@@ -90,7 +111,7 @@ export async function criarReserva(
         observacoes: texto("observacoes"),
         check_in_date: entrada,
         check_out_date: saida,
-        items: ratearTotal(orcamento),
+        items: ratearTotal(orcamento, recursosPorTarifa),
       }),
     });
   } catch {

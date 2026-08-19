@@ -12,9 +12,15 @@ import {
 } from "@/lib/reserva/itens";
 import { formatarData, diasEntre, hoje, validarSelecao } from "@/lib/reserva/datas";
 import { agruparAdicionais, emojiDaSecao, type Grupo } from "@/lib/reserva/secoes";
+import {
+  escreverRecursos,
+  lerRecursos,
+  quantidadesPorTarifa,
+  type Recurso,
+} from "@/lib/reserva/recursos";
 import { Passos } from "./passos";
 import { Stepper } from "./stepper";
-import { CardAdicional } from "./card-adicional";
+import { CardRecurso } from "./card-recurso";
 import { CarrinhoFixo } from "./carrinho-fixo";
 import { Acordeao } from "./acordeao";
 
@@ -48,11 +54,11 @@ export function PassoReserva({
   sourceId,
   categoryId,
   ingressos,
-  adicionais,
   grupos,
   inicial,
   orcamentoInicial,
   precosIniciais,
+  recursosIniciais,
 }: {
   slug: string;
   nome: string;
@@ -61,9 +67,14 @@ export function PassoReserva({
   sourceId: number;
   categoryId: number;
   ingressos: Item[];
-  adicionais: Item[];
   grupos: Grupo[];
-  inicial: { entrada?: string; saida?: string; quantidades: Quantidades };
+  inicial: {
+    entrada?: string;
+    saida?: string;
+    quantidades: Quantidades;
+    recursos: number[];
+  };
+  recursosIniciais: Recurso[];
   orcamentoInicial: Orcamento | null;
   precosIniciais: Record<number, number>;
 }) {
@@ -77,13 +88,32 @@ export function PassoReserva({
   // before that there is no correct number to show, only the base column, which
   // for the admissions is never what gets charged.
   const [precos, setPrecos] = useState<Record<number, number>>(precosIniciais);
+  // Churrasqueiras físicas disponíveis na data, com foto e preço da tarifa do
+  // grupo. Buscadas de novo a cada troca de data: outra pessoa pode levar a
+  // última enquanto esta escolhe.
+  const [recursos, setRecursos] = useState<Recurso[]>(recursosIniciais);
+  const [recursosSel, setRecursosSel] = useState<number[]>(inicial.recursos);
 
   const min = hoje();
   const selecao = validarSelecao(entrada || undefined, saida || undefined, {
     diaUnico,
     cutoff,
   });
-  const totalItens = Object.values(qtds).reduce((a, b) => a + b, 0);
+  // O /simular fala em tarifa e quantidade. Duas churrasqueiras da mesma
+  // tarifa viram uma linha de quantidade dois — é assim que o motor conta.
+  const qtdsCompletas = {
+    ...qtds,
+    ...(() => {
+      const porTarifa = quantidadesPorTarifa(recursosSel, recursos);
+      const soma: Quantidades = {};
+      for (const [id, q] of Object.entries(porTarifa)) {
+        soma[Number(id)] = (qtds[Number(id)] ?? 0) + q;
+      }
+      return soma;
+    })(),
+  };
+  const totalItens =
+    Object.values(qtds).reduce((a, b) => a + b, 0) + recursosSel.length;
 
   // Ignores the response of a request that a newer one has already superseded.
   // Without this, typing quickly can land an older total last.
@@ -94,6 +124,7 @@ export function PassoReserva({
     // replaceState rather than push: each keystroke must not become a history
     // entry the back button has to walk through.
     const p = escreverQuantidades(qtds);
+    for (const [k, v] of escreverRecursos(recursosSel)) p.set(k, v);
     if (entrada) p.set("entrada", entrada);
     if (saida && !diaUnico) p.set("saida", saida);
     const qs = p.toString();
@@ -122,7 +153,7 @@ export function PassoReserva({
             // Day use is a single date; Sistur accepts check_out equal to
             // check_in and prices the FIXED items once.
             check_out_date: diaUnico ? selecao.entrada : selecao.saida,
-            items: Object.entries(qtds)
+            items: Object.entries(qtdsCompletas)
               .filter(([, q]) => q > 0)
               .map(([id, q]) => ({ item_id: Number(id), quantity: q })),
           }),
@@ -147,11 +178,16 @@ export function PassoReserva({
 
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entrada, saida, JSON.stringify(qtds), selecao.completa, totalItens]);
+  }, [entrada, saida, JSON.stringify(qtdsCompletas), selecao.completa, totalItens]);
 
   // Prices depend on the dates alone, so this does not re-run when a quantity
   // changes — that would be one Sistur call per keystroke for no new answer.
-  const todosIds = [...ingressos, ...adicionais].map((i) => i.id).join(",");
+  // Ingressos mais as tarifas que cobrem os espaços disponíveis. Repetida não
+  // faz mal: o /simular responde uma linha por item.
+  const todosIds = [
+    ...ingressos.map((i) => i.id),
+    ...new Set(recursos.map((r) => r.item_id)),
+  ].join(",");
   useEffect(() => {
     if (!selecao.completa || !selecao.entrada) {
       setPrecos({});
@@ -186,6 +222,47 @@ export function PassoReserva({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selecao.entrada, selecao.saida, selecao.completa, todosIds]);
 
+  useEffect(() => {
+    if (!selecao.completa || !selecao.entrada) {
+      setRecursos([]);
+      return;
+    }
+    let vivo = true;
+    (async () => {
+      const q = new URLSearchParams({
+        source_id: String(sourceId),
+        category_id: String(categoryId),
+        check_in: selecao.entrada!,
+        check_out: (diaUnico ? selecao.entrada : selecao.saida)!,
+      });
+      try {
+        const res = await fetch(`/api/recursos/?${q}`, { cache: "no-store" });
+        if (!vivo) return;
+        const dados = res.ok ? await res.json() : { resources: [] };
+        setRecursos(dados.resources ?? []);
+        // Solta o que deixou de estar disponível: manter a seleção levaria a
+        // pessoa até o pagamento para ser recusada lá.
+        const livres = new Set(
+          (dados.resources ?? [])
+            .filter((r: Recurso) => r.is_available)
+            .map((r: Recurso) => r.id),
+        );
+        setRecursosSel((atual) => atual.filter((id) => livres.has(id)));
+      } catch {
+        if (vivo) setRecursos([]);
+      }
+    })();
+    return () => {
+      vivo = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selecao.entrada, selecao.saida, selecao.completa, sourceId, categoryId]);
+
+  const setRecurso = (id: number, marcado: boolean) =>
+    setRecursosSel((atual) =>
+      marcado ? [...new Set([...atual, id])] : atual.filter((x) => x !== id),
+    );
+
   const setQtd = (id: number, valor: number) =>
     setQtds((atual) => {
       const proximo = { ...atual };
@@ -200,7 +277,7 @@ export function PassoReserva({
       : 0;
 
   const porGrupo = new Map(grupos.map((g) => [g.id, g]));
-  const secoes = agruparAdicionais(adicionais, grupos);
+  const secoes = agruparAdicionais(recursos, grupos);
 
   // Uma frase só, dizendo o que falta. Botão desabilitado sem explicação deixa
   // a pessoa procurando o que fez de errado.
@@ -310,35 +387,43 @@ export function PassoReserva({
           ))}
         </ul>
 
-        {/* ── Adicionais ────────────────────────────────────────────── */}
+        {/* ── Espaços ───────────────────────────────────────────────── */}
         {/*
-          Uma seção vira acordeão quando tem subseções, e fica aberta quando não
-          tem. A regra sai da forma da árvore, não de uma lista de nomes no
-          código: Churrasqueiras se divide em Área A e Área B e é um catálogo
-          para navegar; Esportes e aventuras são três itens que cabem na tela.
-          Um grupo novo criado no admin se encaixa sozinho no formato certo.
+          O formulário oferece a churrasqueira física, não a tarifa. É o que o
+          cliente reserva de fato, e é o que permite dizer se AQUELA está livre
+          na data e mostrar as fotos DELA. O preço continua vindo do grupo, o
+          mesmo caminho que o balcão percorre.
+
+          Uma seção vira acordeão quando tem subseções e fica aberta quando não
+          tem — regra tirada da forma da árvore, não de uma lista de nomes.
         */}
         {secoes.map((sec) => {
           const temSub = sec.sub.some((x) => x.grupo !== null);
-          const itensDaSecao = sec.sub.flatMap((x) => x.itens);
-          const escolhidos = itensDaSecao.reduce((n, i) => n + (qtds[i.id] ?? 0), 0);
+          const todos = sec.sub.flatMap((x) => x.itens);
+          const escolhidos = todos.filter((r) => recursosSel.includes(r.id)).length;
+          const livres = todos.filter((r) => r.is_available).length;
 
-          const grade = (itens: Item[]) => (
+          const grade = (lista: Recurso[]) => (
             <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-              {itens.map((i) => (
-                <CardAdicional
-                  key={i.id}
-                  item={i}
-                  grupo={porGrupo.get(i.group_id ?? -1)}
-                  quantidade={qtds[i.id] ?? 0}
-                  onQtd={(v) => setQtd(i.id, v)}
-                  unit={precos[i.id]}
+              {lista.map((r) => (
+                <CardRecurso
+                  key={r.id}
+                  recurso={r}
+                  selecionado={recursosSel.includes(r.id)}
+                  onToggle={(m) => setRecurso(r.id, m)}
+                  unit={precos[r.item_id]}
                   noites={noites}
-                  emoji={emojiDaSecao(sec.titulo)}
                 />
               ))}
             </ul>
           );
+
+          const resumo = (n: number, disp: number) =>
+            n > 0
+              ? `${n} selecionada${n > 1 ? "s" : ""}`
+              : disp === 0
+                ? "Nenhuma disponível nesta data"
+                : `${disp} disponíve${disp > 1 ? "is" : "l"}`;
 
           if (!temSub) {
             return (
@@ -347,7 +432,7 @@ export function PassoReserva({
                   <span aria-hidden="true">{emojiDaSecao(sec.titulo)}</span>
                   {sec.titulo}
                 </h2>
-                {grade(itensDaSecao)}
+                {grade(todos)}
               </section>
             );
           }
@@ -357,27 +442,18 @@ export function PassoReserva({
               key={sec.id ?? "outros"}
               titulo={sec.titulo}
               emoji={emojiDaSecao(sec.titulo)}
-              resumo={
-                escolhidos > 0
-                  ? `${escolhidos} selecionado${escolhidos > 1 ? "s" : ""}`
-                  : `${itensDaSecao.length} opções`
-              }
-              // Já escolheu algo aqui? Abre — senão a seleção fica escondida
-              // atrás de um cabeçalho fechado.
+              resumo={resumo(escolhidos, livres)}
               aberto={escolhidos > 0}
               destaque={escolhidos > 0}
             >
               {sec.sub.map((sub) => {
-                const n = sub.itens.reduce((t, i) => t + (qtds[i.id] ?? 0), 0);
+                const n = sub.itens.filter((r) => recursosSel.includes(r.id)).length;
+                const d = sub.itens.filter((r) => r.is_available).length;
                 return sub.grupo ? (
                   <Acordeao
                     key={sub.grupo.id}
                     titulo={sub.grupo.name}
-                    resumo={
-                      n > 0
-                        ? `${n} selecionado${n > 1 ? "s" : ""}`
-                        : `${sub.itens.length} opções`
-                    }
+                    resumo={resumo(n, d)}
                     aberto={n > 0}
                     destaque={n > 0}
                   >
@@ -392,6 +468,12 @@ export function PassoReserva({
             </Acordeao>
           );
         })}
+
+        {selecao.completa && recursos.length === 0 && (
+          <p className="f-hint mt-6">
+            Nenhum espaço disponível para esta data.
+          </p>
+        )}
 
         <CarrinhoFixo
           orcamento={orcamento}

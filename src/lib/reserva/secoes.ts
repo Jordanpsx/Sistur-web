@@ -1,7 +1,9 @@
-import type { Item } from "@/lib/sistur/catalog";
-
 /**
- * Turns the flat add-on list into the sections Sistur already defines.
+ * Turns a flat list into the sections Sistur already defines.
+ *
+ * Generic over what is being grouped: it started with tariffs and now carries
+ * physical resources, which share the only three fields it reads — an id, a
+ * group and a price.
  *
  * The groups are maintained by the operator and carry information no invented
  * category could: "ÁREA A – DIVERSÃO (Permitido som ambiente)" versus
@@ -26,8 +28,11 @@ export type Grupo = {
   image_url: string | null;
 };
 
-export type Subsecao = { grupo: Grupo | null; itens: Item[] };
-export type Secao = { titulo: string; id: number | null; sub: Subsecao[] };
+/** O mínimo que algo precisa para ser agrupado: um id, um grupo e um preço. */
+export type Agrupavel = { id: number; group_id?: number | null; price: number };
+
+export type Subsecao<T> = { grupo: Grupo | null; itens: T[] };
+export type Secao<T> = { titulo: string; id: number | null; sub: Subsecao<T>[] };
 
 /** Sobe até o ancestral de topo, com guarda contra ciclo. */
 function raiz(g: Grupo, porId: Map<number, Grupo>): Grupo {
@@ -42,13 +47,16 @@ function raiz(g: Grupo, porId: Map<number, Grupo>): Grupo {
   return atual;
 }
 
-export function agruparAdicionais(itens: Item[], grupos: Grupo[]): Secao[] {
+export function agruparAdicionais<T extends Agrupavel>(
+  itens: T[],
+  grupos: Grupo[],
+): Secao<T>[] {
   const porId = new Map(grupos.map((g) => [g.id, g]));
   const ordem = new Map(grupos.map((g, i) => [g.id, i]));
 
   // secao -> subsecao -> itens. Map preserva ordem de inserção, e as chaves
   // entram na ordem em que os grupos vêm da API (sort_order, depois id).
-  const secoes = new Map<number | null, Map<number | null, Item[]>>();
+  const secoes = new Map<number | null, Map<number | null, T[]>>();
 
   const ordenados = [...itens].sort((a, b) => {
     const ga = a.group_id != null ? ordem.get(a.group_id) ?? 1e9 : 1e9;
