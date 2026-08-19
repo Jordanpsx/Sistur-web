@@ -121,14 +121,30 @@ descreve("funil de reserva", () => {
     }
   });
 
-  it("as fotos são pedidas em tamanho e qualidade decentes", async () => {
-    // Cartão pequeno demais e qualidade 75 tornavam a foto inútil para escolher
-    // uma churrasqueira. O original tem 1600x1200 para gastar.
+  it("o cartão pede miniatura, em qualidade acima do padrão", async () => {
+    // Divisão de papéis: a grade fica escaneável com treze churrasqueiras, e
+    // quem quer ver de perto abre a galeria.
     const html = await (await fetch(`${SITE}/reservar/day-use/?entrada=${daqui(40)}`)).text();
     expect(html).toMatch(/wp-content%2Fuploads[^"&]*&amp;w=\d+&amp;q=85/);
-    // Uma coluna no celular: duas fotos lado a lado num aparelho de 375px dão
-    // 170px cada, pequeno demais para julgar o espaço.
-    expect(html).toContain("grid-cols-1");
+    expect(html).toContain("grid-cols-2");
+  });
+
+  it("a galeria pede a viewport inteira", async () => {
+    // Ela monta no clique, então não aparece no HTML do servidor. O que dá para
+    // travar é o contrato dela dentro do bundle da página: a primeira versão
+    // ficava presa a 768px e clicar na foto entregava outra foto pequena.
+    const html = await (await fetch(`${SITE}/reservar/day-use/?entrada=${daqui(40)}`)).text();
+    const caminho = html.match(
+      /\/_next\/static\/chunks\/app\/[^"]*experiencia[^"]*\.js/,
+    )?.[0];
+    expect(caminho, "não achei o chunk da página").toBeTruthy();
+
+    const js = await (await fetch(`${SITE}${caminho}`)).text();
+    expect(js).toContain("100vw");
+    expect(js).toContain("quality:90");
+    // Contain e não cover: recortar a foto da churrasqueira ao ampliar seria o
+    // oposto do que a galeria existe para fazer.
+    expect(js).toContain("object-contain");
   });
 
   it("os ingressos explicam quem paga meia e quem não paga", async () => {
