@@ -18,6 +18,20 @@
  * é o resultado do teste, e o rastro fica no console.
  */
 
+/**
+ * Se este alvo pode receber reservas de teste.
+ *
+ * As suítes se pulam quando SISTUR_API_URL está ausente, mas ausência não era
+ * garantia nenhuma: a variável apontando para o Sistur *de produção* rodaria
+ * igual e criaria "Regressao ... Silva" na lista de quem trabalha. Nada no
+ * código distinguia um alvo do outro.
+ *
+ * Então o padrão é não escrever. Criar reserva exige que o ambiente se declare
+ * descartável, e só o .env do staging traz essa declaração. Um alvo sem ela não
+ * quebra a rodada — os testes de leitura seguem, os de escrita se pulam.
+ */
+export const PODE_CRIAR = process.env.SISTUR_ALVO_DESCARTAVEL === "1";
+
 const pendentes = new Set<string>();
 
 /** Anota um `group_id` para ser cancelado ao fim do arquivo de testes. */

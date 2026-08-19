@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it } from "vitest";
-import { descartarDepois, faxinar } from "@/testes/reserva-descartavel";
+import { PODE_CRIAR, descartarDepois, faxinar } from "@/testes/reserva-descartavel";
 
 /**
  * Smoke tests over the running site.
@@ -15,6 +15,8 @@ import { descartarDepois, faxinar } from "@/testes/reserva-descartavel";
 
 const SITE = process.env.SITE_URL;
 const descreve = SITE ? describe : describe.skip;
+// Escrever exige que o alvo se declare descartável — ver PODE_CRIAR.
+const descreveCria = SITE && PODE_CRIAR ? describe : describe.skip;
 
 /** Fetches a page and strips tags, leaving the visible text. */
 async function texto(caminho: string): Promise<string> {
@@ -387,7 +389,7 @@ descreve("home", () => {
   });
 });
 
-descreve("pagamento", () => {
+descreveCria("pagamento", () => {
   it("a página monta o Brick com a chave pública e o total", async () => {
     const g = await reservar();
     const html = await (await fetch(`${SITE}/reservar/day-use/pagamento/?r=${g}`)).text();
@@ -477,6 +479,9 @@ descreve("status do pagamento (polling do PIX)", () => {
     }
   });
 
+});
+
+descreveCria("status do pagamento — com reserva de verdade", () => {
   it("também aceita consulta só pela reserva", async () => {
     // A reserva é a fonte autoritativa: ela vira paga por webhook, por
     // reprocessamento manual ou no balcão. Só perguntar pelo payment_id deixava

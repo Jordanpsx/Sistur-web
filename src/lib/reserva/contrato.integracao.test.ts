@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it } from "vitest";
-import { descartarDepois, faxinar } from "@/testes/reserva-descartavel";
+import { PODE_CRIAR, descartarDepois, faxinar } from "@/testes/reserva-descartavel";
 import { ratearTotal, type Orcamento } from "./itens";
 
 /**
@@ -167,7 +167,9 @@ descreve("rateio bate com o que o Sistur recalcula", () => {
   });
 });
 
-const criaReservas = API && CHAVE ? describe : describe.skip;
+// Além da chave, exige um alvo declarado descartável: sem isso a suíte
+// apontada para produção criaria reservas na lista de quem trabalha.
+const criaReservas = API && CHAVE && PODE_CRIAR ? describe : describe.skip;
 
 criaReservas("criação ponta a ponta", () => {
   it("cria a reserva com o rateio, sem divergência de preço", async () => {
