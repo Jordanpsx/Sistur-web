@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { chavesDe, montarPayer } from "@/lib/reserva/pagador";
 
 /**
  * Payment proxy — hands the Mercado Pago Brick's payload to Sistur.
@@ -12,9 +13,10 @@ import { NextResponse } from "next/server";
  *      the total Sistur has stored for the reservation. A tampered request
  *      cannot pay R$ 1,00 for a R$ 500,00 booking, because the number in the
  *      request body is discarded here.
- *   3. **The payer.** Name, CPF and e-mail come from the reservation, not from
- *      the page. The browser never receives them, so the reservation code in the
- *      URL does not leak a stranger's data.
+ *   3. **The reservation's identity.** Name and CPF are never sent to the page,
+ *      so a reservation code in a URL does not leak a stranger's data. The payer
+ *      Mercado Pago is told about is the one the Brick collected — see
+ *      `montarPayer` for why those are different things.
  *
  * The card token itself is generated *inside* the Brick, against Mercado Pago
  * directly — card numbers never touch this server, which is the entire point of
@@ -30,7 +32,7 @@ type DadosPagamento = {
   status: string;
   total: number;
   expirada: boolean;
-  payer: Record<string, unknown>;
+  payer: import("@/lib/reserva/pagador").Payer;
 };
 
 async function obterReserva(groupId: string): Promise<DadosPagamento | null> {
@@ -82,6 +84,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ erro: "Escolha uma forma de pagamento." }, { status: 400 });
   }
 
+  // Nomes dos campos recebidos, nunca os valores. Não havia registro nenhum do
+  // que o Brick manda de fato — o formato era conhecido por documentação, não
+  // por observação. Isto responde isso sem colocar CPF ou e-mail em log.
+  //
+  // Antes do try de propósito: uma falha de rede não pode apagar o rastro de
+  // que a tentativa chegou até aqui.
+  console.info(
+    "[pagamento] metodo=%s formData=%o payer=%o",
+    metodo,
+    chavesDe(formData),
+    chavesDe((formData as { payer?: unknown }).payer),
+  );
+
   try {
     const res = await fetch(`${API}/api/v1/payments/process`, {
       method: "POST",
@@ -95,9 +110,13 @@ export async function POST(req: Request) {
       signal: AbortSignal.timeout(30000),
       body: JSON.stringify({
         reserva_id: reserva.reserva_id,
-        // From Sistur, never from the request. See the note above.
+        // From Sistur, never from the request. This is the field that guards the
+        // charge, and the reason a tampered payer costs us nothing.
         transaction_amount: reserva.total,
-        payer: reserva.payer,
+        // Quem pagou, coletado pelo Brick, com o da reserva cobrindo o que
+        // faltar. Mandar o da reserva fazia o token nascer com um CPF e a
+        // cobrança sair com outro.
+        payer: montarPayer((formData as { payer?: unknown }).payer, reserva.payer),
         payment_method_id: metodo,
         token: formData.token,
         installments: formData.installments,
