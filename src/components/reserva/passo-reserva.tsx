@@ -11,7 +11,11 @@ import {
   type Quantidades,
 } from "@/lib/reserva/itens";
 import { formatarData, diasEntre, hoje, validarSelecao } from "@/lib/reserva/datas";
+import { agruparAdicionais, emojiDaSecao, type Grupo } from "@/lib/reserva/secoes";
 import { Passos } from "./passos";
+import { Stepper } from "./stepper";
+import { CardAdicional } from "./card-adicional";
+import { CarrinhoFixo } from "./carrinho-fixo";
 
 /**
  * Step 2 — dates, items and the running total, on one screen.
@@ -44,6 +48,7 @@ export function PassoReserva({
   categoryId,
   ingressos,
   adicionais,
+  grupos,
   inicial,
   orcamentoInicial,
   precosIniciais,
@@ -56,6 +61,7 @@ export function PassoReserva({
   categoryId: number;
   ingressos: Item[];
   adicionais: Item[];
+  grupos: Grupo[];
   inicial: { entrada?: string; saida?: string; quantidades: Quantidades };
   orcamentoInicial: Orcamento | null;
   precosIniciais: Record<number, number>;
@@ -192,6 +198,21 @@ export function PassoReserva({
       ? diasEntre(selecao.entrada, selecao.saida)
       : 0;
 
+  const porGrupo = new Map(grupos.map((g) => [g.id, g]));
+  const secoes = agruparAdicionais(adicionais, grupos);
+
+  // Uma frase só, dizendo o que falta. Botão desabilitado sem explicação deixa
+  // a pessoa procurando o que fez de errado.
+  const pendencia = !selecao.completa
+    ? diaUnico
+      ? "Escolha a data para ver o valor"
+      : "Escolha entrada e saída para ver o valor"
+    : totalItens === 0
+      ? "Escolha ao menos um ingresso"
+      : falhou
+        ? "Não foi possível calcular agora — você pode continuar"
+        : null;
+
   return (
     <div className="f-card">
       <div className="f-head">
@@ -257,42 +278,92 @@ export function PassoReserva({
 
         {/* ── Ingressos ─────────────────────────────────────────────── */}
         <h2 className="mt-8">Ingressos</h2>
-        <ListaItens itens={ingressos} qtds={qtds} onQtd={setQtd} precos={precos} noites={noites} />
+        <ul className="divide-y divide-[var(--c-border)] rounded-xl border border-[var(--c-border)]">
+          {ingressos.map((i) => (
+            <li key={i.id} className="flex items-center gap-3 p-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[0.9375rem] font-medium text-[var(--c-fg)]">
+                  {i.name}
+                </p>
+                {/* Microcopy vinda do Sistur (bot_description). Quem paga meia e
+                    quem não paga é regra de negócio; o operador edita no admin,
+                    e o site não fica com a regra congelada em código. */}
+                {i.description && (
+                  <p className="text-sm text-[var(--c-muted)]">{i.description}</p>
+                )}
+                <p className="mt-0.5 text-sm text-[var(--c-fg)]">
+                  {i.price <= 0.01
+                    ? "Sem custo"
+                    : precos[i.id] !== undefined
+                      ? formatarBRL(precos[i.id])
+                      : ""}
+                </p>
+              </div>
+              <Stepper
+                nome={`i${i.id}`}
+                valor={qtds[i.id] ?? 0}
+                onChange={(v) => setQtd(i.id, v)}
+                rotulo={i.name}
+              />
+            </li>
+          ))}
+        </ul>
 
-        {/* ── Adicionais ────────────────────────────────────────────── */}
-        {adicionais.length > 0 && (
-          <details className="f-det" open={adicionais.some((i) => qtds[i.id])}>
-            <summary>
-              Adicionais
-              <span className="f-det-n">{adicionais.length} opções</span>
-            </summary>
-            <ListaItens itens={adicionais} qtds={qtds} onQtd={setQtd} precos={precos} noites={noites} />
-          </details>
-        )}
+        {/* ── Adicionais, nas seções que o Sistur já mantém ──────────── */}
+        {secoes.map((sec) => (
+          <section key={sec.id ?? "outros"} className="mt-8">
+            <h2 className="flex items-center gap-2">
+              <span aria-hidden="true">{emojiDaSecao(sec.titulo)}</span>
+              {sec.titulo}
+            </h2>
 
-        {/* ── Total ─────────────────────────────────────────────────── */}
-        <Resumo
-          selecao={selecao}
-          diaUnico={diaUnico}
-          noites={noites}
-          totalItens={totalItens}
+            {sec.sub.map((sub) => (
+              <div key={sub.grupo?.id ?? "raiz"} className="mb-5 last:mb-0">
+                {sub.grupo && (
+                  <p className="mb-2 text-sm font-medium text-[var(--c-muted)]">
+                    {sub.grupo.name}
+                  </p>
+                )}
+                <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+                  {sub.itens.map((i) => (
+                    <CardAdicional
+                      key={i.id}
+                      item={i}
+                      grupo={porGrupo.get(i.group_id ?? -1)}
+                      quantidade={qtds[i.id] ?? 0}
+                      onQtd={(v) => setQtd(i.id, v)}
+                      unit={precos[i.id]}
+                      noites={noites}
+                      emoji={emojiDaSecao(sec.titulo)}
+                    />
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </section>
+        ))}
+
+        <CarrinhoFixo
           orcamento={orcamento}
           carregando={carregando}
-          falhou={falhou}
+          pendencia={pendencia}
+          totalItens={totalItens}
+          podeAvancar={selecao.completa && totalItens > 0}
         />
 
-        <div className="f-nav">
-          <Link className="f-btn f-btn--voltar" href="/reservar/">
+        <p className="mt-3 text-center">
+          <Link className="text-sm text-[var(--c-muted)] hover:underline" href="/reservar/">
             ← Trocar experiência
           </Link>
-          <button
-            type="submit"
-            className="f-btn f-btn--ir"
-            disabled={!selecao.completa || totalItens === 0}
-          >
-            Continuar →
+        </p>
+
+        {/* Sem JavaScript o total não recalcula sozinho; o formulário avança
+            para o passo 3, então recalcular precisa de um botão que volte. */}
+        <noscript>
+          <button type="submit" formAction="" className="f-btn f-btn--ir mt-4 w-full">
+            Atualizar valores
           </button>
-        </div>
+        </noscript>
       </form>
     </div>
   );

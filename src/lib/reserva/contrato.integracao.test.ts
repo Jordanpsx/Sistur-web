@@ -202,7 +202,11 @@ criaReservas("criação ponta a ponta", () => {
       check_out_date: ci,
       items: [{ item_id: 1, quantity: 2 }],
     });
-    if (o.discount_amount === 0) return; // sem desconto não há o que divergir
+    // A anti-fraude tolera R$ 0,01. Se o desconto couber dentro disso não há
+    // divergência a detectar — acontece de verdade quando alguém põe um preço
+    // de centavos para testar pagamento, e o teste não deve acusar o produto
+    // por isso.
+    if (o.subtotal - o.total <= 0.01) return;
 
     const r = await criar({
       source_id: CACHOEIRA,

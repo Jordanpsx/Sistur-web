@@ -102,17 +102,50 @@ descreve("funil de reserva", () => {
 
   it("com data escolhida, cada item mostra o valor daquele dia", async () => {
     const t = await texto(`/reservar/day-use/?entrada=${daqui(40)}`);
-    const itens = t.slice(t.indexOf("Ingressos"), t.indexOf("Resumo"));
-    expect(itens).toMatch(/R\$/);
-    expect(itens).toMatch(/nesta data|por diária/);
+    expect(t.slice(t.indexOf("Ingressos"))).toMatch(/R\$/);
   });
 
-  it("o resumo traz o total e o desconto", async () => {
+  it("os ingressos explicam quem paga meia e quem não paga", async () => {
+    // A regra vem do bot_description no Sistur, editável pelo operador. O
+    // formulário do WordPress explicava; o novo tinha perdido isso.
+    const t = await texto(`/reservar/day-use/?entrada=${daqui(40)}`);
+    expect(t).toMatch(/6 a 12 anos/);
+    expect(t).toMatch(/n[ãa]o pagam/);
+  });
+
+  it("os adicionais aparecem nas seções que o Sistur mantém", async () => {
+    // "Permitido som" vs "Sossego" é o que decide a escolha da churrasqueira, e
+    // estava só no banco.
+    const t = await texto(`/reservar/day-use/?entrada=${daqui(40)}`);
+    expect(t).toMatch(/Churrasqueiras/);
+    expect(t).toMatch(/Permitido som/);
+    expect(t).toMatch(/Proibido som/);
+    expect(t).toMatch(/Esportes e aventuras/);
+  });
+
+  it("as churrasqueiras mostram capacidade e foto", async () => {
+    const html = await (await fetch(`${SITE}/reservar/day-use/?entrada=${daqui(40)}`)).text();
+    expect(html).toMatch(/capacidade para at[ée]/);
+    expect(html).toContain("wp-content/uploads");
+  });
+
+  it("o carrinho fixo traz o total e o botão de avançar", async () => {
     const t = await texto(`/reservar/day-use/?entrada=${daqui(40)}&i1=2&i2=1`);
-    const resumo = t.slice(t.indexOf("Resumo"));
-    expect(resumo).toMatch(/Total/);
-    // Regressão do category_id ausente: sem ele o desconto sumia do resumo.
-    expect(resumo).toMatch(/Desconto/);
+    expect(t).toMatch(/Continuar/);
+    expect(t).toMatch(/R\$/);
+  });
+
+  it("sem seleção, o carrinho diz o que falta", async () => {
+    expect(await texto("/reservar/day-use/")).toMatch(/Escolha a data/);
+    expect(await texto(`/reservar/day-use/?entrada=${daqui(40)}`)).toMatch(
+      /Escolha ao menos um ingresso/,
+    );
+  });
+
+  it("o carrinho mostra o desconto", async () => {
+    const t = await texto(`/reservar/day-use/?entrada=${daqui(40)}&i1=2&i2=1`);
+    // Regressão do category_id ausente: sem ele o desconto sumia.
+    expect(t).toMatch(/desconto de R\$/i);
   });
 
   it("data inválida é recusada com mensagem, sem derrubar a página", async () => {
@@ -123,7 +156,8 @@ descreve("funil de reserva", () => {
 
   it("quantidade corrompida não derruba o resto da seleção", async () => {
     const t = await texto(`/reservar/day-use/?entrada=${daqui(40)}&i1=2&i2=abc`);
-    expect(t.slice(t.indexOf("Resumo"))).toMatch(/Total/);
+    expect(t).toMatch(/R\$/);
+    expect(t).toMatch(/Continuar/);
   });
 
   it("o passo 3 exige a seleção completa", async () => {
@@ -140,6 +174,7 @@ descreve("funil de reserva", () => {
 
   it("o passo 3 mostra os dados pedidos e repete o total", async () => {
     const t = await texto(`/reservar/day-use/dados/?entrada=${daqui(40)}&i1=2&i2=1`);
+    expect(t).toMatch(/Sua reserva/);
     expect(t).toMatch(/Nome completo/i);
     expect(t).toMatch(/CPF/);
     expect(t).toMatch(/E-mail/i);

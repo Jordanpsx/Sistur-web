@@ -75,7 +75,7 @@ export default async function FormularioReserva({
     cutoff: e.same_day_cutoff_time,
   });
   const quantidades = lerQuantidades(sp);
-  const { ingressos, adicionais } = await getItensDaExperiencia(e);
+  const { ingressos, adicionais, grupos } = await getItensDaExperiencia(e);
 
   // Priced on the server so the first paint is already correct. Day use is a
   // single date, and Sistur accepts check_out equal to check_in.
@@ -117,6 +117,7 @@ export default async function FormularioReserva({
         categoryId={e.id}
         ingressos={ingressos}
         adicionais={adicionais}
+        grupos={grupos}
         inicial={{
           entrada: selecao.entrada,
           saida: selecao.saida,

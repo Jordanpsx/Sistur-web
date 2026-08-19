@@ -26,6 +26,14 @@ const ItemSchema = z.object({
   // loose items with no way to tell a Day Use ticket from a camping pitch.
   category_id: z.number().nullable(),
   source_id: z.number().nullable(),
+  // Liga o item ao grupo, que carrega nome de exibição, foto e capacidade.
+  group_id: z.number().nullable().optional(),
+  // Campo canônico de "isto é uma entrada", mantido pelo operador. Substituiu a
+  // convenção de procurar `_entrada_` no internal_slug — um remendo sobre
+  // nomenclatura, que quebraria num item mal batizado.
+  is_entry_ticket: z.boolean().default(false),
+  // Microcopy editável no admin: quem paga meia, quem não paga.
+  description: z.string().nullable().optional(),
   price: z.number(),
   // Per-day-tier overrides. These are the same columns an operator edits under
   // "Tarifas por tipo de dia"; null means "fall back to the base price", which
@@ -50,7 +58,17 @@ const CategorySchema = z.object({
   same_day_cutoff_time: z.string().nullable().optional(),
 });
 
+const GroupSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  parent_id: z.number().nullable(),
+  sort_order: z.number(),
+  description: z.string().nullable(),
+  image_url: z.string().nullable(),
+});
+
 const CatalogSchema = z.object({
+  groups: z.array(GroupSchema).default([]),
   sources: z.array(
     z.object({
       id: z.number(),
@@ -93,23 +111,26 @@ export type Item = z.infer<typeof ItemSchema>;
 /**
  * Bookable items for one experience, split into admissions and add-ons.
  *
- * The split reads `internal_slug`: an item whose slug contains `_entrada_` is an
- * admission (`dayuse_entrada_inteira`, `camping_entrada_meia`), everything else
- * is an optional extra. This mirrors how the current WordPress form is laid out —
- * headcount fields first, then opt-in extras — and it is a naming convention the
- * operators already maintain, not a second list to keep in sync.
+ * The split reads `is_entry_ticket`, the flag the operator sets in the admin. An
+ * earlier version matched `_entrada_` inside `internal_slug`, which worked only
+ * as long as everyone kept naming items the same way — a convention standing in
+ * for a field that already existed.
  *
- * Items with no slug fall into add-ons, which is the safe side: an unrecognised
- * item shows up as optional rather than being presented as a required ticket.
+ * Groups come along because the add-ons are rendered inside them: the tree
+ * carries "ÁREA A – DIVERSÃO (Permitido som ambiente)" versus "ÁREA B – SOSSEGO
+ * (Proibido som)", which is what actually decides a barbecue pit.
  */
+export type Grupo = z.infer<typeof GroupSchema>;
+
 export async function getItensDaExperiencia(
   e: Experiencia,
-): Promise<{ ingressos: Item[]; adicionais: Item[] }> {
+): Promise<{ ingressos: Item[]; adicionais: Item[]; grupos: Grupo[] }> {
   const cat = await getCatalog();
   const meus = cat.items.filter((i) => i.category_id === e.id);
   return {
-    ingressos: meus.filter((i) => i.internal_slug?.includes("_entrada_")),
-    adicionais: meus.filter((i) => !i.internal_slug?.includes("_entrada_")),
+    ingressos: meus.filter((i) => i.is_entry_ticket),
+    adicionais: meus.filter((i) => !i.is_entry_ticket),
+    grupos: cat.groups,
   };
 }
 
