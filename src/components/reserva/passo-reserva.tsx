@@ -16,6 +16,7 @@ import { Passos } from "./passos";
 import { Stepper } from "./stepper";
 import { CardAdicional } from "./card-adicional";
 import { CarrinhoFixo } from "./carrinho-fixo";
+import { Acordeao } from "./acordeao";
 
 /**
  * Step 2 — dates, items and the running total, on one screen.
@@ -309,39 +310,88 @@ export function PassoReserva({
           ))}
         </ul>
 
-        {/* ── Adicionais, nas seções que o Sistur já mantém ──────────── */}
-        {secoes.map((sec) => (
-          <section key={sec.id ?? "outros"} className="mt-8">
-            <h2 className="flex items-center gap-2">
-              <span aria-hidden="true">{emojiDaSecao(sec.titulo)}</span>
-              {sec.titulo}
-            </h2>
+        {/* ── Adicionais ────────────────────────────────────────────── */}
+        {/*
+          Uma seção vira acordeão quando tem subseções, e fica aberta quando não
+          tem. A regra sai da forma da árvore, não de uma lista de nomes no
+          código: Churrasqueiras se divide em Área A e Área B e é um catálogo
+          para navegar; Esportes e aventuras são três itens que cabem na tela.
+          Um grupo novo criado no admin se encaixa sozinho no formato certo.
+        */}
+        {secoes.map((sec) => {
+          const temSub = sec.sub.some((x) => x.grupo !== null);
+          const itensDaSecao = sec.sub.flatMap((x) => x.itens);
+          const escolhidos = itensDaSecao.reduce((n, i) => n + (qtds[i.id] ?? 0), 0);
 
-            {sec.sub.map((sub) => (
-              <div key={sub.grupo?.id ?? "raiz"} className="mb-5 last:mb-0">
-                {sub.grupo && (
-                  <p className="mb-2 text-sm font-medium text-[var(--c-muted)]">
-                    {sub.grupo.name}
-                  </p>
-                )}
-                <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-                  {sub.itens.map((i) => (
-                    <CardAdicional
-                      key={i.id}
-                      item={i}
-                      grupo={porGrupo.get(i.group_id ?? -1)}
-                      quantidade={qtds[i.id] ?? 0}
-                      onQtd={(v) => setQtd(i.id, v)}
-                      unit={precos[i.id]}
-                      noites={noites}
-                      emoji={emojiDaSecao(sec.titulo)}
-                    />
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </section>
-        ))}
+          const grade = (itens: Item[]) => (
+            <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+              {itens.map((i) => (
+                <CardAdicional
+                  key={i.id}
+                  item={i}
+                  grupo={porGrupo.get(i.group_id ?? -1)}
+                  quantidade={qtds[i.id] ?? 0}
+                  onQtd={(v) => setQtd(i.id, v)}
+                  unit={precos[i.id]}
+                  noites={noites}
+                  emoji={emojiDaSecao(sec.titulo)}
+                />
+              ))}
+            </ul>
+          );
+
+          if (!temSub) {
+            return (
+              <section key={sec.id ?? "outros"} className="mt-8">
+                <h2 className="flex items-center gap-2">
+                  <span aria-hidden="true">{emojiDaSecao(sec.titulo)}</span>
+                  {sec.titulo}
+                </h2>
+                {grade(itensDaSecao)}
+              </section>
+            );
+          }
+
+          return (
+            <Acordeao
+              key={sec.id ?? "outros"}
+              titulo={sec.titulo}
+              emoji={emojiDaSecao(sec.titulo)}
+              resumo={
+                escolhidos > 0
+                  ? `${escolhidos} selecionado${escolhidos > 1 ? "s" : ""}`
+                  : `${itensDaSecao.length} opções`
+              }
+              // Já escolheu algo aqui? Abre — senão a seleção fica escondida
+              // atrás de um cabeçalho fechado.
+              aberto={escolhidos > 0}
+              destaque={escolhidos > 0}
+            >
+              {sec.sub.map((sub) => {
+                const n = sub.itens.reduce((t, i) => t + (qtds[i.id] ?? 0), 0);
+                return sub.grupo ? (
+                  <Acordeao
+                    key={sub.grupo.id}
+                    titulo={sub.grupo.name}
+                    resumo={
+                      n > 0
+                        ? `${n} selecionado${n > 1 ? "s" : ""}`
+                        : `${sub.itens.length} opções`
+                    }
+                    aberto={n > 0}
+                    destaque={n > 0}
+                  >
+                    {grade(sub.itens)}
+                  </Acordeao>
+                ) : (
+                  <div key="raiz" className="mb-4">
+                    {grade(sub.itens)}
+                  </div>
+                );
+              })}
+            </Acordeao>
+          );
+        })}
 
         <CarrinhoFixo
           orcamento={orcamento}

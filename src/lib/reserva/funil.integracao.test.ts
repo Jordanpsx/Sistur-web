@@ -123,6 +123,37 @@ descreve("funil de reserva", () => {
     expect(t).toMatch(/Esportes e aventuras/);
   });
 
+  it("churrasqueiras vêm em acordeão; ingressos e esportes ficam abertos", async () => {
+    // A regra sai da forma da árvore: seção com subseções vira acordeão, seção
+    // plana fica aberta. Um grupo novo no admin se encaixa sozinho.
+    const html = await (await fetch(`${SITE}/reservar/day-use/?entrada=${daqui(40)}`)).text();
+    const t = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ");
+
+    // Churrasqueiras (com Área A e Área B) + as duas áreas = 3 acordeões.
+    expect(html.match(/<details/g) ?? []).toHaveLength(3);
+    // Nada escolhido: todos fechados.
+    expect(html).not.toContain("<details open");
+    // Esportes e ingressos não estão atrás de cabeçalho.
+    expect(t).toMatch(/Tirolesa/);
+    expect(t).toMatch(/Meia-Entrada/);
+  });
+
+  it("o acordeão abre sozinho quando já há item escolhido dentro", async () => {
+    // Item 7 é uma churrasqueira da Área A. Deixar a escolha atrás de um
+    // cabeçalho fechado esconderia do cliente o que ele acabou de selecionar.
+    const html = await (await fetch(
+      `${SITE}/reservar/day-use/?entrada=${daqui(40)}&i1=1&i7=1`,
+    )).text();
+    expect(html.match(/<details open/g) ?? []).toHaveLength(2);
+    expect(html.replace(/<[^>]*>/g, " ")).toMatch(/1 selecionado/);
+  });
+
+  it("estacionamento interno não aparece no formulário", async () => {
+    // Escondido por visible_to_web no Sistur, não por filtro no frontend.
+    const t = await texto(`/reservar/day-use/?entrada=${daqui(40)}`);
+    expect(t).not.toMatch(/estacionamento/i);
+  });
+
   it("as churrasqueiras mostram capacidade e foto", async () => {
     const html = await (await fetch(`${SITE}/reservar/day-use/?entrada=${daqui(40)}`)).text();
     expect(html).toMatch(/capacidade para at[ée]/);
