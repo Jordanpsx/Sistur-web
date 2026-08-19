@@ -99,7 +99,14 @@ export function BrickPagamento({
         brick = await mp.bricks().create("payment", "brick-pagamento", {
           initialization: {
             amount: total,
-            payer: { email },
+            payer: {
+              email,
+              // O Brick avisa "entityType only receives individual or
+              // association" quando o campo não vem. Todo cliente do site é
+              // pessoa física — a criação da reserva valida CPF por dígito
+              // verificador e recusa CNPJ —, então o valor é constante.
+              entityType: "individual",
+            },
           },
           customization: {
             paymentMethods: {
