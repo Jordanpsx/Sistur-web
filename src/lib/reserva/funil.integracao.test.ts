@@ -239,6 +239,49 @@ descreve("funil de reserva", () => {
     expect(semItens.url).not.toMatch(/\/dados\//);
   });
 
+  it("o passo 3 carrega a churrasqueira escolhida no passo 2", async () => {
+    // O defeito relatado: a seleção sumia entre os passos e a reserva nascia só
+    // com o ingresso. O passo 3 lia `i<id>` e nunca `r<id>`.
+    const d = daqui(40);
+    const api = process.env.SISTUR_API_URL!;
+    const disp = await (
+      await fetch(
+        `${api}/api/public/reservas/disponibilidade?source_id=1&category_id=1` +
+          `&check_in=${d}&check_out=${d}`,
+      )
+    ).json();
+    const churras = disp.resources[0];
+    expect(churras, "esperava uma churrasqueira disponível").toBeTruthy();
+
+    const html = await (await fetch(
+      `${SITE}/reservar/day-use/dados/?entrada=${d}&i1=1&r${churras.id}=1`,
+    )).text();
+    // Precisa viajar como campo do formulário, senão a Server Action não a vê.
+    expect(html).toContain(`name="r${churras.id}"`);
+
+    const t = html.replace(/<script[\s\S]*?<\/script>/g, "").replace(/<[^>]*>/g, " ");
+    expect(t).toMatch(/Espaço reservado/);
+    expect(t).toMatch(new RegExp(churras.name));
+    // E o total precisa contar a churrasqueira, não só o ingresso.
+    expect(t).toMatch(new RegExp(churras.item_name.replace(/[()]/g, "\\$&")));
+  });
+
+  it("o passo 3 aceita só a churrasqueira, sem ingresso", async () => {
+    const d = daqui(41);
+    const api = process.env.SISTUR_API_URL!;
+    const disp = await (
+      await fetch(
+        `${api}/api/public/reservas/disponibilidade?source_id=1&category_id=1` +
+          `&check_in=${d}&check_out=${d}`,
+      )
+    ).json();
+    const res = await fetch(
+      `${SITE}/reservar/day-use/dados/?entrada=${d}&r${disp.resources[0].id}=1`,
+      { redirect: "follow" },
+    );
+    expect(res.url).toMatch(/\/dados\//);
+  });
+
   it("o passo 3 mostra os dados pedidos e repete o total", async () => {
     const t = await texto(`/reservar/day-use/dados/?entrada=${daqui(40)}&i1=2&i2=1`);
     expect(t).toMatch(/Sua reserva/);

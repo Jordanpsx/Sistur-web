@@ -258,10 +258,11 @@ export function PassoReserva({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selecao.entrada, selecao.saida, selecao.completa, sourceId, categoryId]);
 
+  // Uma churrasqueira por reserva. Marcar outra **substitui** a anterior em vez
+  // de somar: bloquear o clique deixaria a pessoa procurando onde desmarcar a
+  // primeira, e o servidor recusa duas de qualquer forma.
   const setRecurso = (id: number, marcado: boolean) =>
-    setRecursosSel((atual) =>
-      marcado ? [...new Set([...atual, id])] : atual.filter((x) => x !== id),
-    );
+    setRecursosSel((atual) => (marcado ? [id] : atual.filter((x) => x !== id)));
 
   const setQtd = (id: number, valor: number) =>
     setQtds((atual) => {
@@ -413,6 +414,9 @@ export function PassoReserva({
                   onToggle={(m) => setRecurso(r.id, m)}
                   unit={precos[r.item_id]}
                   noites={noites}
+                  outraEscolhida={
+                    recursosSel.length > 0 && !recursosSel.includes(r.id)
+                  }
                 />
               ))}
             </ul>

@@ -28,6 +28,8 @@ export function PassoDados({
   saida,
   diaUnico,
   quantidades,
+  recursos,
+  nomesDosRecursos,
   orcamento,
 }: {
   slug: string;
@@ -38,6 +40,10 @@ export function PassoDados({
   saida?: string;
   diaUnico: boolean;
   quantidades: Quantidades;
+  /** Ids das churrasqueiras escolhidas. */
+  recursos: number[];
+  /** id -> nome, para o resumo e para o botão de voltar. */
+  nomesDosRecursos: Record<number, string>;
   orcamento: Orcamento | null;
 }) {
   const [estado, acao, enviando] = useActionState<EstadoCriacao, FormData>(
@@ -50,6 +56,7 @@ export function PassoDados({
     p.set("entrada", entrada);
     if (saida && !diaUnico) p.set("saida", saida);
     for (const [id, q] of Object.entries(quantidades)) p.set(`i${id}`, String(q));
+    for (const id of recursos) p.set(`r${id}`, "1");
     return `/reservar/${slug}/?${p}`;
   })();
 
@@ -69,6 +76,11 @@ export function PassoDados({
         {saida && !diaUnico && <input type="hidden" name="saida" value={saida} />}
         {Object.entries(quantidades).map(([id, q]) => (
           <input key={id} type="hidden" name={`i${id}`} value={q} />
+        ))}
+        {/* Sem estes campos a churrasqueira escolhida no passo 2 sumia: a
+            Server Action lê `r<id>` do formulário, e ele não os carregava. */}
+        {recursos.map((id) => (
+          <input key={id} type="hidden" name={`r${id}`} value="1" />
         ))}
 
         <h2>Seus dados</h2>
@@ -157,6 +169,15 @@ export function PassoDados({
             {formatarData(entrada)}
             {saida && !diaUnico && <> até {formatarData(saida)}</>}
           </p>
+          {recursos.length > 0 && (
+            <p className="f-hint" style={{ marginBottom: "0.5rem" }}>
+              Espaço reservado:{" "}
+              <strong>
+                {recursos.map((id) => nomesDosRecursos[id] ?? `#${id}`).join(", ")}
+              </strong>
+            </p>
+          )}
+
           {orcamento ? (
             <div className="f-total-box">
               {orcamento.items_breakdown.map((l) => (

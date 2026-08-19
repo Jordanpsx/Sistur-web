@@ -141,3 +141,13 @@ describe("ratearTotal com recursos físicos", () => {
     expect(soma(r)).toBe(49);
   });
 });
+
+describe("uma churrasqueira por reserva", () => {
+  it("o rateio de um único recurso não se divide", () => {
+    const o = orcamento([[7, 1, 120]], 84);
+    const r = ratearTotal(o, { 7: [6] });
+    expect(r).toHaveLength(1);
+    expect(r[0].resource_id).toBe(6);
+    expect(soma(r)).toBe(84);
+  });
+});

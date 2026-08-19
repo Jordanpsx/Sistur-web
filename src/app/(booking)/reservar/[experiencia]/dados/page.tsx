@@ -3,6 +3,11 @@ import type { Metadata } from "next";
 import { getExperiencia } from "@/lib/sistur/catalog";
 import { validarSelecao } from "@/lib/reserva/datas";
 import { lerQuantidades, simular } from "@/lib/reserva/itens";
+import {
+  buscarRecursos,
+  lerRecursos,
+  quantidadesPorTarifa,
+} from "@/lib/reserva/recursos";
 import { PassoDados } from "@/components/reserva/passo-dados";
 
 /**
@@ -48,11 +53,18 @@ export default async function DadosDoCliente({
     cutoff: e.same_day_cutoff_time,
   });
   const quantidades = lerQuantidades(sp);
+  const recursosSel = lerRecursos(sp);
 
   // The same two conditions step 2's button enforces. Checked again here because
   // a URL is not a promise: the button being disabled proves nothing about how
   // this page was reached.
-  if (!selecao.completa || !selecao.entrada || Object.keys(quantidades).length === 0) {
+  // A churrasqueira sozinha já é uma seleção válida — exigir ingresso aqui
+  // devolveria ao passo 2 quem escolheu só o espaço.
+  if (
+    !selecao.completa ||
+    !selecao.entrada ||
+    (Object.keys(quantidades).length === 0 && recursosSel.length === 0)
+  ) {
     const p = new URLSearchParams(
       Object.entries(sp).flatMap(([k, v]) =>
         typeof v === "string" ? [[k, v] as [string, string]] : [],
@@ -63,12 +75,24 @@ export default async function DadosDoCliente({
 
   const entrada = selecao.entrada;
   const saida = e.single_day_only ? entrada : selecao.saida!;
+  // As churrasqueiras escolhidas viram quantidade na tarifa do grupo delas —
+  // sem isto o resumo e a reserva sairiam só com o ingresso, que foi
+  // exatamente o defeito relatado.
+  const recursos = recursosSel.length
+    ? await buscarRecursos({ sourceId: e.sourceId, categoryId: e.id, entrada, saida })
+    : [];
+  const porTarifa = quantidadesPorTarifa(recursosSel, recursos);
+  const quantidadesCompletas = { ...quantidades };
+  for (const [id, q] of Object.entries(porTarifa)) {
+    quantidadesCompletas[Number(id)] = (quantidadesCompletas[Number(id)] ?? 0) + q;
+  }
+
   const orcamento = await simular({
     sourceId: e.sourceId,
     categoryId: e.id,
     entrada,
     saida,
-    quantidades,
+    quantidades: quantidadesCompletas,
   });
 
   return (
@@ -82,6 +106,10 @@ export default async function DadosDoCliente({
         saida={selecao.saida}
         diaUnico={e.single_day_only}
         quantidades={quantidades}
+        recursos={recursosSel}
+        nomesDosRecursos={Object.fromEntries(
+          recursos.filter((r) => recursosSel.includes(r.id)).map((r) => [r.id, r.name]),
+        )}
         orcamento={orcamento}
       />
     </section>

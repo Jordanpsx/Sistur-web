@@ -13,6 +13,11 @@ import { Galeria } from "./galeria";
  * so the only meaningful quantities are zero and one. A stepper here would
  * invite someone to ask for two of a thing there is one of.
  *
+ * Only one pit per booking, so choosing another swaps rather than adds — the
+ * button says "Trocar por esta" when something else is already picked, which is
+ * gentler than disabling every other card and leaving someone hunting for the
+ * one to untick.
+ *
  * An unavailable pit stays on the page, greyed and disabled, rather than being
  * hidden. Removing it would leave a customer wondering where A4 went and trying
  * other dates blindly; shown as taken, it says the date is the problem.
@@ -23,6 +28,7 @@ export function CardRecurso({
   onToggle,
   unit,
   noites,
+  outraEscolhida,
 }: {
   recurso: Recurso;
   selecionado: boolean;
@@ -30,6 +36,8 @@ export function CardRecurso({
   /** Preço resolvido pelo Sistur para a data; cai no de tabela se ausente. */
   unit?: number;
   noites: number;
+  /** Já existe outra churrasqueira escolhida — só uma por reserva. */
+  outraEscolhida: boolean;
 }) {
   const [galeriaAberta, setGaleriaAberta] = useState(false);
   const indisponivel = !recurso.is_available;
@@ -116,7 +124,13 @@ export function CardRecurso({
                       disabled:cursor-not-allowed disabled:border-[var(--c-border)]
                       disabled:bg-transparent disabled:text-[var(--c-muted)]`}
         >
-          {indisponivel ? "Reservada" : selecionado ? "Selecionada ✓" : "Selecionar"}
+          {indisponivel
+            ? "Reservada"
+            : selecionado
+              ? "Selecionada ✓"
+              : outraEscolhida
+                ? "Trocar por esta"
+                : "Selecionar"}
         </button>
 
         {/* Sem JavaScript o botão acima não faz nada, então o estado precisa
