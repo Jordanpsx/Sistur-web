@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getExperiencia, getItensDaExperiencia } from "@/lib/sistur/catalog";
-import { validarSelecao } from "@/lib/reserva/datas";
+import { getExperiencia, getItensDaExperiencia, janelaDe } from "@/lib/sistur/catalog";
+import { momento, validarSelecao } from "@/lib/reserva/datas";
 import { lerQuantidades, precosDoDia, simular } from "@/lib/reserva/itens";
 import {
   buscarRecursos,
@@ -75,19 +75,28 @@ export default async function FormularioReserva({
     return Array.isArray(v) ? v[0] : v;
   };
 
+  // Presente só onde a hora entra no preço — hoje, o camping.
+  const janela = janelaDe(e);
   const selecao = validarSelecao(um("entrada"), um("saida"), {
     diaUnico: e.single_day_only,
     cutoff: e.same_day_cutoff_time,
+    janela,
+    horaEntrada: um("he") ?? janela?.entradaDe,
+    horaSaida: um("hs") ?? janela?.saidaAte,
   });
   const quantidades = lerQuantidades(sp);
   const recursosSel = lerRecursos(sp);
-  const { ingressos, grupos } = await getItensDaExperiencia(e);
+  const { ingressos, adicionais, grupos } = await getItensDaExperiencia(e);
 
   // Priced on the server so the first paint is already correct. Day use is a
   // single date, and Sistur accepts check_out equal to check_in.
   const datado = selecao.completa && selecao.entrada;
   const entrada = selecao.entrada!;
   const saida = e.single_day_only ? entrada : selecao.saida!;
+  // A primeira pintura já precisa do total certo, e no camping o total depende
+  // da hora: 08:00 → 17:00 do dia seguinte são 33 horas, não 24.
+  const inicio = momento(entrada, janela ? selecao.horaEntrada : undefined);
+  const fim = momento(saida, janela ? selecao.horaSaida : undefined);
 
   // Two calls, not one. The quote covers what the visitor actually selected; the
   // price list covers every item so each row can state its own figure for the
@@ -95,7 +104,12 @@ export default async function FormularioReserva({
   // is not repeated when a quantity changes.
   // Os espaços físicos disponíveis na data, com foto e tarifa do grupo.
   const recursos = datado
-    ? await buscarRecursos({ sourceId: e.sourceId, categoryId: e.id, entrada, saida })
+    ? await buscarRecursos({
+        sourceId: e.sourceId,
+        categoryId: e.id,
+        entrada: inicio,
+        saida: fim,
+      })
     : [];
 
   // O que o /simular precisa: tarifa e quantidade. As churrasqueiras escolhidas
@@ -108,6 +122,7 @@ export default async function FormularioReserva({
 
   const idsParaPrecificar = [
     ...ingressos.map((i) => i.id),
+    ...adicionais.map((i) => i.id),
     ...new Set(recursos.map((r) => r.item_id)),
   ];
 
@@ -116,15 +131,15 @@ export default async function FormularioReserva({
         simular({
           sourceId: e.sourceId,
           categoryId: e.id,
-          entrada,
-          saida,
+          entrada: inicio,
+          saida: fim,
           quantidades: quantidadesCompletas,
         }),
         precosDoDia({
           sourceId: e.sourceId,
           categoryId: e.id,
-          entrada,
-          saida,
+          entrada: inicio,
+          saida: fim,
           itemIds: idsParaPrecificar,
         }),
       ])
@@ -143,13 +158,17 @@ export default async function FormularioReserva({
         nome={e.name}
         diaUnico={e.single_day_only}
         cutoff={e.same_day_cutoff_time}
+        janela={janela}
         sourceId={e.sourceId}
         categoryId={e.id}
         ingressos={ingressos}
+        adicionais={adicionais}
         grupos={grupos}
         inicial={{
           entrada: selecao.entrada,
           saida: selecao.saida,
+          horaEntrada: selecao.horaEntrada,
+          horaSaida: selecao.horaSaida,
           quantidades,
           recursos: recursosSel,
         }}

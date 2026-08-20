@@ -10,7 +10,15 @@ import {
   type Orcamento,
   type Quantidades,
 } from "@/lib/reserva/itens";
-import { formatarData, diasEntre, hoje, validarSelecao } from "@/lib/reserva/datas";
+import {
+  formatarData,
+  diasEntre,
+  hoje,
+  horasEntre,
+  momento,
+  validarSelecao,
+  type Janela,
+} from "@/lib/reserva/datas";
 import { agruparAdicionais, emojiDaSecao, type Grupo } from "@/lib/reserva/secoes";
 import {
   escreverRecursos,
@@ -21,6 +29,7 @@ import {
 import { Passos } from "./passos";
 import { Stepper } from "./stepper";
 import { CardRecurso } from "./card-recurso";
+import { CardAdicional } from "./card-adicional";
 import { CarrinhoFixo } from "./carrinho-fixo";
 import { Acordeao } from "./acordeao";
 
@@ -51,9 +60,11 @@ export function PassoReserva({
   nome,
   diaUnico,
   cutoff,
+  janela,
   sourceId,
   categoryId,
   ingressos,
+  adicionais,
   grupos,
   inicial,
   orcamentoInicial,
@@ -64,13 +75,20 @@ export function PassoReserva({
   nome: string;
   diaUnico: boolean;
   cutoff?: string | null;
+  // Presente só onde a hora entra no preço. Ver `Janela` em lib/reserva/datas.
+  janela?: Janela | null;
   sourceId: number;
   categoryId: number;
   ingressos: Item[];
+  // Itens de aluguel com quantidade — barraca, colchão, lenha. São o que o
+  // camping tem além dos ingressos e das churrasqueiras.
+  adicionais: Item[];
   grupos: Grupo[];
   inicial: {
     entrada?: string;
     saida?: string;
+    horaEntrada?: string;
+    horaSaida?: string;
     quantidades: Quantidades;
     recursos: number[];
   };
@@ -80,6 +98,14 @@ export function PassoReserva({
 }) {
   const [entrada, setEntrada] = useState(inicial.entrada ?? "");
   const [saida, setSaida] = useState(inicial.saida ?? "");
+  // Pré-preenchidas com a abertura da portaria: é a escolha de quase todo mundo,
+  // e deixar em branco travaria o total num formulário que já tem data válida.
+  const [horaEntrada, setHoraEntrada] = useState(
+    inicial.horaEntrada ?? janela?.entradaDe ?? "",
+  );
+  const [horaSaida, setHoraSaida] = useState(
+    inicial.horaSaida ?? janela?.saidaAte ?? "",
+  );
   const [qtds, setQtds] = useState<Quantidades>(inicial.quantidades);
   const [orcamento, setOrcamento] = useState<Orcamento | null>(orcamentoInicial);
   const [carregando, setCarregando] = useState(false);
@@ -95,9 +121,16 @@ export function PassoReserva({
   const [recursosSel, setRecursosSel] = useState<number[]>(inicial.recursos);
 
   const min = hoje();
+  // O que vai para o Sistur. Com janela carrega a hora, sem janela é a data
+  // pura — as duas formas são aceitas por /simular e por criar.
+  const instanteEntrada = (d: string) => momento(d, janela ? horaEntrada : undefined);
+  const instanteSaida = (d: string) => momento(d, janela ? horaSaida : undefined);
   const selecao = validarSelecao(entrada || undefined, saida || undefined, {
     diaUnico,
     cutoff,
+    janela,
+    horaEntrada: horaEntrada || undefined,
+    horaSaida: horaSaida || undefined,
   });
   // O /simular fala em tarifa e quantidade. Duas churrasqueiras da mesma
   // tarifa viram uma linha de quantidade dois — é assim que o motor conta.
@@ -127,6 +160,11 @@ export function PassoReserva({
     for (const [k, v] of escreverRecursos(recursosSel)) p.set(k, v);
     if (entrada) p.set("entrada", entrada);
     if (saida && !diaUnico) p.set("saida", saida);
+    // A hora é preço, então viaja com o resto do estado. Sem isto o passo 3
+    // recalcularia sobre meia-noite e cobraria diferente do que foi mostrado —
+    // foi assim que a churrasqueira sumiu entre os passos antes.
+    if (janela && horaEntrada) p.set("he", horaEntrada);
+    if (janela && horaSaida) p.set("hs", horaSaida);
     const qs = p.toString();
     window.history.replaceState(null, "", qs ? `?${qs}` : location.pathname);
 
@@ -149,10 +187,12 @@ export function PassoReserva({
           body: JSON.stringify({
             source_id: sourceId,
             category_id: categoryId,
-            check_in_date: selecao.entrada,
+            check_in_date: instanteEntrada(selecao.entrada!),
             // Day use is a single date; Sistur accepts check_out equal to
             // check_in and prices the FIXED items once.
-            check_out_date: diaUnico ? selecao.entrada : selecao.saida,
+            check_out_date: diaUnico
+              ? instanteEntrada(selecao.entrada!)
+              : instanteSaida(selecao.saida!),
             items: Object.entries(qtdsCompletas)
               .filter(([, q]) => q > 0)
               .map(([id, q]) => ({ item_id: Number(id), quantity: q })),
@@ -178,7 +218,15 @@ export function PassoReserva({
 
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entrada, saida, JSON.stringify(qtdsCompletas), selecao.completa, totalItens]);
+  }, [
+    entrada,
+    saida,
+    horaEntrada,
+    horaSaida,
+    JSON.stringify(qtdsCompletas),
+    selecao.completa,
+    totalItens,
+  ]);
 
   // Prices depend on the dates alone, so this does not re-run when a quantity
   // changes — that would be one Sistur call per keystroke for no new answer.
@@ -202,8 +250,10 @@ export function PassoReserva({
           body: JSON.stringify({
             source_id: sourceId,
             category_id: categoryId,
-            check_in_date: selecao.entrada,
-            check_out_date: diaUnico ? selecao.entrada : selecao.saida,
+            check_in_date: instanteEntrada(selecao.entrada!),
+            check_out_date: diaUnico
+              ? instanteEntrada(selecao.entrada!)
+              : instanteSaida(selecao.saida!),
             items: todosIds.split(",").map((id) => ({
               item_id: Number(id),
               quantity: 1,
@@ -220,7 +270,7 @@ export function PassoReserva({
       vivo = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selecao.entrada, selecao.saida, selecao.completa, todosIds]);
+  }, [selecao.entrada, selecao.saida, horaEntrada, horaSaida, selecao.completa, todosIds]);
 
   useEffect(() => {
     if (!selecao.completa || !selecao.entrada) {
@@ -232,8 +282,10 @@ export function PassoReserva({
       const q = new URLSearchParams({
         source_id: String(sourceId),
         category_id: String(categoryId),
-        check_in: selecao.entrada!,
-        check_out: (diaUnico ? selecao.entrada : selecao.saida)!,
+        check_in: instanteEntrada(selecao.entrada!),
+        check_out: diaUnico
+          ? instanteEntrada(selecao.entrada!)
+          : instanteSaida(selecao.saida!),
       });
       try {
         const res = await fetch(`/api/recursos/?${q}`, { cache: "no-store" });
@@ -256,7 +308,15 @@ export function PassoReserva({
       vivo = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selecao.entrada, selecao.saida, selecao.completa, sourceId, categoryId]);
+  }, [
+    selecao.entrada,
+    selecao.saida,
+    horaEntrada,
+    horaSaida,
+    selecao.completa,
+    sourceId,
+    categoryId,
+  ]);
 
   // Uma churrasqueira por reserva. Marcar outra **substitui** a anterior em vez
   // de somar: bloquear o clique deixaria a pessoa procurando onde desmarcar a
@@ -279,6 +339,17 @@ export function PassoReserva({
 
   const porGrupo = new Map(grupos.map((g) => [g.id, g]));
   const secoes = agruparAdicionais(recursos, grupos);
+
+  // Duas formas de escolher, decididas pelo dado e não por categoria: se a
+  // disponibilidade devolve unidades físicas para a tarifa, a pessoa escolhe
+  // QUAL (a churrasqueira A4, com a foto dela); se não devolve, escolhe QUANTAS
+  // (três colchões de casal). Uma tarifa com unidades nunca aparece nas duas
+  // listas, senão a churrasqueira seria oferecida como card e como contador.
+  const comUnidadeFisica = new Set(recursos.map((r) => r.item_id));
+  const secoesItens = agruparAdicionais(
+    adicionais.filter((i) => !comUnidadeFisica.has(i.id)),
+    grupos,
+  );
 
   // Uma frase só, dizendo o que falta. Botão desabilitado sem explicação deixa
   // a pessoa procurando o que fez de errado.
@@ -339,6 +410,52 @@ export function PassoReserva({
             </div>
           )}
         </div>
+
+        {/* Hora só onde ela é preço. No camping a diária é pró-rata: 08:00 →
+            17:00 do dia seguinte são 33 horas, e custam mais que 24. */}
+        {janela && (
+          <div className="f-row f-row--2">
+            <div>
+              <label className="f-label" data-req htmlFor="he">
+                Hora de entrada
+              </label>
+              <input
+                className="f-input"
+                type="time"
+                id="he"
+                name="he"
+                required
+                step={1800}
+                min={janela.entradaDe}
+                max={janela.entradaAte}
+                value={horaEntrada}
+                onChange={(ev) => setHoraEntrada(ev.target.value)}
+              />
+              <p className="f-hint">
+                Portaria aberta das {janela.entradaDe} às {janela.entradaAte}.
+              </p>
+            </div>
+            <div>
+              <label className="f-label" data-req htmlFor="hs">
+                Hora de saída
+              </label>
+              <input
+                className="f-input"
+                type="time"
+                id="hs"
+                name="hs"
+                required
+                step={1800}
+                max={janela.saidaAte}
+                value={horaSaida}
+                onChange={(ev) => setHoraSaida(ev.target.value)}
+              />
+              <p className="f-hint">
+                Até as {janela.saidaAte}. Permanência mínima de {janela.minHoras} horas.
+              </p>
+            </div>
+          </div>
+        )}
 
         {selecao.erro && (
           <p role="alert" className="f-erro">
@@ -473,7 +590,68 @@ export function PassoReserva({
           );
         })}
 
-        {selecao.completa && recursos.length === 0 && (
+        {/* Itens de aluguel: escolhe-se a quantidade, não a unidade. A mesma
+            árvore de grupos decide seção e acordeão — "Itens para Camping"
+            abre em Barracas, Colchões e Lenha sem nenhuma regra por nome. */}
+        {secoesItens.map((sec) => {
+          const todos = sec.sub.flatMap((x) => x.itens);
+          const escolhidos = todos.reduce((n, i) => n + (qtds[i.id] ?? 0), 0);
+
+          const lista = (itens: Item[]) => (
+            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {itens.map((i) => (
+                <CardAdicional
+                  key={i.id}
+                  item={i}
+                  grupo={i.group_id != null ? porGrupo.get(i.group_id) : undefined}
+                  quantidade={qtds[i.id] ?? 0}
+                  onQtd={(v) => setQtd(i.id, v)}
+                  unit={precos[i.id]}
+                  noites={noites}
+                  emoji={emojiDaSecao(sec.titulo)}
+                />
+              ))}
+            </ul>
+          );
+
+          const resumo = (n: number) =>
+            n > 0 ? `${n} selecionado${n > 1 ? "s" : ""}` : "Nenhum selecionado";
+
+          // Sempre acordeão, com ou sem subseções. Item de aluguel nunca é
+          // ingresso, e "Itens para Camping" traz seis linhas de uma vez —
+          // aberto, empurra o total e o botão para fora da tela no celular.
+          return (
+            <Acordeao
+              key={`i${sec.id ?? "outros"}`}
+              titulo={sec.titulo}
+              emoji={emojiDaSecao(sec.titulo)}
+              resumo={resumo(escolhidos)}
+              aberto={escolhidos > 0}
+              destaque={escolhidos > 0}
+            >
+              {sec.sub.map((sub) => {
+                const n = sub.itens.reduce((t, i) => t + (qtds[i.id] ?? 0), 0);
+                return sub.grupo ? (
+                  <Acordeao
+                    key={sub.grupo.id}
+                    titulo={sub.grupo.name}
+                    resumo={resumo(n)}
+                    aberto={n > 0}
+                    destaque={n > 0}
+                  >
+                    {lista(sub.itens)}
+                  </Acordeao>
+                ) : (
+                  <div key="raiz" className="mb-4">
+                    {lista(sub.itens)}
+                  </div>
+                );
+              })}
+            </Acordeao>
+          );
+        })}
+
+        {selecao.completa && recursos.length === 0 && secoesItens.length === 0 && (
           <p className="f-hint mt-6">
             Nenhum espaço disponível para esta data.
           </p>

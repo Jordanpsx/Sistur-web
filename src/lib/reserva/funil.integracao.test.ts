@@ -522,3 +522,125 @@ descreveCria("status do pagamento — com reserva de verdade", () => {
     expect(res.headers.get("cache-control")).toMatch(/no-store/);
   });
 });
+
+descreve("camping — a hora é preço", () => {
+  const d = (n: number) => {
+    const x = new Date();
+    x.setUTCDate(x.getUTCDate() + n);
+    return x.toISOString().slice(0, 10);
+  };
+
+  /** Lê o orçamento que o servidor embutiu na página. */
+  async function totalDe(query: string): Promise<{ horas: number; total: number }> {
+    const html = await (
+      await fetch(`${SITE}/reservar/camping/?${query}`, { redirect: "follow" })
+    ).text();
+    const horas = html.match(/\\"total_hours\\":(\d+)/);
+    const total = html.match(/\\"total\\":([\d.]+)/);
+    expect(horas, "a página não trouxe total_hours").not.toBeNull();
+    return { horas: Number(horas![1]), total: Number(total![1]) };
+  }
+
+  it("pede hora de entrada e de saída, com os limites da portaria", async () => {
+    const t = await texto(`/reservar/camping/?entrada=${d(30)}&saida=${d(31)}`);
+    expect(t).toMatch(/Hora de entrada/);
+    expect(t).toMatch(/Hora de saída/);
+    // Os limites vêm da categoria no Sistur, não de constante no site.
+    expect(t).toMatch(/Portaria aberta das 08:00 às 17:00/);
+    expect(t).toMatch(/Permanência mínima de 24 horas/);
+  });
+
+  it("o day use não pede hora — lá ela não entra no preço", async () => {
+    const t = await texto(`/reservar/day-use/?entrada=${d(30)}`);
+    expect(t).not.toMatch(/Hora de entrada/);
+  });
+
+  it("33 horas custam mais que 24 na mesma tarifa", async () => {
+    // É a razão de todo o trabalho de horário existir: mandar só a data
+    // anunciaria o preço de 24h e a portaria cobraria o de 33.
+    const longa = await totalDe(`entrada=${d(30)}&saida=${d(31)}&he=08:00&hs=17:00&i18=2`);
+    const curta = await totalDe(`entrada=${d(30)}&saida=${d(31)}&he=14:00&hs=14:00&i18=2`);
+    expect(longa.horas).toBe(33);
+    expect(curta.horas).toBe(24);
+    expect(longa.total).toBeGreaterThan(curta.total);
+  });
+
+  it("recusa entrada fora do horário da portaria", async () => {
+    const t = await texto(
+      `/reservar/camping/?entrada=${d(30)}&saida=${d(31)}&he=06:00&hs=17:00`,
+    );
+    expect(t).toMatch(/entrada é permitida entre 08:00 e 17:00/i);
+  });
+
+  it("recusa permanência abaixo de 24 horas", async () => {
+    const t = await texto(
+      `/reservar/camping/?entrada=${d(30)}&saida=${d(31)}&he=09:00&hs=08:00`,
+    );
+    expect(t).toMatch(/Permanência mínima: 24 horas/i);
+  });
+
+  it("mostra os itens de camping, não só ingressos", async () => {
+    const t = await texto(`/reservar/camping/?entrada=${d(30)}&saida=${d(31)}`);
+    // Barraca e colchão são itens com quantidade; a churrasqueira é unidade
+    // física, e tem de aparecer pelo nome DELA (A1, B2), não pela tarifa.
+    expect(t).toMatch(/Itens para Camping/);
+    expect(t).toMatch(/Barraca Pequena/);
+    expect(t).toMatch(/Colchão Casal/);
+    expect(t).toMatch(/Churrasqueiras/);
+    expect(t).not.toMatch(/Churrasqueira Pequena \(A\)/);
+  });
+});
+
+descreveCria("camping — a hora sobrevive à criação", () => {
+  const d = (n: number) => {
+    const x = new Date();
+    x.setUTCDate(x.getUTCDate() + n);
+    return x.toISOString().slice(0, 10);
+  };
+
+  it("a reserva nasce com o total que foi simulado, hora incluída", async () => {
+    const api = process.env.SISTUR_API_URL!;
+    const chave = process.env.SISTUR_WEB_API_KEY!;
+    const ci = `${d(60)}T08:00`;
+    const co = `${d(61)}T17:00`;
+
+    const sim = await (
+      await fetch(`${api}/reservas/api/public/simular`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source_id: 1,
+          category_id: 2,
+          check_in_date: ci,
+          check_out_date: co,
+          items: [{ item_id: 18, quantity: 2 }],
+        }),
+      })
+    ).json();
+    expect(sim.items_breakdown[0].total_hours).toBe(33);
+
+    const { ratearTotal } = await import("./itens");
+    const res = await fetch(`${api}/api/public/reservas/criar`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Web-Api-Key": chave },
+      body: JSON.stringify({
+        source_id: 1,
+        category_id: 2,
+        customer_name: "Regressao Camping Silva",
+        customer_document: "529.982.247-25",
+        email: "camping@exemplo.com.br",
+        telefone: "(64) 99999-0000",
+        check_in_date: ci,
+        check_out_date: co,
+        items: ratearTotal(sim),
+      }),
+    });
+    const corpo = await res.json();
+    descartarDepois(corpo?.group_id);
+
+    // Truncar a hora aqui fazia a reserva nascer barata: o Sistur montava
+    // meia-noite → meia-noite, 24 horas, e cobrava menos que o simulado.
+    expect(res.status, JSON.stringify(corpo)).toBe(201);
+    expect(corpo.total).toBeCloseTo(sim.total, 2);
+  });
+});

@@ -56,12 +56,65 @@ export function formatarData(s: string): string {
   }).format(new Date(`${s}T12:00:00Z`));
 }
 
+/**
+ * Janela de horário da estadia, vinda da categoria no Sistur.
+ *
+ * Ausente (Day Use) o formulário pede só datas. Presente (Camping) ele pede
+ * hora, porque ali a hora é preço: a diária é pró-rata, e das 08:00 às 17:00 do
+ * dia seguinte são 33 horas, não 24 — R$ 61,87 contra R$ 45,00 na mesma tarifa.
+ * Um formulário que mandasse só a data anunciaria um número e a portaria
+ * cobraria outro.
+ *
+ * Os limites são dado do Sistur, nunca constantes daqui: o camping abre às 8h
+ * porque a portaria abre às 8h, e isso muda sem que ninguém edite o site.
+ */
+export type Janela = {
+  entradaDe: string;
+  entradaAte: string;
+  saidaAte: string;
+  minHoras: number;
+};
+
 export type Selecao = {
   entrada?: string;
   saida?: string;
+  horaEntrada?: string;
+  horaSaida?: string;
   erro?: string;
   completa: boolean;
 };
+
+function ehHoraValida(s: string): boolean {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(s);
+}
+
+function minutos(hhmm: string): number {
+  const [h, m] = hhmm.split(":").map(Number);
+  return h * 60 + m;
+}
+
+/** Horas entre dois instantes, cada um data + hora. */
+export function horasEntre(
+  dataA: string,
+  horaA: string,
+  dataB: string,
+  horaB: string,
+): number {
+  const ms =
+    new Date(`${dataB}T${horaB}:00Z`).getTime() -
+    new Date(`${dataA}T${horaA}:00Z`).getTime();
+  return ms / 3_600_000;
+}
+
+/**
+ * O instante que vai para o Sistur: "YYYY-MM-DD" ou "YYYY-MM-DDTHH:MM".
+ *
+ * As duas formas são aceitas por `/simular` e por `criar`. Mandar a hora só
+ * quando ela existe evita fabricar uma meia-noite que ninguém escolheu.
+ */
+export function momento(data: string, hora?: string): string {
+  return hora ? `${data}T${hora}` : data;
+}
 
 /**
  * Validate what the URL carries.
@@ -77,7 +130,13 @@ export type Selecao = {
 export function validarSelecao(
   entrada: string | undefined,
   saida: string | undefined,
-  opcoes: { diaUnico: boolean; cutoff?: string | null },
+  opcoes: {
+    diaUnico: boolean;
+    cutoff?: string | null;
+    janela?: Janela | null;
+    horaEntrada?: string;
+    horaSaida?: string;
+  },
 ): Selecao {
   if (!entrada) return { completa: false };
 
@@ -122,5 +181,44 @@ export function validarSelecao(
     };
   }
 
-  return { entrada, saida, completa: true };
+  const { janela } = opcoes;
+  if (!janela) return { entrada, saida, completa: true };
+
+  const { horaEntrada, horaSaida } = opcoes;
+  const parcial = { entrada, saida, horaEntrada, horaSaida };
+
+  if (!horaEntrada || !horaSaida) return { ...parcial, completa: false };
+  if (!ehHoraValida(horaEntrada) || !ehHoraValida(horaSaida)) {
+    return { ...parcial, erro: "Horário inválido.", completa: false };
+  }
+
+  if (
+    minutos(horaEntrada) < minutos(janela.entradaDe) ||
+    minutos(horaEntrada) > minutos(janela.entradaAte)
+  ) {
+    return {
+      ...parcial,
+      erro: `A entrada é permitida entre ${janela.entradaDe} e ${janela.entradaAte}.`,
+      completa: false,
+    };
+  }
+
+  if (minutos(horaSaida) > minutos(janela.saidaAte)) {
+    return {
+      ...parcial,
+      erro: `A saída é permitida até as ${janela.saidaAte}.`,
+      completa: false,
+    };
+  }
+
+  const horas = horasEntre(entrada, horaEntrada, saida, horaSaida);
+  if (horas < janela.minHoras) {
+    return {
+      ...parcial,
+      erro: `Permanência mínima: ${janela.minHoras} horas. Esta seleção tem ${Math.floor(horas)}.`,
+      completa: false,
+    };
+  }
+
+  return { ...parcial, completa: true };
 }

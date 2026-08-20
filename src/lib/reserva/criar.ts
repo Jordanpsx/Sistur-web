@@ -1,5 +1,6 @@
 "use server";
 
+import { momento } from "./datas";
 import { redirect } from "next/navigation";
 import { lerQuantidades, ratearTotal, simular } from "./itens";
 import { lerRecursos, quantidadesPorTarifa, buscarRecursos } from "./recursos";
@@ -40,6 +41,11 @@ export async function criarReserva(
   const categoryId = Number(form.get("category_id"));
   const entrada = texto("entrada");
   const saida = texto("saida") || entrada;
+  // A hora vem do passo 2 e é preço no camping. Tudo daqui para baixo fala com
+  // o Sistur usando estes instantes, nunca a data crua: simular sobre um valor
+  // e criar sobre outro é a divergência que a anti-fraude recusa.
+  const inicio = momento(entrada, texto("he") || undefined);
+  const fim = momento(saida, texto("hs") || undefined);
 
   // Quantities arrive as the same `i<id>` keys the URL uses, so one parser
   // serves both and the two cannot drift apart.
@@ -66,7 +72,7 @@ export async function criarReserva(
   // Os espaços escolhidos viram quantidade na tarifa do grupo deles, que é a
   // linguagem do /simular; o `resource_id` volta a aparecer no rateio.
   const recursos = recursosSel.length
-    ? await buscarRecursos({ sourceId, categoryId, entrada, saida })
+    ? await buscarRecursos({ sourceId, categoryId, entrada: inicio, saida: fim })
     : [];
   const porTarifa = quantidadesPorTarifa(recursosSel, recursos);
   const quantidadesCompletas = { ...quantidades };
@@ -84,8 +90,8 @@ export async function criarReserva(
   const orcamento = await simular({
     sourceId,
     categoryId,
-    entrada,
-    saida,
+    entrada: inicio,
+    saida: fim,
     quantidades: quantidadesCompletas,
   });
   if (!orcamento) {
@@ -109,8 +115,8 @@ export async function criarReserva(
         email: texto("email"),
         telefone: texto("telefone"),
         observacoes: texto("observacoes"),
-        check_in_date: entrada,
-        check_out_date: saida,
+        check_in_date: inicio,
+        check_out_date: fim,
         items: ratearTotal(orcamento, recursosPorTarifa),
       }),
     });

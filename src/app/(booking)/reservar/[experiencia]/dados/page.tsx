@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { getExperiencia } from "@/lib/sistur/catalog";
-import { validarSelecao } from "@/lib/reserva/datas";
+import { getExperiencia, janelaDe } from "@/lib/sistur/catalog";
+import { momento, validarSelecao } from "@/lib/reserva/datas";
 import { lerQuantidades, simular } from "@/lib/reserva/itens";
 import {
   buscarRecursos,
@@ -48,9 +48,13 @@ export default async function DadosDoCliente({
     return Array.isArray(v) ? v[0] : v;
   };
 
+  const janela = janelaDe(e);
   const selecao = validarSelecao(um("entrada"), um("saida"), {
     diaUnico: e.single_day_only,
     cutoff: e.same_day_cutoff_time,
+    janela,
+    horaEntrada: um("he"),
+    horaSaida: um("hs"),
   });
   const quantidades = lerQuantidades(sp);
   const recursosSel = lerRecursos(sp);
@@ -75,11 +79,20 @@ export default async function DadosDoCliente({
 
   const entrada = selecao.entrada;
   const saida = e.single_day_only ? entrada : selecao.saida!;
+  // Com hora onde ela é preço. Recalcular sobre a data pura aqui mostraria no
+  // resumo um total menor que o do passo 2 — e cobraria o maior no fim.
+  const inicio = momento(entrada, selecao.horaEntrada);
+  const fim = momento(saida, selecao.horaSaida);
   // As churrasqueiras escolhidas viram quantidade na tarifa do grupo delas —
   // sem isto o resumo e a reserva sairiam só com o ingresso, que foi
   // exatamente o defeito relatado.
   const recursos = recursosSel.length
-    ? await buscarRecursos({ sourceId: e.sourceId, categoryId: e.id, entrada, saida })
+    ? await buscarRecursos({
+        sourceId: e.sourceId,
+        categoryId: e.id,
+        entrada: inicio,
+        saida: fim,
+      })
     : [];
   const porTarifa = quantidadesPorTarifa(recursosSel, recursos);
   const quantidadesCompletas = { ...quantidades };
@@ -90,8 +103,8 @@ export default async function DadosDoCliente({
   const orcamento = await simular({
     sourceId: e.sourceId,
     categoryId: e.id,
-    entrada,
-    saida,
+    entrada: inicio,
+    saida: fim,
     quantidades: quantidadesCompletas,
   });
 
@@ -104,6 +117,8 @@ export default async function DadosDoCliente({
         categoryId={e.id}
         entrada={entrada}
         saida={selecao.saida}
+        horaEntrada={selecao.horaEntrada}
+        horaSaida={selecao.horaSaida}
         diaUnico={e.single_day_only}
         quantidades={quantidades}
         recursos={recursosSel}

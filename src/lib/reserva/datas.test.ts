@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { diasEntre, hoje, validarSelecao } from "./datas";
+import { diasEntre, hoje, horasEntre, momento, validarSelecao } from "./datas";
 
 /**
  * Date rules for the funnel.
@@ -128,5 +128,110 @@ describe("validarSelecao — período", () => {
   it("uma noite é válida", () => {
     congelar("2027-05-01T12:00:00Z");
     expect(validarSelecao("2027-05-10", "2027-05-11", periodo).completa).toBe(true);
+  });
+});
+
+describe("janela de horário (camping)", () => {
+  const janela = {
+    entradaDe: "08:00",
+    entradaAte: "17:00",
+    saidaAte: "17:00",
+    minHoras: 24,
+  };
+  const base = { diaUnico: false, janela };
+  const d = (n: number) => {
+    const x = new Date();
+    x.setUTCDate(x.getUTCDate() + n);
+    return x.toISOString().slice(0, 10);
+  };
+
+  it("sem hora escolhida ainda não está completa", () => {
+    const s = validarSelecao(d(30), d(31), base);
+    expect(s.completa).toBe(false);
+    expect(s.erro).toBeUndefined(); // falta preencher, não é erro
+  });
+
+  it("aceita a estadia mínima", () => {
+    const s = validarSelecao(d(30), d(31), {
+      ...base,
+      horaEntrada: "08:00",
+      horaSaida: "08:00",
+    });
+    expect(s.completa).toBe(true);
+  });
+
+  it("recusa entrada antes da abertura", () => {
+    const s = validarSelecao(d(30), d(31), {
+      ...base,
+      horaEntrada: "06:00",
+      horaSaida: "17:00",
+    });
+    expect(s.completa).toBe(false);
+    expect(s.erro).toMatch(/entre 08:00 e 17:00/);
+  });
+
+  it("recusa entrada depois do fechamento da portaria", () => {
+    const s = validarSelecao(d(30), d(31), {
+      ...base,
+      horaEntrada: "18:00",
+      horaSaida: "17:00",
+    });
+    expect(s.erro).toMatch(/entre 08:00 e 17:00/);
+  });
+
+  it("recusa saída depois do limite", () => {
+    const s = validarSelecao(d(30), d(31), {
+      ...base,
+      horaEntrada: "08:00",
+      horaSaida: "19:00",
+    });
+    expect(s.erro).toMatch(/até as 17:00/);
+  });
+
+  it("recusa permanência abaixo do mínimo", () => {
+    // 09:00 → 08:00 do dia seguinte são 23 horas.
+    const s = validarSelecao(d(30), d(31), {
+      ...base,
+      horaEntrada: "09:00",
+      horaSaida: "08:00",
+    });
+    expect(s.completa).toBe(false);
+    expect(s.erro).toMatch(/mínima: 24 horas/);
+  });
+
+  it("devolve as horas escolhidas mesmo quando recusa", () => {
+    // O passo 2 re-deriva a seleção do próprio estado; sem os valores de volta
+    // os campos nasceriam vazios e a mensagem sumiria.
+    const s = validarSelecao(d(30), d(31), {
+      ...base,
+      horaEntrada: "06:00",
+      horaSaida: "17:00",
+    });
+    expect(s.horaEntrada).toBe("06:00");
+    expect(s.horaSaida).toBe("17:00");
+  });
+
+  it("sem janela, ignora horário por completo", () => {
+    const s = validarSelecao(d(30), d(31), { diaUnico: false });
+    expect(s.completa).toBe(true);
+    expect(s.horaEntrada).toBeUndefined();
+  });
+});
+
+describe("horasEntre e momento", () => {
+  it("conta as 33 horas que fazem o preço do camping subir", () => {
+    expect(horasEntre("2026-10-01", "08:00", "2026-10-02", "17:00")).toBe(33);
+  });
+
+  it("uma diária cheia são 24", () => {
+    expect(horasEntre("2026-10-01", "14:00", "2026-10-02", "14:00")).toBe(24);
+  });
+
+  it("monta o instante com hora quando ela existe", () => {
+    expect(momento("2026-10-01", "08:00")).toBe("2026-10-01T08:00");
+  });
+
+  it("sem hora, devolve a data pura — não inventa meia-noite", () => {
+    expect(momento("2026-10-01")).toBe("2026-10-01");
   });
 });

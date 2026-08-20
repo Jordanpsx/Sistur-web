@@ -26,6 +26,8 @@ export function PassoDados({
   categoryId,
   entrada,
   saida,
+  horaEntrada,
+  horaSaida,
   diaUnico,
   quantidades,
   recursos,
@@ -38,6 +40,9 @@ export function PassoDados({
   categoryId: number;
   entrada: string;
   saida?: string;
+  // Presentes só no camping, onde a hora é preço.
+  horaEntrada?: string;
+  horaSaida?: string;
   diaUnico: boolean;
   quantidades: Quantidades;
   /** Ids das churrasqueiras escolhidas. */
@@ -55,6 +60,8 @@ export function PassoDados({
     const p = new URLSearchParams();
     p.set("entrada", entrada);
     if (saida && !diaUnico) p.set("saida", saida);
+    if (horaEntrada) p.set("he", horaEntrada);
+    if (horaSaida) p.set("hs", horaSaida);
     for (const [id, q] of Object.entries(quantidades)) p.set(`i${id}`, String(q));
     for (const id of recursos) p.set(`r${id}`, "1");
     return `/reservar/${slug}/?${p}`;
@@ -74,6 +81,11 @@ export function PassoDados({
         <input type="hidden" name="category_id" value={categoryId} />
         <input type="hidden" name="entrada" value={entrada} />
         {saida && !diaUnico && <input type="hidden" name="saida" value={saida} />}
+        {/* A hora precisa chegar à criação. Sem ela o Sistur monta a reserva
+            sobre meia-noite e cobra menos do que o resumo mostrou — no camping
+            08:00→17:00 do dia seguinte são 33 horas, não 24. */}
+        {horaEntrada && <input type="hidden" name="he" value={horaEntrada} />}
+        {horaSaida && <input type="hidden" name="hs" value={horaSaida} />}
         {Object.entries(quantidades).map(([id, q]) => (
           <input key={id} type="hidden" name={`i${id}`} value={q} />
         ))}

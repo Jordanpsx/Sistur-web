@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { TAGS } from "./tags";
+import type { Janela } from "@/lib/reserva/datas";
 
 /**
  * Live pricing for the landing pages.
@@ -56,6 +57,14 @@ const CategorySchema = z.object({
   // overnight stay (camping).
   single_day_only: z.boolean().default(false),
   same_day_cutoff_time: z.string().nullable().optional(),
+  // Janela de horário da estadia. Nula onde a hora não entra no preço (day
+  // use); preenchida no camping, onde a diária é pró-rata por hora e o
+  // formulário precisa pedir a hora ao cliente. Os limites são dado do
+  // operador — a portaria muda o horário sem ninguém editar o site.
+  check_in_from: z.string().nullable().optional(),
+  check_in_until: z.string().nullable().optional(),
+  check_out_until: z.string().nullable().optional(),
+  min_stay_hours: z.number().nullable().optional(),
 });
 
 const GroupSchema = z.object({
@@ -92,6 +101,19 @@ export type Experiencia = z.infer<typeof CategorySchema> & {
  * would have been wrong on the day it shipped. A category without a slug is
  * skipped — it has no stable route to point at.
  */
+/**
+ * A janela de horário da experiência, ou null quando ela não tem uma.
+ *
+ * Exige as três horas juntas: uma janela pela metade produziria um formulário
+ * que pede hora sem saber recusá-la, e o preço do camping depende disso. Meia
+ * configuração vale como nenhuma, e o formulário volta a pedir só a data.
+ */
+export function janelaDe(e: Experiencia): Janela | null {
+  const { check_in_from: de, check_in_until: ate, check_out_until: saida } = e;
+  if (!de || !ate || !saida) return null;
+  return { entradaDe: de, entradaAte: ate, saidaAte: saida, minHoras: e.min_stay_hours ?? 0 };
+}
+
 export async function getExperiencias(): Promise<Experiencia[]> {
   const cat = await getCatalog();
   return cat.sources.flatMap((s) =>
