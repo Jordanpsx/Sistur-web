@@ -41,9 +41,18 @@ export type LinhaOrcamento = {
   item_id: number;
   item_name: string;
   quantity: number;
+  /** Tarifa base do item — a diária, não o que se paga por ela. */
   unit_price: number;
+  /**
+   * O que uma unidade custa nesta estadia. Difere de `unit_price` sempre que o
+   * tempo entra na conta: 33 horas de uma diária de R$ 90,00 dão R$ 123,75.
+   * Ausente nos itens FIXED, onde as duas coisas são a mesma.
+   */
+  unit_total?: number;
   item_total: number;
   num_days: number | null;
+  total_hours?: number | null;
+  billing_type?: string;
 };
 
 export type Orcamento = {
@@ -52,6 +61,7 @@ export type Orcamento = {
   discount_amount: number;
   discount_details: Record<string, unknown>;
   service_fee: number;
+  service_fee_details?: { percent?: number; amount?: number } | null;
   total: number;
 };
 

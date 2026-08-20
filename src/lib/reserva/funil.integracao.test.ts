@@ -751,3 +751,53 @@ descreve("proxies do site aceitam a hora", () => {
     }
   });
 });
+
+descreve("a conta aberta", () => {
+  const d = (n: number) => {
+    const x = new Date();
+    x.setUTCDate(x.getUTCDate() + n);
+    return x.toISOString().slice(0, 10);
+  };
+
+  it("o day use abre item, subtotal, desconto pelo nome e total", async () => {
+    const t = await texto(`/reservar/day-use/?entrada=${d(30)}&i1=2&i2=1`);
+    expect(t).toMatch(/Ver detalhes do valor/);
+    expect(t).toMatch(/2 × R\$/);
+    expect(t).toMatch(/Subtotal/);
+    // O desconto pelo nome e percentual. Antes dizia só "Desconto".
+    expect(t).toMatch(/Reserva Antecipada \(\d+%\)/);
+    expect(t).toMatch(/Total/);
+  });
+
+  it("o camping explica o pró-rata que faz o número parecer arbitrário", async () => {
+    const t = await texto(
+      `/reservar/camping/?entrada=${d(30)}&saida=${d(31)}&he=08:00&hs=17:00&i18=2`,
+    );
+    expect(t).toMatch(/1 diária \+ 9h/);
+    expect(t).toMatch(/tarifa R\$/);
+  });
+
+  it("em diárias cheias não fala em tarifa base — não há o que explicar", async () => {
+    const t = await texto(`/reservar/camping/?entrada=${d(30)}&saida=${d(31)}&i18=2`);
+    expect(t).toMatch(/1 diária/);
+    expect(t).not.toMatch(/tarifa R\$/);
+  });
+
+  it("o passo 3 mostra a mesma conta, aberta", async () => {
+    // Ali a pessoa está confirmando o que vai pagar; esconder a conta atrás de
+    // um clique seria esconder o que ela veio ver.
+    const t = await texto(`/reservar/day-use/dados/?entrada=${d(30)}&i1=2&i2=1`);
+    expect(t).toMatch(/Subtotal/);
+    expect(t).toMatch(/Reserva Antecipada \(\d+%\)/);
+    expect(t).not.toMatch(/Ver detalhes do valor/);
+  });
+
+  it("passo 2 e passo 3 contam a mesma história", async () => {
+    const q = `entrada=${d(30)}&saida=${d(31)}&he=08:00&hs=17:00&i18=2`;
+    const p2 = await texto(`/reservar/camping/?${q}`);
+    const p3 = await texto(`/reservar/camping/dados/?${q}`);
+    const subtotal = (s: string) => s.match(/Subtotal\s+R\$[\s ]*([\d.,]+)/)?.[1];
+    expect(subtotal(p2)).toBeTruthy();
+    expect(subtotal(p3)).toBe(subtotal(p2));
+  });
+});

@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { criarReserva, type EstadoCriacao } from "@/lib/reserva/criar";
 import { formatarBRL, type Orcamento, type Quantidades } from "@/lib/reserva/itens";
+import { DetalheValores } from "./detalhe-valores";
 import { formatarData } from "@/lib/reserva/datas";
 import { Passos } from "./passos";
 
@@ -192,30 +193,13 @@ export function PassoDados({
 
           {orcamento ? (
             <div className="f-total-box">
-              {orcamento.items_breakdown.map((l) => (
-                <div key={l.item_id} className="f-linha">
-                  <span>
-                    {l.quantity}× {l.item_name}
-                  </span>
-                  <span>{formatarBRL(l.item_total)}</span>
-                </div>
-              ))}
-              {orcamento.discount_amount > 0 && (
-                <div className="f-linha f-linha--desc">
-                  <span>Desconto</span>
-                  <span>− {formatarBRL(orcamento.discount_amount)}</span>
-                </div>
-              )}
-              {orcamento.service_fee > 0 && (
-                <div className="f-linha">
-                  <span>Taxa de serviço</span>
-                  <span>{formatarBRL(orcamento.service_fee)}</span>
-                </div>
-              )}
-              <div className="f-linha f-linha--total">
-                <span>Total</span>
-                <span>{formatarBRL(orcamento.total)}</span>
-              </div>
+              {/* A mesma conta do passo 2, da mesma função. Antes esta tela
+                  montava a sua própria: sem subtotal, com o desconto chamado
+                  só de "Desconto" e sem dizer por que uma diária de R$ 90,00
+                  virava R$ 123,75. Duas telas explicando o mesmo total de
+                  jeitos diferentes é uma delas estando errada mais cedo ou
+                  mais tarde. */}
+              <DetalheValores orcamento={orcamento} sempreAberto />
             </div>
           ) : (
             <p className="f-hint">

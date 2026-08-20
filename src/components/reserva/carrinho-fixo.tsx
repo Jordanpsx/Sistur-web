@@ -1,6 +1,7 @@
 "use client";
 
 import { formatarBRL, type Orcamento } from "@/lib/reserva/itens";
+import { DetalheValores } from "./detalhe-valores";
 
 /**
  * Sticky cart.
@@ -58,6 +59,10 @@ export function CarrinhoFixo({
               <p className="text-xl font-bold leading-tight text-[var(--c-fg)]">
                 {orcamento ? formatarBRL(orcamento.total) : "—"}
               </p>
+              {/* Fechado por padrão: o total é o que a barra existe para
+                  mostrar, e uma conta sempre aberta empurraria o botão para
+                  fora da tela no celular. */}
+              <DetalheValores orcamento={orcamento} />
             </div>
           )}
         </div>
