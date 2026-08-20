@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ehInstanteValido } from "@/lib/reserva/datas";
 
 /**
  * Price preview — proxies to Sistur's `POST /reservas/api/public/simular`.
@@ -47,7 +48,8 @@ export async function POST(req: Request) {
     items?: unknown;
   };
 
-  const dataOk = (v: unknown) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
+  // Aceita hora: o camping manda instantes, porque lá a hora é preço.
+  const dataOk = ehInstanteValido;
   if (
     typeof source_id !== "number" ||
     typeof category_id !== "number" ||

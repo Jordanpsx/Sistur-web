@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { diasEntre, hoje, horasEntre, momento, validarSelecao } from "./datas";
+import {
+  diasEntre,
+  ehInstanteValido,
+  hoje,
+  horasEntre,
+  momento,
+  validarSelecao,
+} from "./datas";
 
 /**
  * Date rules for the funnel.
@@ -233,5 +240,47 @@ describe("horasEntre e momento", () => {
 
   it("sem hora, devolve a data pura — não inventa meia-noite", () => {
     expect(momento("2026-10-01")).toBe("2026-10-01");
+  });
+});
+
+describe("ehInstanteValido", () => {
+  it("aceita data pura e data com hora", () => {
+    expect(ehInstanteValido("2026-10-01")).toBe(true);
+    expect(ehInstanteValido("2026-10-01T08:00")).toBe(true);
+  });
+
+  it("recusa qualquer coisa fora da forma", () => {
+    for (const v of [
+      "",
+      "2026-10-1",
+      "01/10/2026",
+      "2026-10-01T8:00",
+      "2026-10-01T08:00:00", // segundos não são usados e alargam a superfície
+      "2026-10-01T08:00'; DROP",
+      "2026-10-01 08:00",
+      null,
+      undefined,
+      20261001,
+    ]) {
+      expect(ehInstanteValido(v), String(v)).toBe(false);
+    }
+  });
+});
+
+describe("ehInstanteValido recusa data impossível", () => {
+  it("mês 13 e dia 99 não passam", () => {
+    // Passavam no regex de formato e seguiam até o Sistur, que recusava — e a
+    // tela dizia "nenhum espaço disponível" em vez de "parâmetro inválido".
+    expect(ehInstanteValido("2026-13-99")).toBe(false);
+    expect(ehInstanteValido("2026-02-30")).toBe(false);
+  });
+
+  it("hora fora do relógio não passa", () => {
+    expect(ehInstanteValido("2026-10-01T25:00")).toBe(false);
+    expect(ehInstanteValido("2026-10-01T08:75")).toBe(false);
+  });
+
+  it("29 de fevereiro em ano bissexto passa", () => {
+    expect(ehInstanteValido("2028-02-29")).toBe(true);
   });
 });

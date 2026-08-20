@@ -75,6 +75,33 @@ export type Janela = {
   minHoras: number;
 };
 
+/**
+ * Um instante aceitável para mandar ao Sistur: data, ou data com hora.
+ *
+ * Vive aqui, e não dentro de cada rota, porque as duas coisas que a usam são
+ * fronteiras de segurança: o valor entra numa URL e num corpo que vão para o
+ * Sistur, então a forma precisa ser estrita. Estava duplicada como
+ * `/^\d{4}-\d{2}-\d{2}$/` em `/api/recursos` e `/api/simular`, e quando o
+ * camping passou a mandar hora as duas recusaram — a primeira pintura vinha do
+ * servidor e funcionava, mas toda atualização feita no navegador respondia 400
+ * e a tela dizia que não dava para calcular o valor.
+ *
+ * Estrita de propósito: só dígitos, hífen, "T" e dois-pontos, nesta ordem.
+ */
+export function ehInstanteValido(v: unknown): v is string {
+  if (typeof v !== "string") return false;
+  const m = /^(\d{4}-\d{2}-\d{2})(?:T(\d{2}):(\d{2}))?$/.exec(v);
+  if (!m) return false;
+  // A forma não basta: "2026-13-99" passa em qualquer regex de data e não
+  // existe. Antes ele seguia até o Sistur, que recusava, e a rota devolvia
+  // lista vazia — o site mostrava "nenhum espaço disponível" para uma data
+  // impossível, em vez de dizer que o parâmetro estava errado.
+  if (!ehDataValida(m[1])) return false;
+  if (m[2] === undefined) return true;
+  const [h, min] = [Number(m[2]), Number(m[3])];
+  return h < 24 && min < 60;
+}
+
 export type Selecao = {
   entrada?: string;
   saida?: string;

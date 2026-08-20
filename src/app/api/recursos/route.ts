@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ehInstanteValido } from "@/lib/reserva/datas";
 
 /**
  * Resource availability, proxied for the browser.
@@ -21,15 +22,21 @@ export async function GET(req: Request) {
   const saida = q.get("check_out") ?? "";
 
   const numero = (v: string) => /^\d{1,9}$/.test(v);
-  const data = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v);
-  if (!numero(source) || !numero(categoria) || !data(entrada) || !data(saida)) {
+  // Aceita hora: o camping manda instantes, porque lá a hora é preço.
+  if (
+    !numero(source) ||
+    !numero(categoria) ||
+    !ehInstanteValido(entrada) ||
+    !ehInstanteValido(saida)
+  ) {
     return NextResponse.json({ erro: "Parâmetros inválidos." }, { status: 400 });
   }
 
   try {
     const res = await fetch(
       `${API}/api/public/reservas/disponibilidade?source_id=${source}` +
-        `&category_id=${categoria}&check_in=${entrada}&check_out=${saida}`,
+        `&category_id=${categoria}&check_in=${encodeURIComponent(entrada)}` +
+        `&check_out=${encodeURIComponent(saida)}`,
       { cache: "no-store", signal: AbortSignal.timeout(8000) },
     );
     if (!res.ok) throw new Error(String(res.status));

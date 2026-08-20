@@ -694,3 +694,60 @@ descreveCria("camping — a hora sobrevive à criação", () => {
     expect(corpo.total).toBeCloseTo(sim.total, 2);
   });
 });
+
+descreve("proxies do site aceitam a hora", () => {
+  /**
+   * O buraco que deixou isto passar: todo teste anterior lia o HTML que o
+   * servidor renderiza, e o servidor chama o Sistur direto. Os proxies só
+   * entram quando o navegador atualiza a tela — trocar uma quantidade, mudar
+   * uma data. Eles recusavam o "T" com 400, e a tela dizia que não era
+   * possível calcular o valor no momento.
+   */
+  const d = (n: number) => {
+    const x = new Date();
+    x.setUTCDate(x.getUTCDate() + n);
+    return x.toISOString().slice(0, 10);
+  };
+
+  it("/api/simular/ aceita instante com hora", async () => {
+    const res = await fetch(`${SITE}/api/simular/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source_id: 1,
+        category_id: 2,
+        check_in_date: `${d(30)}T08:00`,
+        check_out_date: `${d(31)}T17:00`,
+        items: [{ item_id: 18, quantity: 2 }],
+      }),
+    });
+    expect(res.status).toBe(200);
+    const corpo = await res.json();
+    expect(corpo.items_breakdown[0].total_hours).toBe(33);
+  });
+
+  it("/api/recursos/ aceita instante com hora", async () => {
+    const q = new URLSearchParams({
+      source_id: "1",
+      category_id: "2",
+      check_in: `${d(30)}T08:00`,
+      check_out: `${d(31)}T17:00`,
+    });
+    const res = await fetch(`${SITE}/api/recursos/?${q}`);
+    expect(res.status).toBe(200);
+    expect((await res.json()).resources.length).toBeGreaterThan(0);
+  });
+
+  it("continuam recusando lixo", async () => {
+    for (const v of ["", "amanhã", "2026-13-99", "2026-10-01T08:00:00"]) {
+      const q = new URLSearchParams({
+        source_id: "1",
+        category_id: "2",
+        check_in: v,
+        check_out: v,
+      });
+      const r = await fetch(`${SITE}/api/recursos/?${q}`);
+      expect(r.status, `check_in=${v}`).toBe(400);
+    }
+  });
+});
