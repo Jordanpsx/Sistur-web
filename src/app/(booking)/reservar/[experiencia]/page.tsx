@@ -82,7 +82,10 @@ export default async function FormularioReserva({
     cutoff: e.same_day_cutoff_time,
     janela,
     horaEntrada: um("he") ?? janela?.entradaDe,
-    horaSaida: um("hs") ?? janela?.saidaAte,
+    // Espelha a entrada, como o passo 2 faz no cliente. Assim a primeira
+    // pintura já traz diárias cheias e o preço base, em vez de abrir num total
+    // quebrado que ninguém escolheu.
+    horaSaida: um("hs") ?? um("he") ?? janela?.entradaDe,
   });
   const quantidades = lerQuantidades(sp);
   const recursosSel = lerRecursos(sp);

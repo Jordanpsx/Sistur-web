@@ -98,14 +98,32 @@ export function PassoReserva({
 }) {
   const [entrada, setEntrada] = useState(inicial.entrada ?? "");
   const [saida, setSaida] = useState(inicial.saida ?? "");
-  // Pré-preenchidas com a abertura da portaria: é a escolha de quase todo mundo,
-  // e deixar em branco travaria o total num formulário que já tem data válida.
+  // A mesma hora nas duas pontas, e não a abertura contra o fechamento. Isso dá
+  // diárias cheias — 24, 48, 72 horas — e o formulário abre no preço base, em
+  // número redondo. Começar em 08:00 → 17:00 abria em 33 horas e R$ 123,75, um
+  // valor quebrado antes de a pessoa ter escolhido nada. Saindo do redondo, ver
+  // o total mexer explica sozinho de onde vem a diferença.
   const [horaEntrada, setHoraEntrada] = useState(
     inicial.horaEntrada ?? janela?.entradaDe ?? "",
   );
   const [horaSaida, setHoraSaida] = useState(
-    inicial.horaSaida ?? janela?.saidaAte ?? "",
+    inicial.horaSaida ?? inicial.horaEntrada ?? janela?.entradaDe ?? "",
   );
+  // Enquanto ninguém tocou na saída, ela segue a entrada. Não é só estética:
+  // sem isso, mudar a entrada para 10:00 deixava a saída às 08:00 e derrubava a
+  // estadia para 22 horas, abaixo do mínimo — um erro que a pessoa não pediu e
+  // não saberia desfazer. Depois que ela escolhe uma saída, mandamos parar.
+  const [saidaEscolhida, setSaidaEscolhida] = useState(
+    inicial.horaSaida != null && inicial.horaSaida !== inicial.horaEntrada,
+  );
+
+  const mudarEntrada = (v: string) => {
+    setHoraEntrada(v);
+    if (!saidaEscolhida && janela) {
+      // Espelha, sem passar do limite de saída.
+      setHoraSaida(v > janela.saidaAte ? janela.saidaAte : v);
+    }
+  };
   const [qtds, setQtds] = useState<Quantidades>(inicial.quantidades);
   const [orcamento, setOrcamento] = useState<Orcamento | null>(orcamentoInicial);
   const [carregando, setCarregando] = useState(false);
@@ -338,16 +356,31 @@ export function PassoReserva({
       : 0;
 
   const porGrupo = new Map(grupos.map((g) => [g.id, g]));
-  const secoes = agruparAdicionais(recursos, grupos);
+  // Duas formas de escolher, e quem decide é o estoque, não a categoria.
+  //
+  // Estoque 1 é uma coisa só, e a pessoa escolhe QUAL: a churrasqueira A4, com
+  // a foto dela, porque a A4 e a A1 não são a mesma churrasqueira. Estoque
+  // maior é um pool intercambiável — ninguém quer escolher qual das oito
+  // barracas pequenas, só quantas.
+  //
+  // A decisão é por seção inteira, não por tarifa. "Itens para Camping" tem
+  // Barraca Pequena com estoque 8 e Barraca Grande com estoque 1; decidindo uma
+  // a uma, a seção saía com cinco contadores e um card "Selecionar" no meio.
+  const tarifasEmPool = new Set(
+    recursos.filter((r) => (r.stock ?? 1) > 1).map((r) => r.item_id),
+  );
+  const todasAsSecoes = agruparAdicionais(recursos, grupos);
+  const secoes = todasAsSecoes.filter(
+    (sec) => !sec.sub.some((x) => x.itens.some((r) => tarifasEmPool.has(r.item_id))),
+  );
 
-  // Duas formas de escolher, decididas pelo dado e não por categoria: se a
-  // disponibilidade devolve unidades físicas para a tarifa, a pessoa escolhe
-  // QUAL (a churrasqueira A4, com a foto dela); se não devolve, escolhe QUANTAS
-  // (três colchões de casal). Uma tarifa com unidades nunca aparece nas duas
-  // listas, senão a churrasqueira seria oferecida como card e como contador.
-  const comUnidadeFisica = new Set(recursos.map((r) => r.item_id));
+  // O que sobrou vira contador: os itens sem recurso nenhum (lenha) e os das
+  // seções que caíram em pool. Uma tarifa nunca aparece nas duas listas.
+  const porUnidade = new Set(
+    secoes.flatMap((sec) => sec.sub.flatMap((x) => x.itens.map((r) => r.item_id))),
+  );
   const secoesItens = agruparAdicionais(
-    adicionais.filter((i) => !comUnidadeFisica.has(i.id)),
+    adicionais.filter((i) => !porUnidade.has(i.id)),
     grupos,
   );
 
@@ -429,7 +462,7 @@ export function PassoReserva({
                 min={janela.entradaDe}
                 max={janela.entradaAte}
                 value={horaEntrada}
-                onChange={(ev) => setHoraEntrada(ev.target.value)}
+                onChange={(ev) => mudarEntrada(ev.target.value)}
               />
               <p className="f-hint">
                 Portaria aberta das {janela.entradaDe} às {janela.entradaAte}.
@@ -448,13 +481,30 @@ export function PassoReserva({
                 step={1800}
                 max={janela.saidaAte}
                 value={horaSaida}
-                onChange={(ev) => setHoraSaida(ev.target.value)}
+                onChange={(ev) => {
+                  setSaidaEscolhida(true);
+                  setHoraSaida(ev.target.value);
+                }}
               />
               <p className="f-hint">
                 Até as {janela.saidaAte}. Permanência mínima de {janela.minHoras} horas.
               </p>
             </div>
           </div>
+        )}
+
+        {/* Quantas horas a escolha tem. Sem isto o total muda e a pessoa não
+            sabe por quê — o preço parece arbitrário em vez de proporcional. */}
+        {janela && selecao.completa && selecao.saida && (
+          <p className="f-hint">
+            {(() => {
+              const h = horasEntre(selecao.entrada!, horaEntrada, selecao.saida, horaSaida);
+              const diarias = h / 24;
+              return Number.isInteger(diarias)
+                ? `${h} horas — ${diarias} diária${diarias > 1 ? "s" : ""} cheia${diarias > 1 ? "s" : ""}.`
+                : `${h} horas — ${Math.floor(diarias)} diária${Math.floor(diarias) > 1 ? "s" : ""} mais ${Math.round(h % 24)} hora${Math.round(h % 24) > 1 ? "s" : ""} proporcionais.`;
+            })()}
+          </p>
         )}
 
         {selecao.erro && (

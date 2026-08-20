@@ -565,6 +565,51 @@ descreve("camping — a hora é preço", () => {
     expect(longa.total).toBeGreaterThan(curta.total);
   });
 
+  it("abre em diárias cheias, no preço base e em número redondo", async () => {
+    // Abrir em 08:00 → 17:00 dava 33 horas e R$ 123,75 antes de a pessoa
+    // escolher nada — um valor quebrado que parecia arbitrário. Mesma hora nas
+    // duas pontas dá a diária cheia, e o total só sai do redondo quando o
+    // cliente mexe, que é quando ele entende por quê.
+    const uma = await totalDe(`entrada=${d(30)}&saida=${d(31)}&i18=2`);
+    const duas = await totalDe(`entrada=${d(30)}&saida=${d(32)}&i18=2`);
+    expect(uma.horas).toBe(24);
+    expect(duas.horas).toBe(48);
+    expect(duas.total).toBeCloseTo(uma.total * 2, 2);
+  });
+
+  it("mudar só a entrada não quebra a estadia mínima", async () => {
+    // A saída acompanha a entrada enquanto ninguém a escolheu. Sem isso, mover
+    // a entrada para 10:00 deixava a saída às 08:00, caía para 22 horas e
+    // batia no mínimo de 24 — um erro que a pessoa não pediu.
+    const t = await texto(`/reservar/camping/?entrada=${d(30)}&saida=${d(31)}&he=10:00`);
+    expect(t).not.toMatch(/Permanência mínima: 24 horas/i);
+    expect(t).toMatch(/24 horas — 1 diária cheia/);
+  });
+
+  it("diz quantas horas a escolha tem, para o total não parecer arbitrário", async () => {
+    const t = await texto(
+      `/reservar/camping/?entrada=${d(30)}&saida=${d(31)}&he=08:00&hs=17:00`,
+    );
+    expect(t).toMatch(/33 horas — 1 diária mais 9 horas proporcionais/);
+  });
+
+  it("pool é contador, unidade é card — quem decide é o estoque", async () => {
+    // 8 barracas pequenas são intercambiáveis: ninguém quer escolher QUAL, só
+    // quantas. A churrasqueira A4 não é intercambiável com a A1, e a foto é
+    // dela. Oferecer as duas do mesmo jeito punha um card "Selecionar" no meio
+    // de cinco contadores.
+    const html = await (
+      await fetch(`${SITE}/reservar/camping/?entrada=${d(30)}&saida=${d(31)}`, {
+        redirect: "follow",
+      })
+    ).text();
+    const texto = html.replace(/<script[\s\S]*?<\/script>/g, "").replace(/<[^>]*>/g, " ");
+    const cards = texto.match(/Selecionar/g)?.length ?? 0;
+    const pits = texto.match(/Churrasqueira [AB]\d/g)?.length ?? 0;
+    expect(cards).toBeGreaterThan(0);
+    expect(cards).toBe(pits);
+  });
+
   it("recusa entrada fora do horário da portaria", async () => {
     const t = await texto(
       `/reservar/camping/?entrada=${d(30)}&saida=${d(31)}&he=06:00&hs=17:00`,
@@ -587,7 +632,12 @@ descreve("camping — a hora é preço", () => {
     expect(t).toMatch(/Barraca Pequena/);
     expect(t).toMatch(/Colchão Casal/);
     expect(t).toMatch(/Churrasqueiras/);
+    // Churrasqueira é unidade: aparece pelo nome DELA, nunca pela tarifa.
+    expect(t).toMatch(/Churrasqueira A4/);
     expect(t).not.toMatch(/Churrasqueira Pequena \(A\)/);
+    // Uma seção só. Decidir card-ou-contador tarifa a tarifa partia "Itens
+    // para Camping" em duas, com o mesmo título aparecendo duas vezes.
+    expect(t.match(/Itens para Camping/g)).toHaveLength(1);
   });
 });
 

@@ -24,6 +24,10 @@ const RecursoSchema = z.object({
   is_available: z.boolean(),
   // null = estoque infinito. Não é "zero disponível".
   available: z.number().nullable(),
+  // Capacidade total, não quantas sobraram. É o que separa uma unidade que se
+  // escolhe pelo nome (Churrasqueira A4, estoque 1) de um pool intercambiável
+  // (8 barracas pequenas). Ausente = trate como unidade.
+  stock: z.number().nullable().optional(),
   // Tarifa que cobre este recurso na categoria pedida.
   item_id: z.number(),
   item_name: z.string(),
