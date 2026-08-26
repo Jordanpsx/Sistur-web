@@ -18,6 +18,22 @@ import type { Janela } from "@/lib/reserva/datas";
 const API = process.env.SISTUR_API_URL!;
 const TOKEN = process.env.SISTUR_PUBLIC_TOKEN ?? "";
 const TTL = 300;
+/** Host por onde o navegador alcança a biblioteca de mídia. Ver lib/sistur/midia.ts. */
+const MIDIA = process.env.SISTUR_MIDIA_URL ?? "";
+
+/**
+ * Resolve um endereço de mídia para algo que o navegador alcance.
+ *
+ * A biblioteca devolve caminho relativo (`/midia/<nome>`) de propósito: o host
+ * muda entre staging e produção. Mas quem serve o arquivo é o Sistur, não o
+ * site — deixar o caminho relativo o faria apontar para o próprio Next, que não
+ * tem o arquivo. Endereço já absoluto passa intacto: as fotos antigas ainda
+ * moram nos uploads do WordPress.
+ */
+function resolverMidia(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return url.startsWith("/") ? `${MIDIA}${url}` : url;
+}
 
 const ItemSchema = z.object({
   id: z.number(),
@@ -121,7 +137,12 @@ export async function getExperiencias(): Promise<Experiencia[]> {
   return cat.sources.flatMap((s) =>
     s.categories
       .filter((c) => c.slug)
-      .map((c) => ({ ...c, sourceId: s.id, venue: s.name })),
+      .map((c) => ({
+        ...c,
+        image_url: resolverMidia(c.image_url),
+        sourceId: s.id,
+        venue: s.name,
+      })),
   );
 }
 
