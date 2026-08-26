@@ -12,6 +12,12 @@ import { VideoDeFundo } from "./video-de-fundo";
  * lugar da miniatura parada. O vídeo começa quando a pessoa aponta ou foca o
  * cartão; em toque, onde não existe hover, começa quando o cartão aparece.
  *
+ * O cartão tem dois modos, e o dado decide qual: com `onQtd` ele vende — preço,
+ * botão, contador. Sem `onQtd` ele **anuncia**: mostra quando a atividade
+ * acontece e mais nada. É o caso da tirolesa e do arvorismo hoje, que rolam aos
+ * domingos mas não são vendidos pelo site; um botão "Adicionar" ali prometeria
+ * uma reserva que o funil não sabe fazer.
+ *
  * **O preço nunca é digitado aqui.** `preco` é o valor que o Sistur resolveu
  * para a data escolhida — via `/simular` ou pela tarifa do catálogo. A home
  * antiga do WordPress guardava preço em campo de ACF e ele divergia do que o
@@ -36,15 +42,19 @@ export type Atividade = {
 export function ExperienceCard({
   atividade,
   preco,
-  quantidade,
+  quantidade = 0,
   onQtd,
+  disponibilidade,
   max = 20,
 }: {
   atividade: Atividade;
   /** Resolvido pelo Sistur. `undefined` = data ainda não escolhida. */
   preco?: number;
-  quantidade: number;
-  onQtd: (valor: number) => void;
+  quantidade?: number;
+  /** Ausente = modo anúncio: o cartão informa, não vende. */
+  onQtd?: (valor: number) => void;
+  /** Quando a atividade acontece — "Aos domingos". Só no modo anúncio. */
+  disponibilidade?: string;
   max?: number;
 }) {
   const [apontado, setApontado] = useState(false);
@@ -67,6 +77,7 @@ export function ExperienceCard({
     return () => obs.disconnect();
   }, [temHover]);
 
+  const vende = typeof onQtd === "function";
   const escolhido = quantidade > 0;
   const tocando = temHover ? apontado : visivel;
 
@@ -112,6 +123,13 @@ export function ExperienceCard({
           </p>
         )}
 
+        {!vende && (
+          <p className="mt-auto pt-3 text-sm font-semibold text-[var(--c-accent-dark)]">
+            {disponibilidade ?? "Consulte na recepção"}
+          </p>
+        )}
+
+        {vende && (
         <div className="mt-auto flex items-center justify-between gap-3 pt-3">
           <p className="text-base font-bold tabular-nums text-[var(--c-fg)]">
             {preco != null ? (
@@ -127,7 +145,7 @@ export function ExperienceCard({
             <div className="flex items-center gap-1 rounded-full border border-[var(--c-border)] p-1">
               <BotaoQtd
                 rotulo={`Remover um ${atividade.titulo}`}
-                onClick={() => onQtd(quantidade - 1)}
+                onClick={() => onQtd?.(quantidade - 1)}
               >
                 −
               </BotaoQtd>
@@ -139,7 +157,7 @@ export function ExperienceCard({
               </span>
               <BotaoQtd
                 rotulo={`Adicionar mais um ${atividade.titulo}`}
-                onClick={() => onQtd(Math.min(max, quantidade + 1))}
+                onClick={() => onQtd?.(Math.min(max, quantidade + 1))}
                 desabilitado={quantidade >= max}
               >
                 +
@@ -148,7 +166,7 @@ export function ExperienceCard({
           ) : (
             <button
               type="button"
-              onClick={() => onQtd(1)}
+              onClick={() => onQtd?.(1)}
               className="min-h-[44px] shrink-0 rounded-full bg-[var(--c-accent)] px-6 text-sm
                          font-semibold uppercase tracking-wide text-[var(--c-on-accent)]
                          transition-colors hover:bg-[var(--c-accent-dark)]
@@ -158,6 +176,7 @@ export function ExperienceCard({
             </button>
           )}
         </div>
+        )}
       </div>
     </article>
   );
