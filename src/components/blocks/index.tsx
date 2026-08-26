@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { ExperienceChoice } from "@/components/imersivo/experience-choice";
 import Link from "next/link";
 import type { Block } from "@/lib/sistur/pages";
 import { resolverPreco, formatarBRL, getExperiencias } from "@/lib/sistur/catalog";
@@ -277,59 +278,22 @@ async function ExperienceSelector({ title, subtitle }: PropsOf<"experience_selec
   const experiencias = await getExperiencias();
   if (experiencias.length === 0) return null;
 
+  // Cartões grandes com foto. A descrição e o botão aparecem no hover onde há
+  // mouse e ficam sempre visíveis no toque — ver ExperienceChoice.
   return (
-    <section className="mx-auto max-w-5xl px-4 py-14">
-      {title && <SectionTitle>{title}</SectionTitle>}
-      {subtitle && (
-        <p className="-mt-4 mb-10 text-center text-lg font-semibold uppercase text-[var(--c-fg)]">
-          {subtitle}
-        </p>
-      )}
-      <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        {experiencias.map((e) => (
-          <li
-            key={e.slug}
-            className="flex flex-col overflow-hidden rounded-lg bg-[var(--c-bg)] shadow-[0_2px_10px_rgba(0,0,0,0.08)]"
-          >
-            {/* A foto vem do operador, pela tela da categoria. Sem ela o cartão
-                fica como sempre foi — só texto — em vez de abrir um retângulo
-                cinza porque ninguém escolheu a imagem ainda. */}
-            {e.image_url && (
-              <div className="relative aspect-[16/10] w-full">
-                <Image
-                  src={e.image_url}
-                  alt=""
-                  fill
-                  sizes="(min-width: 640px) 50vw, 100vw"
-                  className="object-cover"
-                />
-              </div>
-            )}
-            <div className="flex flex-1 flex-col p-7">
-            <h3 className="text-center text-lg uppercase text-[var(--c-fg)]">
-              {e.name}
-            </h3>
-            <div className="mt-5 flex-1 rounded-md border-l-4 border-[#2f6fd0] bg-[#eef4fb] p-4">
-              <p className="text-sm leading-relaxed text-[var(--c-fg)]">
-                {e.description ?? "Detalhes desta experiência em breve."}
-              </p>
-              <p className="mt-3 text-xs text-[var(--c-muted)]">
-                {e.single_day_only
-                  ? "Reserva para um único dia."
-                  : "Permite reserva com mais de um dia."}
-              </p>
-            </div>
-            <Link
-              href={`/reservar/${e.slug}/`}
-              className="mt-6 inline-flex min-h-[44px] items-center justify-center rounded-full bg-[var(--c-accent)] px-6 text-sm font-semibold text-[var(--c-on-accent)] transition-colors hover:bg-[var(--c-accent-dark)]"
-            >
-              Selecionar {e.name}
-            </Link>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <ExperienceChoice
+      titulo={title ?? undefined}
+      subtitulo={subtitle ?? undefined}
+      experiencias={experiencias.map((e) => ({
+        slug: e.slug!,
+        nome: e.name,
+        descricao: e.description,
+        nota: e.single_day_only
+          ? "Reserva para um único dia"
+          : "Permite mais de um dia",
+        imagem: e.image_url,
+      }))}
+    />
   );
 }
 

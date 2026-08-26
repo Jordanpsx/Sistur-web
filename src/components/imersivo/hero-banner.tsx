@@ -16,6 +16,10 @@ import { VideoDeFundo } from "./video-de-fundo";
  * O gradiente vai de baixo para cima, mais forte embaixo, porque é lá que o
  * texto fica. Um véu uniforme sobre a imagem inteira transforma a paisagem num
  * retângulo cinza, e a paisagem é o argumento de venda.
+ *
+ * `min-h-[88svh]` e não `h-screen`: no celular, `100vh` conta a barra do
+ * navegador que se retrai ao rolar, então o botão nasce fora da tela e volta
+ * depois. `svh` é a altura menor, a que existe de verdade quando a página abre.
  */
 
 export type CtaExperiencia = {
@@ -25,7 +29,7 @@ export type CtaExperiencia = {
   href: string;
 };
 
-export function HeroVideoBanner({
+export function HeroBanner({
   titulo,
   subtitulo,
   poster,
@@ -63,7 +67,7 @@ export function HeroVideoBanner({
       />
 
       <div className="mx-auto w-full max-w-5xl px-4 pb-16 pt-28 sm:pb-24">
-        <h1 className="max-w-3xl text-4xl font-semibold uppercase leading-[1.05] tracking-tight text-white drop-shadow-sm sm:text-6xl lg:text-7xl">
+        <h1 className="max-w-3xl text-4xl font-extrabold uppercase leading-[1.05] tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)] md:text-6xl lg:text-7xl">
           {titulo}
         </h1>
 
@@ -89,7 +93,9 @@ export function HeroVideoBanner({
                       "duration-200 hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 " +
                       "focus-visible:outline-offset-2 focus-visible:outline-white sm:w-auto " +
                       (i === 0
-                        ? "bg-[var(--c-accent)] text-[var(--c-on-accent)] shadow-lg hover:bg-[var(--c-accent-dark)]"
+                        // Amarelo da marca, não o verde de reserva: sobre foto
+                        // escura o amarelo salta e o verde some no mato.
+                        ? "bg-[var(--c-primary)] text-[var(--c-on-primary)] shadow-xl shadow-black/30 hover:bg-[var(--c-primary-dark)]"
                         : "border-2 border-white/80 bg-white/10 text-white backdrop-blur hover:bg-white/20")
                     }
                   >

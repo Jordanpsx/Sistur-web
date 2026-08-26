@@ -1,5 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
+import Image from "next/image";
+import { Navbar } from "@/components/imersivo/navbar";
 import { getNav } from "@/lib/sistur/pages";
 
 /**
@@ -26,47 +27,10 @@ export default async function PublicLayout({
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-[var(--c-border)] bg-[var(--c-bg)]">
-        <div className="mx-auto flex h-28 max-w-6xl items-center justify-between gap-4 px-4">
-          <Link href="/" className="shrink-0">
-            {/* O arquivo é 500x500 — QUADRADO. Declarar 160x48 fazia o
-                object-contain encaixotar o logo numa faixa larga, e ele
-                aparecia pequeno dentro dela. A proporção correta é 1:1. */}
-            <Image
-              src={LOGO}
-              alt="Cachoeira do Girassol"
-              width={500}
-              height={500}
-              priority
-              className="h-20 w-20 object-contain"
-            />
-          </Link>
+      <Navbar itens={nav} logo={LOGO} />
 
-          <div className="flex items-center gap-2 sm:gap-6">
-            {/* Menu from the CMS. Hidden below sm: four links plus a button
-                overflow a 375px viewport, and mobile-first is a project rule. */}
-            <ul className="hidden items-center gap-5 md:flex">
-              {nav.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="inline-flex min-h-[44px] items-center text-xs font-medium uppercase tracking-wide text-[var(--c-fg)] transition-colors hover:text-[var(--c-primary-dark)]"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            <Link
-              href="/reservar"
-              className="inline-flex min-h-[44px] items-center rounded-md bg-[var(--c-primary)] px-4 text-xs font-semibold uppercase tracking-wide text-[var(--c-on-primary)] transition-colors hover:bg-[var(--c-primary-dark)] sm:px-5"
-            >
-              Faça sua reserva
-            </Link>
-          </div>
-        </div>
-      </header>
-
+      {/* O cabeçalho é fixo, então tira o conteúdo de baixo dele — menos na
+          home, onde a hero começa no topo de propósito e passa por trás. */}
       {children}
 
       <footer className="bg-[var(--c-footer-bg)] text-[var(--c-footer-fg)]">

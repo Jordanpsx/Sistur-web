@@ -813,3 +813,40 @@ descreve("a conta aberta", () => {
     expect(subtotal(p3)).toBe(subtotal(p2));
   });
 });
+
+descreve("a home como convite", () => {
+  it("o cabeçalho é fixo e a home o deixa passar por trás da hero", async () => {
+    const html = await (await fetch(`${SITE}/`, { redirect: "follow" })).text();
+    expect(html).toMatch(/fixed inset-x-0 top-0 z-50/);
+    // Sem espaçador: a hero começa no topo da tela de propósito.
+    expect(html).not.toMatch(/class="h-20"/);
+  });
+
+  it("página sem hero empurra o conteúdo para baixo do cabeçalho", async () => {
+    // O cabeçalho é fixo, logo sai do fluxo. Sem o espaçador o primeiro
+    // parágrafo de /fotos/ nasceria escondido atrás do menu.
+    const html = await (await fetch(`${SITE}/fotos/`, { redirect: "follow" })).text();
+    expect(html).toMatch(/class="h-20"/);
+    expect(html).toMatch(/bg-\[var\(--c-bg\)\]\/95/);
+  });
+
+  it("os cartões revelam no mouse mas nunca escondem no toque", async () => {
+    // Em telefone não existe apontar. Conteúdo só no :hover sumiria para a
+    // maioria de quem acessa — e é o que faz decidir entre day use e camping.
+    const html = await (await fetch(`${SITE}/`, { redirect: "follow" })).text();
+    expect(html).toMatch(/pointer-fine:opacity-0/);
+    expect(html).toMatch(/pointer-fine:group-hover:opacity-100/);
+    // Teclado chega ao botão por Tab; ele não pode estar invisível no foco.
+    expect(html).toMatch(/pointer-fine:group-focus-within:opacity-100/);
+  });
+
+  it("o CSS entregue traz mesmo a media query, não só a classe", async () => {
+    const html = await (await fetch(`${SITE}/`, { redirect: "follow" })).text();
+    const css = html.match(/\/_next\/static\/css\/[^"]+\.css/)?.[0];
+    expect(css, "a home não referenciou nenhum CSS").toBeTruthy();
+    const folha = await (await fetch(`${SITE}${css}`)).text();
+    // Classe presente no HTML não prova regra emitida: se o Tailwind não
+    // conhecesse a variante, tudo ficaria visível e ninguém notaria no desktop.
+    expect(folha).toMatch(/@media\s*\(pointer:\s*fine\)/);
+  });
+});
