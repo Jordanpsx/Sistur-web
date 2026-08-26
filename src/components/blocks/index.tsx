@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { ExperienceChoice } from "@/components/imersivo/experience-choice";
+import { HeroBanner } from "@/components/imersivo/hero-banner";
 import Link from "next/link";
 import type { Block } from "@/lib/sistur/pages";
 import { resolverPreco, formatarBRL, getExperiencias } from "@/lib/sistur/catalog";
@@ -50,51 +51,6 @@ function SectionTitle({
   );
 }
 
-function Hero({ title, subtitle, image, cta_label, cta_href }: PropsOf<"hero">) {
-  return (
-    <section className="relative isolate overflow-hidden">
-      {image && (
-        <>
-          <Image
-            src={image}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="absolute inset-0 -z-20 object-cover"
-          />
-          {/* Light scrim only. The photo is the point; the text needs contrast
-              without the image turning into a grey rectangle. */}
-          <div className="absolute inset-0 -z-10 bg-black/35" />
-        </>
-      )}
-      <div
-        className={`mx-auto flex max-w-4xl flex-col items-center gap-6 px-4 text-center ${
-          image ? "min-h-[78vh] justify-center py-24" : "py-20 sm:py-28"
-        }`}
-      >
-        <h1
-          className={`text-3xl uppercase leading-tight tracking-tight sm:text-5xl lg:text-6xl ${
-            image ? "text-white" : "text-[var(--c-fg)]"
-          }`}
-        >
-          {title}
-        </h1>
-        {subtitle && (
-          <p
-            className={`max-w-xl text-sm sm:text-base ${
-              image ? "text-white/90" : "text-[var(--c-muted)]"
-            }`}
-          >
-            {subtitle}
-          </p>
-        )}
-        {cta_label && cta_href && <CtaPill href={cta_href}>{cta_label}</CtaPill>}
-      </div>
-    </section>
-  );
-}
-
 /**
  * Two presentations from one block, chosen by the data rather than by a prop:
  * items **with** an image render as a photo card with the label overlaid, the
@@ -124,17 +80,31 @@ function FeatureGrid({ title, items }: PropsOf<"feature_grid">) {
                 sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                 className="absolute inset-0 -z-20 object-cover"
               />
-              <div className="absolute inset-0 -z-10 bg-black/35" />
-              <div className="flex h-full items-center justify-center p-4">
-                <h3 className="text-center text-lg uppercase text-white sm:text-xl">
+              {/* Gradiente direcional, não véu uniforme: escurece onde o texto
+                  pousa e deixa a foto limpa em cima. Véu parelho sobre a imagem
+                  inteira apaga a paisagem, e a paisagem é o que vende. */}
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 -z-10 bg-gradient-to-t from-black/80 via-black/30 to-transparent"
+              />
+              <div className="flex h-full flex-col justify-end p-4">
+                <h3 className="text-lg uppercase text-white drop-shadow-sm sm:text-xl">
                   {item.title}
                 </h3>
+                {item.description && (
+                  <p className="mt-1 text-sm leading-snug text-white/85">
+                    {item.description}
+                  </p>
+                )}
               </div>
             </li>
           ) : (
             <li
               key={i}
-              className="rounded-lg bg-[var(--c-bg)] p-7 text-center shadow-[0_2px_10px_rgba(0,0,0,0.07)]"
+              // Borda além da sombra: em tela clara a sombra sozinha some, e os
+              // itens ficam boiando no branco sem virar cartão.
+              className="rounded-lg border border-[var(--c-border)] bg-[var(--c-bg)] p-6
+                         text-center shadow-md transition-shadow hover:shadow-lg"
             >
               <h3 className="text-lg uppercase text-[var(--c-accent)]">
                 {item.title}
@@ -225,14 +195,18 @@ async function PriceTable({ title, nota, rows }: PropsOf<"price_table">) {
   if (visiveis.length === 0) return null;
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-6">
-      <div className="rounded-xl bg-[var(--c-panel)] px-4 py-12 sm:px-8">
-        {title && <SectionTitle onPanel>{title}</SectionTitle>}
+    // Invertido: a seção clara e os cartões escuros. O bloco verde inteiro
+    // pesava no meio da página e os preços se perdiam dentro dele; agora cada
+    // preço é um objeto sobre o fundo, e é neles que o olho pousa.
+    <section className="bg-[var(--c-surface)] py-14">
+      <div className="mx-auto max-w-6xl px-4">
+        {title && <SectionTitle>{title}</SectionTitle>}
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           {visiveis.map((r, i) => (
             <li
               key={i}
-              className="flex flex-col items-center gap-2 rounded-lg bg-white/5 px-4 py-6 text-center"
+              className="flex flex-col items-center gap-2 rounded-xl bg-[var(--c-panel)]
+                         px-4 py-6 text-center text-[var(--c-on-panel)] shadow-lg"
             >
               <p className="text-xs font-medium text-[var(--c-primary)]">
                 {r.label}
@@ -243,9 +217,14 @@ async function PriceTable({ title, nota, rows }: PropsOf<"price_table">) {
                 )}
                 {formatarBRL(r.valor as number)}
               </p>
+              {/* Sólido, e ocupando a largura do cartão. Contorno vazado lê
+                  como ação secundária, e esta é a única ação do bloco. */}
               <Link
                 href="/reservar"
-                className="mt-2 inline-flex min-h-[44px] items-center rounded-md border border-white/70 px-4 text-xs font-semibold uppercase text-[var(--c-on-panel)] transition-colors hover:bg-white/10"
+                className="mt-2 inline-flex min-h-[44px] w-full items-center justify-center
+                           rounded-lg bg-[var(--c-on-panel)] px-4 text-xs font-bold uppercase
+                           tracking-wide text-[var(--c-panel)] transition-colors
+                           hover:bg-[var(--c-surface)]"
               >
                 Reservar
               </Link>
@@ -253,7 +232,7 @@ async function PriceTable({ title, nota, rows }: PropsOf<"price_table">) {
           ))}
         </ul>
         {nota && (
-          <p className="mt-8 text-center text-xs text-white/80">{nota}</p>
+          <p className="mt-8 text-center text-xs text-[var(--c-muted)]">{nota}</p>
         )}
       </div>
     </section>
@@ -315,7 +294,19 @@ function Gallery({ title, resource_id }: PropsOf<"gallery">) {
 export function renderBlock(block: Block, key: number) {
   switch (block.type) {
     case "hero":
-      return <Hero key={key} {...block.props} />;
+      return (
+        <HeroBanner
+          key={key}
+          titulo={block.props.title}
+          subtitulo={block.props.subtitle}
+          poster={block.props.image}
+          ctas={
+            block.props.cta_label && block.props.cta_href
+              ? [{ label: block.props.cta_label, href: block.props.cta_href }]
+              : []
+          }
+        />
+      );
     case "feature_grid":
       return <FeatureGrid key={key} {...block.props} />;
     case "rich_text":

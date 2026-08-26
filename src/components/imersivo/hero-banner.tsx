@@ -38,17 +38,19 @@ export function HeroBanner({
 }: {
   titulo: string;
   subtitulo?: string;
-  /** Obrigatória: é o que se vê antes, durante o carregamento e no lugar do vídeo. */
-  poster: string;
+  /** O que se vê antes, durante o carregamento e no lugar do vídeo. Ausente,
+   *  a seção usa um fundo sólido da marca — a falta aparece na tela, que é
+   *  como alguém descobre que precisa subir uma foto. */
+  poster?: string | null;
   video?: { url: string; tipo?: string }[];
   ctas: CtaExperiencia[];
 }) {
   return (
     <section className="relative isolate flex min-h-[88svh] items-end overflow-hidden">
       <div className="absolute inset-0 -z-20">
-        {video?.length ? (
+        {video?.length && poster ? (
           <VideoDeFundo src={video} poster={poster} />
-        ) : (
+        ) : poster ? (
           <Image
             src={poster}
             alt=""
@@ -57,6 +59,8 @@ export function HeroBanner({
             sizes="100vw"
             className="object-cover"
           />
+        ) : (
+          <div className="h-full w-full bg-[var(--c-panel)]" />
         )}
       </div>
 

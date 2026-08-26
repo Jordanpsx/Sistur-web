@@ -850,3 +850,40 @@ descreve("a home como convite", () => {
     expect(folha).toMatch(/@media\s*\(pointer:\s*fine\)/);
   });
 });
+
+descreve("hierarquia visual da home", () => {
+  async function markup(): Promise<string> {
+    const html = await (await fetch(`${SITE}/`, { redirect: "follow" })).text();
+    // O payload RSC repete as mesmas classes dentro de <script>; contar sem
+    // tirá-lo dá o dobro e esconde se algo deixou de renderizar.
+    return html.replace(/<script[\s\S]*?<\/script>/g, "");
+  }
+
+  it("cada item da estrutura é um cartão, não texto solto no branco", async () => {
+    const m = await markup();
+    const cartoes = m.match(/border border-\[var\(--c-border\)\] bg-\[var\(--c-bg\)\] p-6/g);
+    expect(cartoes?.length ?? 0).toBeGreaterThanOrEqual(3);
+  });
+
+  it("foto com texto ganha gradiente direcional, não véu parelho", async () => {
+    // Véu uniforme apaga a paisagem; gradiente escurece só onde o texto pousa.
+    const m = await markup();
+    expect(m).toMatch(/from-black\/80 via-black\/30 to-transparent/);
+    expect(m).not.toMatch(/-z-10 bg-black\/35/);
+  });
+
+  it("a tabela de valores é clara com cartões escuros, não um bloco verde", async () => {
+    const m = await markup();
+    expect(m).toMatch(/bg-\[var\(--c-surface\)\] py-14/);
+    const cards = m.match(/rounded-xl bg-\[var\(--c-panel\)\]/g);
+    expect(cards?.length ?? 0).toBeGreaterThan(0);
+  });
+
+  it("o Reservar da tabela é sólido e ocupa a largura do cartão", async () => {
+    // Contorno vazado lê como ação secundária, e é a única ação do bloco.
+    const m = await markup();
+    const solidos = m.match(/w-full items-center justify-center\s+rounded-lg bg-\[var\(--c-on-panel\)\]/g);
+    expect(solidos?.length ?? 0).toBeGreaterThan(0);
+    expect(m).not.toMatch(/border border-white\/70/);
+  });
+});
