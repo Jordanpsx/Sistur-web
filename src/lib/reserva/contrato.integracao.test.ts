@@ -1,5 +1,11 @@
 import { afterAll, describe, expect, it } from "vitest";
-import { PODE_CRIAR, descartarDepois, faxinar } from "@/testes/reserva-descartavel";
+import {
+  PODE_CRIAR,
+  datasCandidatas,
+  descartarDepois,
+  ehDataBloqueada,
+  faxinar,
+} from "@/testes/reserva-descartavel";
 import { ratearTotal, type Orcamento } from "./itens";
 
 /**
@@ -173,26 +179,33 @@ const criaReservas = API && CHAVE && PODE_CRIAR ? describe : describe.skip;
 
 criaReservas("criação ponta a ponta", () => {
   it("cria a reserva com o rateio, sem divergência de preço", async () => {
-    const ci = daqui(60);
-    const o = await simular({
-      source_id: CACHOEIRA,
-      category_id: DAY_USE,
-      check_in_date: ci,
-      check_out_date: ci,
-      items: [{ item_id: 1, quantity: 2 }, { item_id: 2, quantity: 1 }],
-    });
+    // Percorre dias até um ser aceito: o operador bloqueia datas ("Manutenção
+    // de piscinas toda quarta-feira"), e uma data fixa no futuro caminha pelos
+    // dias da semana até cair numa delas.
+    let r!: Awaited<ReturnType<typeof criar>>;
+    let o!: Orcamento;
+    for (const ci of datasCandidatas(60)) {
+      o = await simular({
+        source_id: CACHOEIRA,
+        category_id: DAY_USE,
+        check_in_date: ci,
+        check_out_date: ci,
+        items: [{ item_id: 1, quantity: 2 }, { item_id: 2, quantity: 1 }],
+      });
 
-    const r = await criar({
-      source_id: CACHOEIRA,
-      category_id: DAY_USE,
-      customer_name: "Regressao Automatizada Silva",
-      customer_document: "529.982.247-25",
-      email: "regressao@exemplo.com.br",
-      telefone: "(64) 99999-0000",
-      check_in_date: ci,
-      check_out_date: ci,
-      items: ratearTotal(o),
-    });
+      r = await criar({
+        source_id: CACHOEIRA,
+        category_id: DAY_USE,
+        customer_name: "Regressao Automatizada Silva",
+        customer_document: "529.982.247-25",
+        email: "regressao@exemplo.com.br",
+        telefone: "(64) 99999-0000",
+        check_in_date: ci,
+        check_out_date: ci,
+        items: ratearTotal(o),
+      });
+      if (r.status === 201 || !ehDataBloqueada(r.corpo)) break;
+    }
 
     expect(r.status, JSON.stringify(r.corpo)).toBe(201);
     expect(r.corpo.total).toBeCloseTo(o.total, 2);

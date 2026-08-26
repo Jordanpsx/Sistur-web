@@ -70,3 +70,28 @@ export async function faxinar(): Promise<void> {
     );
   }
 }
+
+/**
+ * Datas candidatas a partir de `inicio` dias no futuro.
+ *
+ * O operador bloqueia dias — hoje há "Manutenção de piscinas toda
+ * quarta-feira" —, e a suíte usava uma data fixa no futuro. Como essa data
+ * caminha pelos dias da semana conforme o tempo passa, a cada semana ela caía
+ * numa quarta e três testes quebravam sem que nada tivesse mudado no código.
+ *
+ * Quem cria reserva percorre estas datas até uma ser aceita. O teste quer uma
+ * reserva, não um dia específico.
+ */
+export function datasCandidatas(inicio: number, quantas = 8): string[] {
+  return Array.from({ length: quantas }, (_, i) => {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() + inicio + i);
+    return d.toISOString().slice(0, 10);
+  });
+}
+
+/** Se o Sistur recusou por bloqueio de data, e não por defeito do teste. */
+export function ehDataBloqueada(corpo: unknown): boolean {
+  const erro = (corpo as { erro?: unknown })?.erro;
+  return typeof erro === "string" && /bloquead/i.test(erro);
+}

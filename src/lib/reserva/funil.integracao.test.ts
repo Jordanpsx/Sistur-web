@@ -1,5 +1,11 @@
 import { afterAll, describe, expect, it } from "vitest";
-import { PODE_CRIAR, descartarDepois, faxinar } from "@/testes/reserva-descartavel";
+import {
+  PODE_CRIAR,
+  datasCandidatas,
+  descartarDepois,
+  ehDataBloqueada,
+  faxinar,
+} from "@/testes/reserva-descartavel";
 
 /**
  * Smoke tests over the running site.
@@ -44,45 +50,51 @@ function reservar(): Promise<string> {
 async function criarReserva(): Promise<string> {
   const api = process.env.SISTUR_API_URL!;
   const chave = process.env.SISTUR_WEB_API_KEY!;
-  const d = daqui(70);
-  const sim = await (
-    await fetch(`${api}/reservas/api/public/simular`, {
+  const { ratearTotal } = await import("./itens");
+
+  let ultimo: unknown = null;
+  // Percorre dias até um ser aceito: o operador bloqueia datas, e uma data fixa
+  // no futuro caminha pelos dias da semana até cair num dia bloqueado.
+  for (const d of datasCandidatas(70)) {
+    const sim = await (
+      await fetch(`${api}/reservas/api/public/simular`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source_id: 1,
+          category_id: 1,
+          check_in_date: d,
+          check_out_date: d,
+          items: [{ item_id: 1, quantity: 1 }],
+        }),
+      })
+    ).json();
+
+    const res = await fetch(`${api}/api/public/reservas/criar`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Web-Api-Key": chave },
       body: JSON.stringify({
         source_id: 1,
         category_id: 1,
+        customer_name: "Regressao Pagamento Silva",
+        customer_document: "529.982.247-25",
+        email: "pagamento@exemplo.com.br",
+        telefone: "(64) 99999-0000",
         check_in_date: d,
         check_out_date: d,
-        items: [{ item_id: 1, quantity: 1 }],
+        items: ratearTotal(sim),
       }),
-    })
-  ).json();
-
-  const { ratearTotal } = await import("./itens");
-  const res = await fetch(`${api}/api/public/reservas/criar`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Web-Api-Key": chave },
-    body: JSON.stringify({
-      source_id: 1,
-      category_id: 1,
-      customer_name: "Regressao Pagamento Silva",
-      customer_document: "529.982.247-25",
-      email: "pagamento@exemplo.com.br",
-      telefone: "(64) 99999-0000",
-      check_in_date: d,
-      check_out_date: d,
-      items: ratearTotal(sim),
-    }),
-  });
-  const groupId = (await res.json()).group_id;
-  // Anotada para o afterAll cancelar. Sem isto cada rodada deixa seis
-  // reservas pendentes na lista do operador — e deixou.
-  descartarDepois(groupId);
-  return groupId;
+    });
+    const corpo = await res.json();
+    ultimo = corpo;
+    if (res.status === 201) {
+      descartarDepois(corpo.group_id);
+      return corpo.group_id;
+    }
+    if (!ehDataBloqueada(corpo)) break;
+  }
+  throw new Error(`nenhuma data livre para reservar: ${JSON.stringify(ultimo)}`);
 }
-
-afterAll(faxinar);
 
 function daqui(dias: number): string {
   const d = new Date();

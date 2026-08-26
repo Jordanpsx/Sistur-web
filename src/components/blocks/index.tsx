@@ -289,8 +289,23 @@ async function ExperienceSelector({ title, subtitle }: PropsOf<"experience_selec
         {experiencias.map((e) => (
           <li
             key={e.slug}
-            className="flex flex-col rounded-lg bg-[var(--c-bg)] p-7 shadow-[0_2px_10px_rgba(0,0,0,0.08)]"
+            className="flex flex-col overflow-hidden rounded-lg bg-[var(--c-bg)] shadow-[0_2px_10px_rgba(0,0,0,0.08)]"
           >
+            {/* A foto vem do operador, pela tela da categoria. Sem ela o cartão
+                fica como sempre foi — só texto — em vez de abrir um retângulo
+                cinza porque ninguém escolheu a imagem ainda. */}
+            {e.image_url && (
+              <div className="relative aspect-[16/10] w-full">
+                <Image
+                  src={e.image_url}
+                  alt=""
+                  fill
+                  sizes="(min-width: 640px) 50vw, 100vw"
+                  className="object-cover"
+                />
+              </div>
+            )}
+            <div className="flex flex-1 flex-col p-7">
             <h3 className="text-center text-lg uppercase text-[var(--c-fg)]">
               {e.name}
             </h3>
@@ -310,6 +325,7 @@ async function ExperienceSelector({ title, subtitle }: PropsOf<"experience_selec
             >
               Selecionar {e.name}
             </Link>
+            </div>
           </li>
         ))}
       </ul>
