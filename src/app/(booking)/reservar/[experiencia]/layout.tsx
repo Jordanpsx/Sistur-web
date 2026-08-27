@@ -1,4 +1,5 @@
 import { getExperiencia } from "@/lib/sistur/catalog";
+import { listarMidia } from "@/lib/sistur/midia";
 import { BarracaDecorativa } from "@/components/imersivo/barraca-decorativa";
 import { CabecalhoFunil } from "@/components/reserva/cabecalho-funil";
 
@@ -35,6 +36,11 @@ export default async function ExperienciaLayout({
 }) {
   const e = await getExperiencia((await params).experiencia);
   const noturno = e?.tema === "noturno";
+  // A ilustração vem da biblioteca, por uma etiqueta só dela. Buscar por
+  // "camping" traria também a foto do cartão da experiência, e o cenário
+  // viraria uma paisagem esticada no canto na próxima vez que alguém subisse
+  // uma foto. Sem nada etiquetado, o céu fica sem barraca — não com um vão.
+  const [barraca] = noturno ? await listarMidia({ tag: "cenario-camping" }) : [];
 
   return (
     <div data-tema={noturno ? "noturno" : undefined} className="relative">
@@ -42,7 +48,7 @@ export default async function ExperienciaLayout({
         <>
           {/* O céu. Fixo e atrás de tudo, inclusive do cabeçalho. */}
           <div aria-hidden="true" className="ceu-noturno fixed inset-0 -z-10" />
-          <BarracaDecorativa />
+          {barraca && <BarracaDecorativa src={barraca.url_absoluta} />}
         </>
       )}
 

@@ -916,8 +916,24 @@ descreve("tema noturno do camping", () => {
     const html = await (
       await fetch(`${SITE}/reservar/camping/?entrada=${d(30)}&saida=${d(31)}`)
     ).text();
-    const barraca = html.match(/pointer-events-none fixed bottom-0 right-10 z-0 hidden w-64 lg:block/);
-    expect(barraca, "a barraca precisa ser hidden lg:block e pointer-events-none").toBeTruthy();
+    expect(html).toMatch(/pointer-events-none fixed bottom-0/);
+    expect(html).toMatch(/hidden w-\[22rem\] select-none lg:block/);
+  });
+
+  it("o cenário sai da biblioteca, e é uma imagem que carrega", async () => {
+    // Ela vem por etiqueta própria: buscar por "camping" traria também a foto
+    // do cartão da experiência, e o canto viraria uma paisagem esticada.
+    const html = await (
+      await fetch(`${SITE}/reservar/camping/?entrada=${d(30)}&saida=${d(31)}`)
+    ).text();
+    const src = html
+      .match(/src="\/_next\/image\/\?url=[^"]*midia[^"]*"/)?.[0]
+      ?.replace(/^src="/, "")
+      .replace(/"$/, "")
+      .replace(/&amp;/g, "&");
+    expect(src, "o cenário não veio da biblioteca de mídia").toBeTruthy();
+    const res = await fetch(`${SITE}${src}`);
+    expect(res.status).toBe(200);
   });
 
   it("o texto que ficou sobre o céu clareia junto", async () => {
