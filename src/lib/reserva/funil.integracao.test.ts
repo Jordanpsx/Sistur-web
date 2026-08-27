@@ -916,8 +916,38 @@ descreve("tema noturno do camping", () => {
     const html = await (
       await fetch(`${SITE}/reservar/camping/?entrada=${d(30)}&saida=${d(31)}`)
     ).text();
-    expect(html).toMatch(/pointer-events-none fixed bottom-0/);
-    expect(html).toMatch(/hidden w-\[22rem\] select-none lg:block/);
+    // Garantias, não nomes de classe: o enfeite não aparece no celular, não
+    // recebe toque, e encosta no canto. Travar a largura exata fazia o teste
+    // quebrar toda vez que a arte era redimensionada.
+    const bloco = html.match(/<div aria-hidden="true" class="pointer-events-none fixed bottom-0[^"]*"/)?.[0];
+    expect(bloco, "não achei o contêiner da barraca").toBeTruthy();
+    expect(bloco).toMatch(/\bhidden\b/);
+    expect(bloco).toMatch(/\blg:block\b/);
+    expect(bloco).toMatch(/\bright-0\b/);
+  });
+
+  it("o cenário é uma camada só, e nenhuma parte dele recebe clique", async () => {
+    // Céu, lua, estrelas e chão juntos: z-index e pointer-events de enfeite
+    // decididos num arquivo, em vez de três componentes que precisam concordar
+    // para o formulário continuar clicável.
+    const html = await (
+      await fetch(`${SITE}/reservar/camping/?entrada=${d(30)}&saida=${d(31)}`)
+    ).text();
+    expect(html).toMatch(/pointer-events-none fixed inset-0 -z-10/);
+    expect(html).toMatch(/class="lua/);
+    expect(html).toMatch(/chao-noturno/);
+    // O formulário fica acima de tudo isso.
+    expect(html).toMatch(/relative z-10 mx-auto max-w-4xl/);
+  });
+
+  it("o chão e a lua chegam à folha entregue", async () => {
+    const html = await (await fetch(`${SITE}/reservar/camping/`)).text();
+    const css = html.match(/\/_next\/static\/css\/[^"]+\.css/)?.[0];
+    const folha = await (await fetch(`${SITE}${css}`)).text();
+    expect(folha).toMatch(/\.lua\{/);
+    expect(folha).toMatch(/\.chao-noturno\{/);
+    // A borda da barraca dissolve antes de encostar na coluna do formulário.
+    expect(folha).toMatch(/\.barraca-cenario\{[^}]*mask-image/);
   });
 
   it("o cenário sai da biblioteca, e é uma imagem que carrega", async () => {
@@ -950,7 +980,11 @@ descreve("tema noturno do camping", () => {
     const html = await (
       await fetch(`${SITE}/reservar/camping/?entrada=${d(30)}&saida=${d(31)}`)
     ).text();
-    expect(html).toMatch(/ceu-noturno fixed inset-0 -z-10/);
+    // A camada do cenário cobre a viewport e fica atrás de tudo; o céu vive
+    // dentro dela. Antes o céu era ele próprio o fixed — mudou quando lua e
+    // chão entraram, e a garantia é a mesma.
+    expect(html).toMatch(/pointer-events-none fixed inset-0 -z-10/);
+    expect(html).toMatch(/ceu-noturno/);
     // E o cabeçalho entra no tema em vez de ficar uma faixa branca por cima.
     expect(html).toMatch(/border-b border-white\/10 bg-transparent/);
   });

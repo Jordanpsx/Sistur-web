@@ -1,6 +1,7 @@
 import { getExperiencia } from "@/lib/sistur/catalog";
 import { listarMidia } from "@/lib/sistur/midia";
 import { BarracaDecorativa } from "@/components/imersivo/barraca-decorativa";
+import { CenarioNoturno } from "@/components/imersivo/cenario-noturno";
 import { CabecalhoFunil } from "@/components/reserva/cabecalho-funil";
 
 /**
@@ -46,8 +47,9 @@ export default async function ExperienciaLayout({
     <div data-tema={noturno ? "noturno" : undefined} className="relative">
       {noturno && (
         <>
-          {/* O céu. Fixo e atrás de tudo, inclusive do cabeçalho. */}
-          <div aria-hidden="true" className="ceu-noturno fixed inset-0 -z-10" />
+          {/* Céu, lua, estrelas e chão. Fixo e atrás de tudo, inclusive do
+              cabeçalho. */}
+          <CenarioNoturno />
           {barraca && <BarracaDecorativa src={barraca.url_absoluta} />}
         </>
       )}

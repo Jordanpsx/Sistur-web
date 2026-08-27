@@ -609,21 +609,56 @@ a[class*="min-h-[44px]"] {
    sol. O tema veste a moldura, nunca o que se lê.
    ------------------------------------------------------------------------- */
 
-/* A camada do céu: fixa, atrás de tudo, cobrindo a viewport inteira desde o
-   primeiro byte. Antes o fundo vivia no elemento temático, que começa abaixo do
-   cabeçalho — dava uma coluna de noite cercada de branco. */
+/* O céu. Duas famílias de estrelas: pontos de 1px, muitos e discretos, e
+   alguns de 2px mais brilhantes na frente — é o que dá profundidade sem imagem
+   e sem animação. */
 .ceu-noturno {
   background-color: #0f172a;
   background-image:
-    /* Estrelas: dois planos de pontos em tamanhos diferentes dão profundidade
-       sem imagem nenhuma — é gradiente radial, custa zero requisição. */
-    radial-gradient(1px 1px at 20% 15%, rgb(255 255 255 / 0.7), transparent),
-    radial-gradient(1px 1px at 70% 8%, rgb(255 255 255 / 0.5), transparent),
-    radial-gradient(1.5px 1.5px at 40% 30%, rgb(255 255 255 / 0.6), transparent),
-    radial-gradient(1px 1px at 85% 35%, rgb(255 255 255 / 0.45), transparent),
-    radial-gradient(1px 1px at 10% 45%, rgb(255 255 255 / 0.55), transparent),
-    radial-gradient(1.5px 1.5px at 60% 55%, rgb(255 255 255 / 0.4), transparent),
-    linear-gradient(to bottom, #0f172a 0%, #1e1b4b 45%, #0f172a 100%);
+    /* plano da frente — poucas, maiores */
+    radial-gradient(2px 2px at 18% 12%, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(2px 2px at 62% 22%, rgb(255 255 255 / 0.75), transparent),
+    radial-gradient(2px 2px at 88% 48%, rgb(255 255 255 / 0.7), transparent),
+    radial-gradient(2px 2px at 33% 58%, rgb(255 255 255 / 0.65), transparent),
+    radial-gradient(2px 2px at 74% 68%, rgb(255 255 255 / 0.6), transparent),
+    /* plano de trás — muitas, pequenas */
+    radial-gradient(1px 1px at 8% 8%, rgb(255 255 255 / 0.6), transparent),
+    radial-gradient(1px 1px at 27% 5%, rgb(255 255 255 / 0.5), transparent),
+    radial-gradient(1px 1px at 45% 16%, rgb(255 255 255 / 0.55), transparent),
+    radial-gradient(1px 1px at 55% 9%, rgb(255 255 255 / 0.45), transparent),
+    radial-gradient(1px 1px at 79% 14%, rgb(255 255 255 / 0.5), transparent),
+    radial-gradient(1px 1px at 93% 24%, rgb(255 255 255 / 0.45), transparent),
+    radial-gradient(1px 1px at 12% 28%, rgb(255 255 255 / 0.5), transparent),
+    radial-gradient(1px 1px at 38% 33%, rgb(255 255 255 / 0.45), transparent),
+    radial-gradient(1px 1px at 68% 38%, rgb(255 255 255 / 0.5), transparent),
+    radial-gradient(1px 1px at 22% 44%, rgb(255 255 255 / 0.45), transparent),
+    radial-gradient(1px 1px at 50% 46%, rgb(255 255 255 / 0.4), transparent),
+    radial-gradient(1px 1px at 84% 56%, rgb(255 255 255 / 0.45), transparent),
+    radial-gradient(1px 1px at 6% 60%, rgb(255 255 255 / 0.4), transparent),
+    radial-gradient(1px 1px at 43% 70%, rgb(255 255 255 / 0.35), transparent),
+    radial-gradient(1px 1px at 60% 78%, rgb(255 255 255 / 0.3), transparent),
+    linear-gradient(to bottom, #0f172a 0%, #1e1b4b 45%, #131a33 100%);
+}
+
+/* A lua: um disco com halo. Dois box-shadow — um curto e forte para a borda
+   acesa, um longo e fraco para a luz que ela joga no céu. */
+.lua {
+  background: radial-gradient(circle at 35% 35%, #fffbeb 0%, #fde68a 55%, #fcd34d 100%);
+  box-shadow:
+    0 0 24px 4px rgb(253 230 138 / 0.45),
+    0 0 90px 24px rgb(251 191 36 / 0.18);
+}
+
+/* O chão: mata escura subindo do rodapé e dissolvendo no céu. Sem topo duro,
+   senão vira uma faixa colada na tela em vez de horizonte. */
+.chao-noturno {
+  background-image: linear-gradient(
+    to top,
+    #0a1512 0%,
+    rgb(10 21 18 / 0.85) 35%,
+    rgb(12 24 30 / 0.45) 70%,
+    transparent 100%
+  );
 }
 
 /* Vidro: a moldura deixa o céu atravessar, o conteúdo continua legível.
@@ -674,10 +709,14 @@ a[class*="min-h-[44px]"] {
   border-radius: 16px 16px 0 0;
 }
 
-/* Quem pediu menos movimento também costuma pedir menos ruído visual: o céu
-   perde as estrelas e fica só o gradiente. */
-@media (prefers-reduced-motion: reduce) {
-  .ceu-noturno {
-    background-image: linear-gradient(to bottom, #0f172a 0%, #1e1b4b 45%, #0f172a 100%);
-  }
+/* Não há regra de `prefers-reduced-motion` aqui de propósito: nada no cenário
+   se move. Aquela preferência fala de movimento, e apagar as estrelas por causa
+   dela seria aplicar a regra onde ela não vale — quem a liga continua querendo
+   ver o céu, só não quer que ele pisque. */
+
+/* Ver a nota em BarracaDecorativa: dissolve a borda que encosta na coluna do
+   formulário, mantendo o diorama inteiro do lado direito. */
+.barraca-cenario {
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 38%, #000 100%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 38%, #000 100%);
 }
