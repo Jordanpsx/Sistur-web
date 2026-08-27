@@ -42,6 +42,9 @@ export default async function ExperienciaLayout({
   // viraria uma paisagem esticada no canto na próxima vez que alguém subisse
   // uma foto. Sem nada etiquetado, o céu fica sem barraca — não com um vão.
   const [barraca] = noturno ? await listarMidia({ tag: "cenario-camping" }) : [];
+  // A faixa de mata do rodapé, quando existir. Etiqueta própria: ela e a
+  // barraca são peças diferentes do mesmo cenário e trocam em separado.
+  const [chao] = noturno ? await listarMidia({ tag: "cenario-chao" }) : [];
 
   return (
     <div data-tema={noturno ? "noturno" : undefined} className="relative">
@@ -49,7 +52,7 @@ export default async function ExperienciaLayout({
         <>
           {/* Céu, lua, estrelas e chão. Fixo e atrás de tudo, inclusive do
               cabeçalho. */}
-          <CenarioNoturno />
+          <CenarioNoturno chao={chao?.url_absoluta} />
           {barraca && <BarracaDecorativa src={barraca.url_absoluta} />}
         </>
       )}

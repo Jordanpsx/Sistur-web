@@ -14,7 +14,7 @@
  * cintilação ao lado de um campo de formulário distrai justamente quem está
  * conferindo um número. O céu fica vivo por densidade, não por animação.
  */
-export function CenarioNoturno() {
+export function CenarioNoturno({ chao }: { chao?: string }) {
   return (
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10">
       {/* Céu e estrelas — gradientes radiais, zero requisição. */}
@@ -27,9 +27,25 @@ export function CenarioNoturno() {
         <div className="lua h-14 w-14 rounded-full sm:h-16 sm:w-16 lg:h-20 lg:w-20" />
       </div>
 
-      {/* Chão: a mata escura no rodapé. Sem ela o diorama flutua no vazio.
-          Full-width e ~20vh, com o topo dissolvendo no céu. */}
-      <div className="chao-noturno absolute inset-x-0 bottom-0 h-[20vh] lg:h-[26vh]" />
+      {/* Chão: a mata no rodapé, de ponta a ponta. Sem ela o diorama flutua.
+
+          Com arte, a faixa é repetida no eixo X — por isso ela precisa fechar
+          nas laterais, e por isso é imagem de fundo e não <Image>: o
+          `next/image` otimiza uma foto, não sabe ladrilhar. Sem arte, fica o
+          gradiente, que já cumpre o papel de horizonte. */}
+      <div
+        className="chao-noturno absolute inset-x-0 bottom-0 h-[20vh] lg:h-[26vh]"
+        style={
+          chao
+            ? {
+                backgroundImage: `url(${chao}), var(--chao-gradiente)`,
+                backgroundRepeat: "repeat-x, no-repeat",
+                backgroundPosition: "bottom center, bottom center",
+                backgroundSize: "auto 100%, 100% 100%",
+              }
+            : undefined
+        }
+      />
     </div>
   );
 }

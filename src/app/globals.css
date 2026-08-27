@@ -652,6 +652,15 @@ a[class*="min-h-[44px]"] {
 /* O chão: mata escura subindo do rodapé e dissolvendo no céu. Sem topo duro,
    senão vira uma faixa colada na tela em vez de horizonte. */
 .chao-noturno {
+  /* Em variável para a faixa ilustrada poder empilhar por cima dele sem
+     perder o horizonte que dissolve no céu. */
+  --chao-gradiente: linear-gradient(
+    to top,
+    #0a1512 0%,
+    rgb(10 21 18 / 0.85) 35%,
+    rgb(12 24 30 / 0.45) 70%,
+    transparent 100%
+  );
   background-image: linear-gradient(
     to top,
     #0a1512 0%,
