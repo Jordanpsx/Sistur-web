@@ -1,17 +1,30 @@
 import { getExperiencia } from "@/lib/sistur/catalog";
 import { BarracaDecorativa } from "@/components/imersivo/barraca-decorativa";
+import { CabecalhoFunil } from "@/components/reserva/cabecalho-funil";
 
 /**
  * Casca de uma experiência — onde o funil ganha a cara dela.
  *
- * Existe neste nível, e não no layout do funil inteiro, porque o tema é por
- * experiência: céu estrelado faz sentido em quem está reservando uma noite e
- * não faria numa visita à vinícola. Envolve os quatro passos, então a pessoa
- * não vê o fundo trocar entre escolher a data e pagar.
+ * O tema vive neste nível, e não no layout do funil inteiro, porque é por
+ * experiência: céu estrelado faz sentido em quem reserva uma noite e não faria
+ * numa visita à vinícola. Envolve os quatro passos, então o fundo não troca
+ * entre escolher a data e pagar.
  *
  * Quem decide é o dado. A categoria carrega `tema`, editável na tela do
- * operador — olhar o slug aqui seria fixar no código do site uma decisão de
- * aparência que não é nossa, e que muda sem deploy.
+ * operador — olhar o slug aqui fixaria no código do site uma decisão de
+ * aparência que não é nossa e que muda sem deploy.
+ *
+ * ## Por que o céu é uma camada fixa, e não o `body`
+ *
+ * A saída óbvia para cobrir a tela inteira seria um `useEffect` pondo o atributo
+ * no `document.body`. Funciona, e pisca: o servidor manda a página clara, o
+ * navegador pinta, e só então o JavaScript escurece. Num tema noturno esse
+ * lampejo branco é exatamente o que se quer evitar, e ele acontece em todo
+ * carregamento.
+ *
+ * Uma camada `fixed inset-0 -z-10` renderizada no servidor cobre a viewport
+ * desde o primeiro byte, sem JavaScript nenhum e sem estado para limpar quando
+ * a pessoa navega para outra experiência.
  */
 export default async function ExperienciaLayout({
   children,
@@ -23,14 +36,21 @@ export default async function ExperienciaLayout({
   const e = await getExperiencia((await params).experiencia);
   const noturno = e?.tema === "noturno";
 
-  if (!noturno) return <>{children}</>;
-
   return (
-    <div data-tema="noturno" className="relative">
-      <BarracaDecorativa />
-      {/* Acima do enfeite. Sem isto o formulário disputaria o clique com uma
+    <div data-tema={noturno ? "noturno" : undefined} className="relative">
+      {noturno && (
+        <>
+          {/* O céu. Fixo e atrás de tudo, inclusive do cabeçalho. */}
+          <div aria-hidden="true" className="ceu-noturno fixed inset-0 -z-10" />
+          <BarracaDecorativa />
+        </>
+      )}
+
+      <CabecalhoFunil noturno={noturno} />
+
+      {/* Acima do enfeite: sem isto o formulário disputaria o clique com uma
           ilustração que não deveria receber nenhum. */}
-      <div className="relative z-10">{children}</div>
+      <main className="relative z-10 mx-auto max-w-4xl px-4 pb-24">{children}</main>
     </div>
   );
 }

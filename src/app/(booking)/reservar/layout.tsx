@@ -1,37 +1,17 @@
-import Image from "next/image";
-import Link from "next/link";
-
 /**
- * Booking shell — deliberately quieter than the public one.
+ * Casca do funil.
  *
- * No navigation menu: once someone is choosing an experience, links to Fotos and
- * Sobre nós are exits, not affordances. The logo returns to the site and that is
- * the only way out that this chrome offers.
+ * Só a coluna. O cabeçalho saiu daqui de propósito: o tema é escolhido por
+ * experiência, e este layout está acima do segmento que sabe qual é — deixar o
+ * cabeçalho aqui produzia uma faixa branca fixa por cima do céu noturno, com
+ * uma emenda visível no meio da tela.
+ *
+ * Quem renderiza o cabeçalho agora é quem conhece o tema: a tela de escolha e o
+ * layout de cada experiência. Resolvido no servidor, sem o pisca-branco que um
+ * `useEffect` no `body` produziria a cada carregamento.
  */
-
-const LOGO =
-  "https://cachoeiradogirassol.com.br/wp-content/uploads/2025/09/logo-cachoeira.png";
-
 export default function BookingLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <>
-      <header className="border-b border-[var(--c-border)] bg-[var(--c-bg)]">
-        <div className="mx-auto flex h-24 max-w-4xl items-center px-4">
-          <Link href="/" className="shrink-0">
-            <Image
-              src={LOGO}
-              alt="Cachoeira do Girassol"
-              width={500}
-              height={500}
-              priority
-              className="h-16 w-16 object-contain"
-            />
-          </Link>
-        </div>
-      </header>
-      <main className="mx-auto max-w-4xl px-4 pb-24">{children}</main>
-    </>
-  );
+  return <>{children}</>;
 }

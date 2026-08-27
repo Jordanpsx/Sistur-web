@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CabecalhoFunil } from "@/components/reserva/cabecalho-funil";
 import type { Metadata } from "next";
 import { getExperiencias } from "@/lib/sistur/catalog";
 
@@ -53,6 +54,9 @@ export default async function EscolherExperiencia() {
   }
 
   return (
+    <>
+      <CabecalhoFunil />
+      <main className="mx-auto max-w-4xl px-4 pb-24">
     <section className="py-14">
       <h1 className="sec-title mb-4 text-3xl sm:text-4xl">Faça sua reserva</h1>
       <p className="mb-10 text-center text-lg font-semibold uppercase text-[var(--c-fg)]">
@@ -94,5 +98,7 @@ export default async function EscolherExperiencia() {
         ))}
       </ul>
     </section>
+      </main>
+    </>
   );
 }

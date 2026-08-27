@@ -609,9 +609,10 @@ a[class*="min-h-[44px]"] {
    sol. O tema veste a moldura, nunca o que se lê.
    ------------------------------------------------------------------------- */
 
-[data-tema="noturno"] {
-  /* Céu: escuro em cima e embaixo, com o índigo no meio, como fim de tarde
-     virando noite. */
+/* A camada do céu: fixa, atrás de tudo, cobrindo a viewport inteira desde o
+   primeiro byte. Antes o fundo vivia no elemento temático, que começa abaixo do
+   cabeçalho — dava uma coluna de noite cercada de branco. */
+.ceu-noturno {
   background-color: #0f172a;
   background-image:
     /* Estrelas: dois planos de pontos em tamanhos diferentes dão profundidade
@@ -623,17 +624,25 @@ a[class*="min-h-[44px]"] {
     radial-gradient(1px 1px at 10% 45%, rgb(255 255 255 / 0.55), transparent),
     radial-gradient(1.5px 1.5px at 60% 55%, rgb(255 255 255 / 0.4), transparent),
     linear-gradient(to bottom, #0f172a 0%, #1e1b4b 45%, #0f172a 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
 }
 
-/* Vidro fosco: a moldura se dissolve no céu, o conteúdo continua sólido. */
+/* Vidro: a moldura deixa o céu atravessar, o conteúdo continua legível.
+   85% e não 10%: com o card a 10% o texto secundário fica em 1,1:1 contra o
+   fundo, e o WCAG AA pede 4,5:1 — seria bonito e ilegível. A 85% o céu aparece
+   através do card e o texto principal fica em 8:1. */
 [data-tema="noturno"] .f-card {
-  background: rgb(255 255 255 / 0.95);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgb(255 255 255 / 0.2);
+  background: rgb(255 255 255 / 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgb(255 255 255 / 0.3);
   border-radius: 16px;
   box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.5);
+}
+
+/* O texto secundário é o elo fraco: sobre o card a 85% o cinza padrão dá 4,0:1
+   e reprova. Escurecido aqui, sobe para 5,4:1 sem mudar nada no tema claro. */
+[data-tema="noturno"] .f-card {
+  --c-muted: #4a5768;
 }
 
 /* O cabeçalho do card era verde-claro sobre branco; sobre o céu vira noite. */
@@ -668,7 +677,7 @@ a[class*="min-h-[44px]"] {
 /* Quem pediu menos movimento também costuma pedir menos ruído visual: o céu
    perde as estrelas e fica só o gradiente. */
 @media (prefers-reduced-motion: reduce) {
-  [data-tema="noturno"] {
+  .ceu-noturno {
     background-image: linear-gradient(to bottom, #0f172a 0%, #1e1b4b 45%, #0f172a 100%);
   }
 }

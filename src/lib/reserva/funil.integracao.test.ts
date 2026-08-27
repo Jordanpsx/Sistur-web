@@ -169,8 +169,12 @@ descreve("funil de reserva", () => {
     // travar é o contrato dela dentro do bundle da página: a primeira versão
     // ficava presa a 768px e clicar na foto entregava outra foto pequena.
     const html = await (await fetch(`${SITE}/reservar/day-use/?entrada=${daqui(40)}`)).text();
+    // Especificamente o chunk da PÁGINA. Procurar por "experiencia" pegava o
+    // primeiro que casasse, e no dia em que o segmento ganhou um layout esse
+    // primeiro passou a ser o layout — o teste acusou a galeria por uma
+    // mudança que não a tocou.
     const caminho = html.match(
-      /\/_next\/static\/chunks\/app\/[^"]*experiencia[^"]*\.js/,
+      /\/_next\/static\/chunks\/app\/[^"]*experiencia[^"]*\/page-[^"]*\.js/,
     )?.[0];
     expect(caminho, "não achei o chunk da página").toBeTruthy();
 
@@ -922,6 +926,36 @@ descreve("tema noturno do camping", () => {
       await fetch(`${SITE}/reservar/camping/?entrada=${d(30)}&saida=${d(31)}`)
     ).text();
     expect(html).toMatch(/fora-do-card/);
+  });
+
+  it("o céu cobre a viewport inteira, não só a coluna do formulário", async () => {
+    // A camada é fixa e renderizada no servidor: um useEffect no body pintaria
+    // a página clara primeiro e escureceria depois, piscando a cada carga.
+    const html = await (
+      await fetch(`${SITE}/reservar/camping/?entrada=${d(30)}&saida=${d(31)}`)
+    ).text();
+    expect(html).toMatch(/ceu-noturno fixed inset-0 -z-10/);
+    // E o cabeçalho entra no tema em vez de ficar uma faixa branca por cima.
+    expect(html).toMatch(/border-b border-white\/10 bg-transparent/);
+  });
+
+  it("o day use mantém o cabeçalho claro", async () => {
+    const html = await (await fetch(`${SITE}/reservar/day-use/?entrada=${d(30)}`)).text();
+    expect(html).not.toMatch(/ceu-noturno/);
+    expect(html).toMatch(/border-\[var\(--c-border\)\] bg-\[var\(--c-bg\)\]/);
+  });
+
+  it("o vidro do card não sacrifica a legibilidade", async () => {
+    // Com o card a 10% o texto secundário fica em 1,1:1 contra o fundo e o
+    // WCAG AA pede 4,5:1. A 85% o céu atravessa e o texto continua legível.
+    const html = await (await fetch(`${SITE}/reservar/camping/`)).text();
+    const css = html.match(/\/_next\/static\/css\/[^"]+\.css/)?.[0];
+    const folha = await (await fetch(`${SITE}${css}`)).text();
+    const regra = folha.match(/\[data-tema=["']?noturno["']?\]\s*\.f-card\{[^}]*\}/)?.[0] ?? "";
+    expect(regra, "não achei a regra do card no CSS entregue").toBeTruthy();
+    // #ffffffd9 é 0.85 em hex; o que não pode é despencar para transparente.
+    expect(regra).toMatch(/background:\s*#ffffffd9/);
+    expect(regra).toMatch(/--c-muted:\s*#4a5768/);
   });
 
   it("as regras do tema chegam mesmo na folha entregue", async () => {
