@@ -29,8 +29,8 @@ export function BarracaDecorativa({ src }: { src: string }) {
       <Image
         src={src}
         alt=""
-        width={663}
-        height={485}
+        width={1831}
+        height={1141}
         // Sem `priority`: é decoração. Competir com o formulário pela banda da
         // primeira pintura seria trocar o que importa pelo que enfeita.
         loading="lazy"
