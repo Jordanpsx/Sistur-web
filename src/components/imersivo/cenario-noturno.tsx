@@ -27,26 +27,25 @@ export function CenarioNoturno({ chao }: { chao?: string }) {
         <div className="lua h-14 w-14 rounded-full sm:h-16 sm:w-16 lg:h-20 lg:w-20" />
       </div>
 
-      {/* Chão: a mata no rodapé, de ponta a ponta. Sem ela o diorama flutua.
+      {/* A mata. Uma peça só, ancorada à direita, sem repetir.
 
-          Com arte, a faixa é repetida no eixo X — por isso ela precisa fechar
-          nas laterais, e por isso é imagem de fundo e não <Image>: o
-          `next/image` otimiza uma foto, não sabe ladrilhar. Sem arte, fica o
-          gradiente, que já cumpre o papel de horizonte. */}
+          Não ladrilha de propósito: esta arte tem o lado direito iluminado de
+          quente, e é ali que a barraca fica — a luz no chão passa a ser a
+          fogueira dela. Repetida, a mancha quente apareceria também à esquerda,
+          onde não há fogo nenhum, e a cena deixaria de fazer sentido.
+
+          `cover` com âncora no topo: a grama corre para fora pela borda de
+          baixo da tela, que é o corte natural, em vez de as copas serem
+          decepadas em cima. */}
       <div
-        className="chao-noturno absolute inset-x-0 bottom-0 h-[22vh] lg:h-[24vh]"
+        className="chao-noturno absolute inset-x-0 bottom-0 h-[38vh]"
         style={
           chao
             ? {
                 backgroundImage: `url(${chao}), var(--chao-gradiente)`,
-                backgroundRepeat: "repeat-x, no-repeat",
-                backgroundPosition: "bottom center, bottom center",
-                // Escala por LARGURA fixa, não por altura. Com `auto 100%` o
-                // ladrilho crescia junto com a faixa e as árvores ficavam
-                // maiores que a barraca inteira — a cena deixava de ler como
-                // um lugar só. Assim a árvore tem tamanho constante em
-                // qualquer tela, e é a mata que fica distante.
-                backgroundSize: "1500px auto, 100% 100%",
+                backgroundRepeat: "no-repeat, no-repeat",
+                backgroundPosition: "top right, bottom center",
+                backgroundSize: "cover, 100% 100%",
               }
             : undefined
         }

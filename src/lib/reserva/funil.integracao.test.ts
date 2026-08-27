@@ -919,7 +919,12 @@ descreve("tema noturno do camping", () => {
     // Garantias, não nomes de classe: o enfeite não aparece no celular, não
     // recebe toque, e encosta no canto. Travar a largura exata fazia o teste
     // quebrar toda vez que a arte era redimensionada.
-    const bloco = html.match(/<div aria-hidden="true" class="pointer-events-none fixed bottom-0[^"]*"/)?.[0];
+    // Mira no que só a barraca tem. Procurar por "pointer-events-none fixed"
+    // pegava o primeiro que casasse, e desde que o cenário virou uma camada
+    // esse primeiro é o céu — o teste acusava a barraca por outro elemento.
+    const bloco = html
+      .match(/<div aria-hidden="true" class="pointer-events-none fixed [^"]*"/g)
+      ?.find((c) => c.includes("lg:block"));
     expect(bloco, "não achei o contêiner da barraca").toBeTruthy();
     expect(bloco).toMatch(/\bhidden\b/);
     expect(bloco).toMatch(/\blg:block\b/);
