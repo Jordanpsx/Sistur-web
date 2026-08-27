@@ -75,6 +75,8 @@ const CategorySchema = z.object({
   same_day_cutoff_time: z.string().nullable().optional(),
   // Foto da experiência, definida pelo operador. Nula = cartão só com texto.
   image_url: z.string().nullable().optional(),
+  /** Tema do formulário desta experiência. Nulo = claro, o padrão. */
+  tema: z.string().nullable().optional(),
   // Janela de horário da estadia. Nula onde a hora não entra no preço (day
   // use); preenchida no camping, onde a diária é pró-rata por hora e o
   // formulário precisa pedir a hora ao cliente. Os limites são dado do

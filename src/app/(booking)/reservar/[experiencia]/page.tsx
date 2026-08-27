@@ -151,7 +151,7 @@ export default async function FormularioReserva({
   return (
     <section className="py-8 sm:py-12">
       {e.description && (
-        <p className="mb-5 text-sm leading-relaxed text-[var(--c-muted)]">
+        <p className="fora-do-card mb-5 text-sm leading-relaxed text-[var(--c-muted)]">
           {e.description}
         </p>
       )}

@@ -35,7 +35,7 @@ export function CarrinhoFixo({
 }) {
   return (
     <div
-      className="sticky bottom-0 z-20 -mx-4 mt-6 border-t border-[var(--c-border)]
+      className="carrinho-fixo sticky bottom-0 z-20 -mx-4 mt-6 border-t border-[var(--c-border)]
                  bg-white/95 px-4 py-3 backdrop-blur
                  shadow-[0_-4px_16px_rgba(0,0,0,0.06)]
                  sm:-mx-5 sm:px-5"

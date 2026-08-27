@@ -887,3 +887,52 @@ descreve("hierarquia visual da home", () => {
     expect(m).not.toMatch(/border border-white\/70/);
   });
 });
+
+descreve("tema noturno do camping", () => {
+  const d = (n: number) => {
+    const x = new Date();
+    x.setUTCDate(x.getUTCDate() + n);
+    return x.toISOString().slice(0, 10);
+  };
+
+  it("veste o camping e deixa o day use em paz", async () => {
+    // O tema sai da categoria, não do slug: é decisão de aparência do operador,
+    // e um céu estrelado numa visita à vinícola ficaria deslocado.
+    const camping = await (
+      await fetch(`${SITE}/reservar/camping/?entrada=${d(30)}&saida=${d(31)}`)
+    ).text();
+    const dayUse = await (
+      await fetch(`${SITE}/reservar/day-use/?entrada=${d(30)}`)
+    ).text();
+    expect(camping).toMatch(/data-tema="noturno"/);
+    expect(dayUse).not.toMatch(/data-tema="noturno"/);
+  });
+
+  it("a barraca não existe no celular e não rouba toque em lugar nenhum", async () => {
+    const html = await (
+      await fetch(`${SITE}/reservar/camping/?entrada=${d(30)}&saida=${d(31)}`)
+    ).text();
+    const barraca = html.match(/pointer-events-none fixed bottom-0 right-10 z-0 hidden w-64 lg:block/);
+    expect(barraca, "a barraca precisa ser hidden lg:block e pointer-events-none").toBeTruthy();
+  });
+
+  it("o texto que ficou sobre o céu clareia junto", async () => {
+    // Sem isto a descrição da experiência continuava #5b6b7c sobre azul-noite.
+    const html = await (
+      await fetch(`${SITE}/reservar/camping/?entrada=${d(30)}&saida=${d(31)}`)
+    ).text();
+    expect(html).toMatch(/fora-do-card/);
+  });
+
+  it("as regras do tema chegam mesmo na folha entregue", async () => {
+    const html = await (await fetch(`${SITE}/reservar/camping/`)).text();
+    const css = html.match(/\/_next\/static\/css\/[^"]+\.css/)?.[0];
+    expect(css).toBeTruthy();
+    const folha = await (await fetch(`${SITE}${css}`)).text();
+    // Sem aspas: o CSS compilado escreve [data-tema=noturno].
+    expect(folha).toMatch(/\[data-tema=["']?noturno["']?\]/);
+    // Campo branco sólido é inegociável — vidro fosco atrás de um <input>
+    // destrói a legibilidade de quem digita CPF no sol.
+    expect(folha).toMatch(/\[data-tema=["']?noturno["']?\]\s*\.f-input\s*\{\s*background:\s*#fff/);
+  });
+});

@@ -595,3 +595,80 @@ a[class*="min-h-[44px]"] {
 @media (prefers-reduced-motion: reduce) {
   .pix-pulso { animation: none; opacity: 0.8; }
 }
+
+/* ---------------------------------------------------------------------------
+   Tema noturno do funil — vestido por experiência, escolhido pelo operador.
+   -------------------------------------------------------------------------
+   Escopo por atributo em vez de props nos componentes: o formulário é o mesmo
+   do day use, e passar um `tema` por dez componentes para mudar cor seria
+   espalhar decisão de aparência por dentro da lógica de reserva.
+
+   O que NÃO muda aqui é tão importante quanto o que muda: os campos continuam
+   brancos sólidos e o texto continua escuro. Vidro fosco atrás de um <input>
+   parece bonito e destrói a legibilidade de quem preenche CPF no celular, no
+   sol. O tema veste a moldura, nunca o que se lê.
+   ------------------------------------------------------------------------- */
+
+[data-tema="noturno"] {
+  /* Céu: escuro em cima e embaixo, com o índigo no meio, como fim de tarde
+     virando noite. */
+  background-color: #0f172a;
+  background-image:
+    /* Estrelas: dois planos de pontos em tamanhos diferentes dão profundidade
+       sem imagem nenhuma — é gradiente radial, custa zero requisição. */
+    radial-gradient(1px 1px at 20% 15%, rgb(255 255 255 / 0.7), transparent),
+    radial-gradient(1px 1px at 70% 8%, rgb(255 255 255 / 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 40% 30%, rgb(255 255 255 / 0.6), transparent),
+    radial-gradient(1px 1px at 85% 35%, rgb(255 255 255 / 0.45), transparent),
+    radial-gradient(1px 1px at 10% 45%, rgb(255 255 255 / 0.55), transparent),
+    radial-gradient(1.5px 1.5px at 60% 55%, rgb(255 255 255 / 0.4), transparent),
+    linear-gradient(to bottom, #0f172a 0%, #1e1b4b 45%, #0f172a 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* Vidro fosco: a moldura se dissolve no céu, o conteúdo continua sólido. */
+[data-tema="noturno"] .f-card {
+  background: rgb(255 255 255 / 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.5);
+}
+
+/* O cabeçalho do card era verde-claro sobre branco; sobre o céu vira noite. */
+[data-tema="noturno"] .f-head {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  color: #e0e7ff;
+}
+[data-tema="noturno"] .f-head h1,
+[data-tema="noturno"] .f-head p {
+  color: #e0e7ff;
+}
+
+/* Campos: brancos sólidos, sem transparência. Ver a nota no topo. */
+[data-tema="noturno"] .f-input {
+  background: #fff;
+}
+
+/* Texto que vive FORA do card — a descrição da experiência acima dele — passa
+   a ficar sobre o céu, e precisava clarear para continuar legível. */
+[data-tema="noturno"] .fora-do-card {
+  color: rgb(224 231 255 / 0.9);
+}
+
+/* A barra do carrinho encosta no rodapé, sobre o céu. */
+[data-tema="noturno"] .carrinho-fixo {
+  background: rgb(255 255 255 / 0.97);
+  backdrop-filter: blur(12px);
+  border-top-color: rgb(255 255 255 / 0.2);
+  border-radius: 16px 16px 0 0;
+}
+
+/* Quem pediu menos movimento também costuma pedir menos ruído visual: o céu
+   perde as estrelas e fica só o gradiente. */
+@media (prefers-reduced-motion: reduce) {
+  [data-tema="noturno"] {
+    background-image: linear-gradient(to bottom, #0f172a 0%, #1e1b4b 45%, #0f172a 100%);
+  }
+}
