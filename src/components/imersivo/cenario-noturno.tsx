@@ -47,14 +47,19 @@ export function CenarioNoturno({
       </div>
 
       {/* A lua. Canto superior direito em qualquer tela, longe da logo, que
-          fica à esquerda do cabeçalho. O recorte tem o halo dissolvendo nas
-          bordas, então ela pousa sobre o céu sem deixar um quadrado. */}
+          fica à esquerda do cabeçalho.
+
+          `screen` porque o recorte carrega o céu ao redor dela. Com alpha
+          apenas, esse céu virava um disco escuro por cima do fundo — e antes,
+          com a dissolvência encostando na borda da caixa, um quadrado. No modo
+          screen o escuro não soma nada e só a luz da lua atravessa, então o
+          recorte pousa sobre qualquer parte do céu sem deixar marca. */}
       {lua && (
         <img
           src={lua}
           alt=""
-          className="absolute right-2 top-12 w-28 select-none sm:right-8 sm:top-16
-                     sm:w-36 lg:right-16 lg:top-20 lg:w-52"
+          className="absolute right-2 top-12 w-28 select-none mix-blend-screen
+                     sm:right-8 sm:top-16 sm:w-36 lg:right-16 lg:top-20 lg:w-52"
         />
       )}
 
