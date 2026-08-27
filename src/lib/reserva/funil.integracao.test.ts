@@ -943,6 +943,10 @@ descreve("tema noturno do camping", () => {
     // CSS para elas. O que precisa continuar é o céu e o chão existirem.
     expect(html).toMatch(/ceu-noturno/);
     expect(html).toMatch(/chao-noturno/);
+    // A lua é elemento próprio, ancorada ao canto direito. Dentro da arte do
+    // céu ela obedecia ao recorte do `cover`: caía em 37% da largura numa
+    // 2560x1311 e sumia inteira do quadro no celular.
+    expect(html).toMatch(/class="absolute right-2 top-12/);
     // O formulário fica acima de tudo isso.
     expect(html).toMatch(/relative z-10 mx-auto max-w-4xl/);
   });

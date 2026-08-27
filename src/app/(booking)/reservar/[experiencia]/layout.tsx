@@ -46,6 +46,7 @@ export default async function ExperienciaLayout({
   // barraca são peças diferentes do mesmo cenário e trocam em separado.
   const [chao] = noturno ? await listarMidia({ tag: "cenario-chao" }) : [];
   const [ceu] = noturno ? await listarMidia({ tag: "cenario-ceu" }) : [];
+  const [lua] = noturno ? await listarMidia({ tag: "cenario-lua" }) : [];
 
   return (
     <div data-tema={noturno ? "noturno" : undefined} className="relative">
@@ -53,7 +54,11 @@ export default async function ExperienciaLayout({
         <>
           {/* Céu, lua, estrelas e chão. Fixo e atrás de tudo, inclusive do
               cabeçalho. */}
-          <CenarioNoturno ceu={ceu?.url_absoluta} chao={chao?.url_absoluta} />
+          <CenarioNoturno
+            ceu={ceu?.url_absoluta}
+            lua={lua?.url_absoluta}
+            chao={chao?.url_absoluta}
+          />
           {barraca && <BarracaDecorativa src={barraca.url_absoluta} />}
         </>
       )}

@@ -14,15 +14,24 @@
  * cintilação ao lado de um campo de formulário distrai justamente quem está
  * conferindo um número. O céu fica vivo por densidade, não por animação.
  */
-export function CenarioNoturno({ ceu, chao }: { ceu?: string; chao?: string }) {
+export function CenarioNoturno({
+  ceu,
+  lua,
+  chao,
+}: {
+  ceu?: string;
+  lua?: string;
+  chao?: string;
+}) {
   return (
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10">
-      {/* O céu. Imagem, não gradiente: ela traz a lua crescente e as estrelas
-          desenhadas, com uma densidade que radial-gradient não alcança.
+      {/* O céu — só as estrelas e o gradiente. A lua foi recortada dele e
+          virou elemento próprio, logo abaixo.
 
-          Ancorada à direita e no topo, porque é onde a lua está — com âncora
-          ao centro ela sairia do quadro em tela estreita. O gradiente fica por
-          baixo para cobrir o que a imagem não alcançar. */}
+          Foi preciso separar: com `cover`, a fatia visível da arte muda com a
+          proporção da tela. Numa 2560x1311 a lua caía em 37% da largura, atrás
+          do formulário; num celular ela saía inteira do quadro. Aqui a posição
+          do céu deixou de importar — ele é textura — e a lua passa a obedecer. */}
       <div className="ceu-noturno absolute inset-0">
         {ceu && (
           <div
@@ -30,12 +39,24 @@ export function CenarioNoturno({ ceu, chao }: { ceu?: string; chao?: string }) {
             style={{
               backgroundImage: `url(${ceu})`,
               backgroundRepeat: "no-repeat",
-              backgroundPosition: "top right",
+              backgroundPosition: "top center",
               backgroundSize: "cover",
             }}
           />
         )}
       </div>
+
+      {/* A lua. Canto superior direito em qualquer tela, longe da logo, que
+          fica à esquerda do cabeçalho. O recorte tem o halo dissolvendo nas
+          bordas, então ela pousa sobre o céu sem deixar um quadrado. */}
+      {lua && (
+        <img
+          src={lua}
+          alt=""
+          className="absolute right-2 top-12 w-28 select-none sm:right-8 sm:top-16
+                     sm:w-36 lg:right-16 lg:top-20 lg:w-52"
+        />
+      )}
 
       {/* A mata. Duas camadas: o gradiente cobre a largura toda, e a arte
           pousa sobre ele ancorada à direita.
