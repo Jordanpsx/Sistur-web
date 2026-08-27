@@ -609,44 +609,13 @@ a[class*="min-h-[44px]"] {
    sol. O tema veste a moldura, nunca o que se lê.
    ------------------------------------------------------------------------- */
 
-/* O céu. Duas famílias de estrelas: pontos de 1px, muitos e discretos, e
-   alguns de 2px mais brilhantes na frente — é o que dá profundidade sem imagem
-   e sem animação. */
+/* O céu por baixo da imagem. Cores tiradas da própria arte: #03041a no alto,
+   #060d29 no meio e #03204d perto do horizonte — medidas na foto, não
+   escolhidas de memória. Ele cobre o que a imagem não alcançar em tela muito
+   alta, e a emenda não aparece porque é a mesma cor. */
 .ceu-noturno {
-  background-color: #0f172a;
-  background-image:
-    /* plano da frente — poucas, maiores */
-    radial-gradient(2px 2px at 18% 12%, rgb(255 255 255 / 0.9), transparent),
-    radial-gradient(2px 2px at 62% 22%, rgb(255 255 255 / 0.75), transparent),
-    radial-gradient(2px 2px at 88% 48%, rgb(255 255 255 / 0.7), transparent),
-    radial-gradient(2px 2px at 33% 58%, rgb(255 255 255 / 0.65), transparent),
-    radial-gradient(2px 2px at 74% 68%, rgb(255 255 255 / 0.6), transparent),
-    /* plano de trás — muitas, pequenas */
-    radial-gradient(1px 1px at 8% 8%, rgb(255 255 255 / 0.6), transparent),
-    radial-gradient(1px 1px at 27% 5%, rgb(255 255 255 / 0.5), transparent),
-    radial-gradient(1px 1px at 45% 16%, rgb(255 255 255 / 0.55), transparent),
-    radial-gradient(1px 1px at 55% 9%, rgb(255 255 255 / 0.45), transparent),
-    radial-gradient(1px 1px at 79% 14%, rgb(255 255 255 / 0.5), transparent),
-    radial-gradient(1px 1px at 93% 24%, rgb(255 255 255 / 0.45), transparent),
-    radial-gradient(1px 1px at 12% 28%, rgb(255 255 255 / 0.5), transparent),
-    radial-gradient(1px 1px at 38% 33%, rgb(255 255 255 / 0.45), transparent),
-    radial-gradient(1px 1px at 68% 38%, rgb(255 255 255 / 0.5), transparent),
-    radial-gradient(1px 1px at 22% 44%, rgb(255 255 255 / 0.45), transparent),
-    radial-gradient(1px 1px at 50% 46%, rgb(255 255 255 / 0.4), transparent),
-    radial-gradient(1px 1px at 84% 56%, rgb(255 255 255 / 0.45), transparent),
-    radial-gradient(1px 1px at 6% 60%, rgb(255 255 255 / 0.4), transparent),
-    radial-gradient(1px 1px at 43% 70%, rgb(255 255 255 / 0.35), transparent),
-    radial-gradient(1px 1px at 60% 78%, rgb(255 255 255 / 0.3), transparent),
-    linear-gradient(to bottom, #0f172a 0%, #1e1b4b 45%, #131a33 100%);
-}
-
-/* A lua: um disco com halo. Dois box-shadow — um curto e forte para a borda
-   acesa, um longo e fraco para a luz que ela joga no céu. */
-.lua {
-  background: radial-gradient(circle at 35% 35%, #fffbeb 0%, #fde68a 55%, #fcd34d 100%);
-  box-shadow:
-    0 0 24px 4px rgb(253 230 138 / 0.45),
-    0 0 90px 24px rgb(251 191 36 / 0.18);
+  background-color: #03041a;
+  background-image: linear-gradient(to bottom, #03041a 0%, #060d29 45%, #03204d 100%);
 }
 
 /* O chão: mata escura subindo do rodapé e dissolvendo no céu. Sem topo duro,
@@ -654,11 +623,13 @@ a[class*="min-h-[44px]"] {
 .chao-noturno {
   /* Em variável para a faixa ilustrada poder empilhar por cima dele sem
      perder o horizonte que dissolve no céu. */
+  /* Sobe do verde-escuro da mata para o azul do horizonte, para o chão
+     encontrar o céu na cor que o céu tem ali. */
   --chao-gradiente: linear-gradient(
     to top,
-    #0a1512 0%,
-    rgb(10 21 18 / 0.85) 35%,
-    rgb(12 24 30 / 0.45) 70%,
+    #071310 0%,
+    rgb(7 19 16 / 0.85) 35%,
+    rgb(3 32 77 / 0.45) 70%,
     transparent 100%
   );
   background-image: linear-gradient(
@@ -675,7 +646,10 @@ a[class*="min-h-[44px]"] {
    fundo, e o WCAG AA pede 4,5:1 — seria bonito e ilegível. A 85% o céu aparece
    através do card e o texto principal fica em 8:1. */
 [data-tema="noturno"] .f-card {
-  background: rgb(255 255 255 / 0.85);
+  /* Um véu do azul do horizonte no branco, para o card pertencer à noite em
+     vez de ser um retângulo neutro colado nela. Mantém 85% de branco: é o que
+     segura o contraste do texto — ver a nota acima. */
+  background: rgb(247 250 253 / 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgb(255 255 255 / 0.3);
@@ -690,13 +664,15 @@ a[class*="min-h-[44px]"] {
 }
 
 /* O cabeçalho do card era verde-claro sobre branco; sobre o céu vira noite. */
+/* O cabeçalho do card repete o céu: escuro em cima, azul do horizonte
+   embaixo. Era índigo arroxeado, que não existe em lugar nenhum da arte. */
 [data-tema="noturno"] .f-head {
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-  color: #e0e7ff;
+  background: linear-gradient(160deg, #061029 0%, #03204d 60%, #073b73 100%);
+  color: #dbe7f7;
 }
 [data-tema="noturno"] .f-head h1,
 [data-tema="noturno"] .f-head p {
-  color: #e0e7ff;
+  color: #dbe7f7;
 }
 
 /* Campos: brancos sólidos, sem transparência. Ver a nota no topo. */
@@ -728,6 +704,12 @@ a[class*="min-h-[44px]"] {
 .barraca-cenario {
   -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 38%, #000 100%);
   mask-image: linear-gradient(to right, transparent 0%, #000 38%, #000 100%);
+}
+
+/* Texto sobre o céu — a descrição da experiência, acima do card. Puxado para
+   o azul-claro da arte em vez de um cinza neutro. */
+[data-tema="noturno"] .fora-do-card {
+  color: rgb(200 218 240 / 0.92);
 }
 
 /* Ver a nota em CenarioNoturno: em tela muito larga a arte da mata não alcança

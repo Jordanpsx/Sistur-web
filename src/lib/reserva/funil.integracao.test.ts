@@ -939,7 +939,9 @@ descreve("tema noturno do camping", () => {
       await fetch(`${SITE}/reservar/camping/?entrada=${d(30)}&saida=${d(31)}`)
     ).text();
     expect(html).toMatch(/pointer-events-none fixed inset-0 -z-10/);
-    expect(html).toMatch(/class="lua/);
+    // A lua e as estrelas vieram para a arte do céu; não há mais elemento de
+    // CSS para elas. O que precisa continuar é o céu e o chão existirem.
+    expect(html).toMatch(/ceu-noturno/);
     expect(html).toMatch(/chao-noturno/);
     // O formulário fica acima de tudo isso.
     expect(html).toMatch(/relative z-10 mx-auto max-w-4xl/);
@@ -949,8 +951,11 @@ descreve("tema noturno do camping", () => {
     const html = await (await fetch(`${SITE}/reservar/camping/`)).text();
     const css = html.match(/\/_next\/static\/css\/[^"]+\.css/)?.[0];
     const folha = await (await fetch(`${SITE}${css}`)).text();
-    expect(folha).toMatch(/\.lua\{/);
+    expect(folha).toMatch(/\.ceu-noturno\{/);
     expect(folha).toMatch(/\.chao-noturno\{/);
+    // A paleta sai medida da arte do céu, não escolhida de memória.
+    expect(folha).toMatch(/#03041a/);
+    expect(folha).toMatch(/#03204d/);
     // A borda da barraca dissolve antes de encostar na coluna do formulário.
     expect(folha).toMatch(/\.barraca-cenario\{[^}]*mask-image/);
   });
@@ -1008,8 +1013,9 @@ descreve("tema noturno do camping", () => {
     const folha = await (await fetch(`${SITE}${css}`)).text();
     const regra = folha.match(/\[data-tema=["']?noturno["']?\]\s*\.f-card\{[^}]*\}/)?.[0] ?? "";
     expect(regra, "não achei a regra do card no CSS entregue").toBeTruthy();
-    // #ffffffd9 é 0.85 em hex; o que não pode é despencar para transparente.
-    expect(regra).toMatch(/background:\s*#ffffffd9/);
+    // O que não pode é despencar para transparente: a 10% o texto secundário
+    // fica em 1,1:1 contra o fundo. `d9` é 0.85 em hexadecimal.
+    expect(regra).toMatch(/background:\s*#[0-9a-f]{6}d9/);
     expect(regra).toMatch(/--c-muted:\s*#4a5768/);
   });
 

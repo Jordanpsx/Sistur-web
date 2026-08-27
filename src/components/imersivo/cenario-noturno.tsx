@@ -14,17 +14,27 @@
  * cintilação ao lado de um campo de formulário distrai justamente quem está
  * conferindo um número. O céu fica vivo por densidade, não por animação.
  */
-export function CenarioNoturno({ chao }: { chao?: string }) {
+export function CenarioNoturno({ ceu, chao }: { ceu?: string; chao?: string }) {
   return (
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10">
-      {/* Céu e estrelas — gradientes radiais, zero requisição. */}
-      <div className="ceu-noturno absolute inset-0" />
+      {/* O céu. Imagem, não gradiente: ela traz a lua crescente e as estrelas
+          desenhadas, com uma densidade que radial-gradient não alcança.
 
-      {/* A lua. Alta e à direita, longe da logo, que fica à esquerda do
-          cabeçalho. No celular ela é a única peça do cenário que aparece — a
-          barraca some abaixo de lg —, então precisa estar visível de cara. */}
-      <div className="absolute right-8 top-20 sm:right-16 sm:top-24 lg:right-24">
-        <div className="lua h-14 w-14 rounded-full sm:h-16 sm:w-16 lg:h-20 lg:w-20" />
+          Ancorada à direita e no topo, porque é onde a lua está — com âncora
+          ao centro ela sairia do quadro em tela estreita. O gradiente fica por
+          baixo para cobrir o que a imagem não alcançar. */}
+      <div className="ceu-noturno absolute inset-0">
+        {ceu && (
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url(${ceu})`,
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "top right",
+              backgroundSize: "cover",
+            }}
+          />
+        )}
       </div>
 
       {/* A mata. Duas camadas: o gradiente cobre a largura toda, e a arte
