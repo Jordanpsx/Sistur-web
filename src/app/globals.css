@@ -729,3 +729,11 @@ a[class*="min-h-[44px]"] {
   -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 38%, #000 100%);
   mask-image: linear-gradient(to right, transparent 0%, #000 38%, #000 100%);
 }
+
+/* Ver a nota em CenarioNoturno: em tela muito larga a arte da mata não alcança
+   a ponta esquerda, então a borda dissolve no gradiente em vez de terminar num
+   corte vertical. */
+.mata-arte {
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 14%, #000 100%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 14%, #000 100%);
+}

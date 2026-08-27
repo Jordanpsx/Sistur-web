@@ -30,8 +30,11 @@ export function BarracaDecorativa({ src }: { src: string }) {
       // Um pouco acima do rodapé: assim a base dela cai dentro da faixa de
       // grama em vez de encostar na borda da tela, e as duas peças passam a
       // ser um lugar só.
-      className="pointer-events-none fixed bottom-[3vh] right-0 z-0 hidden w-[34vw]
-                 max-w-[600px] select-none lg:block xl:w-[30vw]"
+      // Medida em vh, como a faixa. Com largura, ela e a mata descasavam
+      // conforme a proporção da tela mudava. O recuo negativo põe a base dela
+      // dentro da grama em primeiro plano, na frente da linha de árvores.
+      className="pointer-events-none fixed -bottom-[5vh] right-0 z-0 hidden
+                 h-[30vh] select-none lg:block"
     >
       <Image
         src={src}
@@ -47,7 +50,7 @@ export function BarracaDecorativa({ src }: { src: string }) {
         // o contraste, mas uma ilustração 3D detalhada atrás do texto continua
         // sendo ruído. Assim ela fica grande e ancorada à direita sem disputar
         // atenção com o que a pessoa está lendo.
-        className="barraca-cenario h-auto w-full drop-shadow-[0_0_40px_rgba(251,191,36,0.18)]"
+        className="barraca-cenario h-full w-auto drop-shadow-[0_0_40px_rgba(251,191,36,0.18)]"
       />
     </div>
   );

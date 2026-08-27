@@ -27,29 +27,34 @@ export function CenarioNoturno({ chao }: { chao?: string }) {
         <div className="lua h-14 w-14 rounded-full sm:h-16 sm:w-16 lg:h-20 lg:w-20" />
       </div>
 
-      {/* A mata. Uma peça só, ancorada à direita, sem repetir.
+      {/* A mata. Duas camadas: o gradiente cobre a largura toda, e a arte
+          pousa sobre ele ancorada à direita.
 
-          Não ladrilha de propósito: esta arte tem o lado direito iluminado de
-          quente, e é ali que a barraca fica — a luz no chão passa a ser a
-          fogueira dela. Repetida, a mancha quente apareceria também à esquerda,
-          onde não há fogo nenhum, e a cena deixaria de fazer sentido.
+          Escalada por ALTURA, não por largura. Com largura, a copa crescia com
+          a tela enquanto a barraca crescia com a altura, e as duas descasavam —
+          numa ultrawide a barraca acabava dentro das árvores. Por altura, a
+          base da copa fica sempre em 60% da faixa, em qualquer resolução, e a
+          barraca cabe na frente dela por construção.
 
-          `cover` com âncora no topo: a grama corre para fora pela borda de
-          baixo da tela, que é o corte natural, em vez de as copas serem
-          decepadas em cima. */}
-      <div
-        className="chao-noturno absolute inset-x-0 bottom-0 h-[38vh]"
-        style={
-          chao
-            ? {
-                backgroundImage: `url(${chao}), var(--chao-gradiente)`,
-                backgroundRepeat: "no-repeat, no-repeat",
-                backgroundPosition: "top right, bottom center",
-                backgroundSize: "cover, 100% 100%",
-              }
-            : undefined
-        }
-      />
+          Não repete: esta arte tem o lado direito aceso de quente, e é ali que
+          a barraca fica — a luz no chão é a fogueira dela. Ladrilhada, o mesmo
+          calor apareceria à esquerda, onde não há fogo.
+
+          Em telas muito largas a arte não alcança a ponta esquerda; a borda
+          dissolve no gradiente em vez de terminar em corte. */}
+      <div className="chao-noturno absolute inset-x-0 bottom-0 h-[48vh]">
+        {chao && (
+          <div
+            className="mata-arte absolute inset-0"
+            style={{
+              backgroundImage: `url(${chao})`,
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "bottom right",
+              backgroundSize: "auto 100%",
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 }
