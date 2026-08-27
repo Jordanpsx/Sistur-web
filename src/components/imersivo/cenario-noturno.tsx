@@ -34,14 +34,19 @@ export function CenarioNoturno({ chao }: { chao?: string }) {
           `next/image` otimiza uma foto, não sabe ladrilhar. Sem arte, fica o
           gradiente, que já cumpre o papel de horizonte. */}
       <div
-        className="chao-noturno absolute inset-x-0 bottom-0 h-[20vh] lg:h-[26vh]"
+        className="chao-noturno absolute inset-x-0 bottom-0 h-[22vh] lg:h-[24vh]"
         style={
           chao
             ? {
                 backgroundImage: `url(${chao}), var(--chao-gradiente)`,
                 backgroundRepeat: "repeat-x, no-repeat",
                 backgroundPosition: "bottom center, bottom center",
-                backgroundSize: "auto 100%, 100% 100%",
+                // Escala por LARGURA fixa, não por altura. Com `auto 100%` o
+                // ladrilho crescia junto com a faixa e as árvores ficavam
+                // maiores que a barraca inteira — a cena deixava de ler como
+                // um lugar só. Assim a árvore tem tamanho constante em
+                // qualquer tela, e é a mata que fica distante.
+                backgroundSize: "1500px auto, 100% 100%",
               }
             : undefined
         }

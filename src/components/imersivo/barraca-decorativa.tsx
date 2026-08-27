@@ -23,8 +23,11 @@ export function BarracaDecorativa({ src }: { src: string }) {
       // Encostada no canto inferior direito, sem folga: ela pousa sobre o chão
       // do cenário, e uma margem ali a faria flutuar de novo — que é o defeito
       // que o chão veio corrigir.
-      className="pointer-events-none fixed bottom-0 right-0 z-0 hidden w-[45vw]
-                 max-w-[700px] select-none lg:block xl:w-[40vw]"
+      // Menor e recuada do canto: encostada em `right-0` a grama era fatiada
+      // pela borda da tela, e no tamanho anterior a barraca competia com o
+      // formulário em vez de emoldurá-lo.
+      className="pointer-events-none fixed bottom-0 right-0 z-0 hidden w-[32vw]
+                 max-w-[520px] select-none lg:block xl:w-[28vw]"
     >
       <Image
         src={src}
@@ -34,7 +37,7 @@ export function BarracaDecorativa({ src }: { src: string }) {
         // Sem `priority`: é decoração. Competir com o formulário pela banda da
         // primeira pintura seria trocar o que importa pelo que enfeita.
         loading="lazy"
-        sizes="(min-width: 1280px) min(40vw, 700px), min(45vw, 700px)"
+        sizes="(min-width: 1280px) min(28vw, 520px), min(32vw, 520px)"
         // A borda esquerda dissolve antes de chegar ao formulário. No tamanho
         // pedido a barraca cobre 44% da coluna a 1024px — o card a 85% segura
         // o contraste, mas uma ilustração 3D detalhada atrás do texto continua
