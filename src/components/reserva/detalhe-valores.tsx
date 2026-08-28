@@ -16,9 +16,12 @@ import type { Orcamento } from "@/lib/reserva/itens";
  */
 export function DetalheValores({
   orcamento,
+  nomesPorTarifa,
   sempreAberto = false,
 }: {
   orcamento: Orcamento | null;
+  /** Tarifa → unidades físicas escolhidas. Ver `detalharOrcamento`. */
+  nomesPorTarifa?: Record<number, string[]>;
   /**
    * Sem o disclosure. No passo 3 a pessoa está confirmando o que vai pagar —
    * esconder a conta atrás de um clique ali seria esconder o que ela veio ver.
@@ -27,7 +30,7 @@ export function DetalheValores({
    */
   sempreAberto?: boolean;
 }) {
-  const linhas = detalharOrcamento(orcamento);
+  const linhas = detalharOrcamento(orcamento, nomesPorTarifa);
   if (linhas.length === 0) return null;
 
   if (sempreAberto) return <Linhas linhas={linhas} />;

@@ -33,6 +33,7 @@ export function PassoDados({
   quantidades,
   recursos,
   nomesDosRecursos,
+  tarifaDosRecursos,
   orcamento,
 }: {
   slug: string;
@@ -50,6 +51,8 @@ export function PassoDados({
   recursos: number[];
   /** id -> nome, para o resumo e para o botão de voltar. */
   nomesDosRecursos: Record<number, string>;
+  /** id do recurso → id da tarifa dele, para a conta nomear a unidade. */
+  tarifaDosRecursos: Record<number, number>;
   orcamento: Orcamento | null;
 }) {
   const [estado, acao, enviando] = useActionState<EstadoCriacao, FormData>(
@@ -199,7 +202,16 @@ export function PassoDados({
                   virava R$ 123,75. Duas telas explicando o mesmo total de
                   jeitos diferentes é uma delas estando errada mais cedo ou
                   mais tarde. */}
-              <DetalheValores orcamento={orcamento} sempreAberto />
+              <DetalheValores
+                orcamento={orcamento}
+                nomesPorTarifa={recursos.reduce<Record<number, string[]>>((acc, id) => {
+                  const tarifa = tarifaDosRecursos[id];
+                  const nome = nomesDosRecursos[id];
+                  if (tarifa && nome) (acc[tarifa] ??= []).push(nome);
+                  return acc;
+                }, {})}
+                sempreAberto
+              />
             </div>
           ) : (
             <p className="f-hint">

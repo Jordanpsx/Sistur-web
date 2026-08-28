@@ -62,15 +62,41 @@ function nomeDoDesconto(chave: string, dados: unknown): string {
     : nome;
 }
 
-export function detalharOrcamento(o: Orcamento | null): LinhaDetalhe[] {
+/**
+ * Junta os nomes escolhidos numa frase.
+ *
+ * Duas churrasqueiras da mesma tarifa viram uma linha só no `/simular` — o
+ * motor conta por tarifa e quantidade —, então a linha precisa nomear as duas.
+ */
+function juntar(nomes: string[]): string {
+  if (nomes.length <= 1) return nomes[0] ?? "";
+  return `${nomes.slice(0, -1).join(", ")} e ${nomes[nomes.length - 1]}`;
+}
+
+export function detalharOrcamento(
+  o: Orcamento | null,
+  /**
+   * Tarifa → nomes das unidades físicas escolhidas nela.
+   *
+   * O `/simular` responde em tarifa: quem escolheu a Churrasqueira A4 recebe de
+   * volta "Churrasqueira Grande (A)", que é o nome do preço, não o da coisa. Na
+   * tela o cliente escolheu A4, e ver outro nome na conta faz duvidar se pegou
+   * a certa. Ausente, a linha mantém o nome da tarifa — é o caso de todo item
+   * que não tem unidade física.
+   */
+  nomesPorTarifa?: Record<number, string[]>,
+): LinhaDetalhe[] {
   if (!o) return [];
 
-  const linhas: LinhaDetalhe[] = o.items_breakdown.map((l) => ({
-    tipo: "item",
-    titulo: l.item_name,
-    descricao: descreverItem(l),
-    valor: l.item_total,
-  }));
+  const linhas: LinhaDetalhe[] = o.items_breakdown.map((l) => {
+    const escolhidas = nomesPorTarifa?.[l.item_id];
+    return {
+      tipo: "item",
+      titulo: escolhidas?.length ? juntar(escolhidas) : l.item_name,
+      descricao: descreverItem(l),
+      valor: l.item_total,
+    };
+  });
 
   const temAjuste = o.discount_amount > 0 || o.service_fee > 0;
 

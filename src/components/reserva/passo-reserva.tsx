@@ -355,6 +355,14 @@ export function PassoReserva({
       ? diasEntre(selecao.entrada, selecao.saida)
       : 0;
 
+  // Tarifa → nomes das churrasqueiras escolhidas nela, para a conta dizer
+  // "Churrasqueira A4" onde o /simular responde "Churrasqueira Grande (A)".
+  const nomesPorTarifa: Record<number, string[]> = {};
+  for (const id of recursosSel) {
+    const r = recursos.find((x) => x.id === id);
+    if (r) (nomesPorTarifa[r.item_id] ??= []).push(r.name);
+  }
+
   const porGrupo = new Map(grupos.map((g) => [g.id, g]));
   // Duas formas de escolher, e quem decide é o estoque, não a categoria.
   //
@@ -708,6 +716,7 @@ export function PassoReserva({
         )}
 
         <CarrinhoFixo
+          nomesPorTarifa={nomesPorTarifa}
           orcamento={orcamento}
           carregando={carregando}
           pendencia={pendencia}

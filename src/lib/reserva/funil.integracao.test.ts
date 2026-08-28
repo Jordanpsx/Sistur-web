@@ -343,8 +343,11 @@ descreve("funil de reserva", () => {
     const t = html.replace(/<script[\s\S]*?<\/script>/g, "").replace(/<[^>]*>/g, " ");
     expect(t).toMatch(/Espaço reservado/);
     expect(t).toMatch(new RegExp(churras.name));
-    // E o total precisa contar a churrasqueira, não só o ingresso.
-    expect(t).toMatch(new RegExp(churras.item_name.replace(/[()]/g, "\\$&")));
+    // A conta precisa contar a churrasqueira, e nomeá-la pelo nome DELA. Este
+    // teste exigia aqui o nome da tarifa — que é o preço, não a coisa — e foi
+    // o que travou o defeito por tanto tempo.
+    expect(t).toMatch(new RegExp(`${churras.name}\\s+1 ×`));
+    expect(t).not.toMatch(new RegExp(churras.item_name.replace(/[()]/g, "\\$&")));
   });
 
   it("o passo 3 aceita só a churrasqueira, sem ingresso", async () => {
@@ -658,56 +661,64 @@ descreve("camping — a hora é preço", () => {
 });
 
 descreveCria("camping — a hora sobrevive à criação", () => {
-  const d = (n: number) => {
-    const x = new Date();
-    x.setUTCDate(x.getUTCDate() + n);
-    return x.toISOString().slice(0, 10);
-  };
-
   it("a reserva nasce com o total que foi simulado, hora incluída", async () => {
     const api = process.env.SISTUR_API_URL!;
     const chave = process.env.SISTUR_WEB_API_KEY!;
-    const ci = `${d(60)}T08:00`;
-    const co = `${d(61)}T17:00`;
+    const { ratearTotal } = await import("./itens");
 
-    const sim = await (
-      await fetch(`${api}/reservas/api/public/simular`, {
+    // Percorre dias até um ser aceito: o operador bloqueia quartas-feiras para
+    // manutenção, e uma data fixa no futuro caminha pelos dias da semana até
+    // cair numa delas.
+    let ultimo: unknown = null;
+    for (const dia of datasCandidatas(60)) {
+      const seguinte = new Date(`${dia}T00:00:00Z`);
+      seguinte.setUTCDate(seguinte.getUTCDate() + 1);
+      const ci = `${dia}T08:00`;
+      const co = `${seguinte.toISOString().slice(0, 10)}T17:00`;
+
+      const sim = await (
+        await fetch(`${api}/reservas/api/public/simular`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            source_id: 1,
+            category_id: 2,
+            check_in_date: ci,
+            check_out_date: co,
+            items: [{ item_id: 18, quantity: 2 }],
+          }),
+        })
+      ).json();
+      expect(sim.items_breakdown[0].total_hours).toBe(33);
+
+      const res = await fetch(`${api}/api/public/reservas/criar`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Web-Api-Key": chave },
         body: JSON.stringify({
           source_id: 1,
           category_id: 2,
+          customer_name: "Regressao Camping Silva",
+          customer_document: "529.982.247-25",
+          email: "camping@exemplo.com.br",
+          telefone: "(64) 99999-0000",
           check_in_date: ci,
           check_out_date: co,
-          items: [{ item_id: 18, quantity: 2 }],
+          items: ratearTotal(sim),
         }),
-      })
-    ).json();
-    expect(sim.items_breakdown[0].total_hours).toBe(33);
+      });
+      const corpo = await res.json();
+      ultimo = corpo;
+      descartarDepois(corpo?.group_id);
 
-    const { ratearTotal } = await import("./itens");
-    const res = await fetch(`${api}/api/public/reservas/criar`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Web-Api-Key": chave },
-      body: JSON.stringify({
-        source_id: 1,
-        category_id: 2,
-        customer_name: "Regressao Camping Silva",
-        customer_document: "529.982.247-25",
-        email: "camping@exemplo.com.br",
-        telefone: "(64) 99999-0000",
-        check_in_date: ci,
-        check_out_date: co,
-        items: ratearTotal(sim),
-      }),
-    });
-    const corpo = await res.json();
-    descartarDepois(corpo?.group_id);
-
-    // Truncar a hora aqui fazia a reserva nascer barata: o Sistur montava
-    // meia-noite → meia-noite, 24 horas, e cobrava menos que o simulado.
-    expect(res.status, JSON.stringify(corpo)).toBe(201);
-    expect(corpo.total).toBeCloseTo(sim.total, 2);
+      if (res.status === 201) {
+        // Truncar a hora fazia a reserva nascer barata: o Sistur montava
+        // meia-noite → meia-noite, 24 horas, e cobrava menos que o simulado.
+        expect(corpo.total).toBeCloseTo(sim.total, 2);
+        return;
+      }
+      if (!ehDataBloqueada(corpo)) break;
+    }
+    throw new Error(`nenhuma data livre: ${JSON.stringify(ultimo)}`);
   });
 });
 
@@ -1033,5 +1044,33 @@ descreve("tema noturno do camping", () => {
     // Campo branco sólido é inegociável — vidro fosco atrás de um <input>
     // destrói a legibilidade de quem digita CPF no sol.
     expect(folha).toMatch(/\[data-tema=["']?noturno["']?\]\s*\.f-input\s*\{\s*background:\s*#fff/);
+  });
+});
+
+descreve("a conta nomeia a churrasqueira escolhida", () => {
+  const d = (n: number) => {
+    const x = new Date();
+    x.setUTCDate(x.getUTCDate() + n);
+    return x.toISOString().slice(0, 10);
+  };
+
+  async function texto2(url: string): Promise<string> {
+    const html = await (await fetch(url, { redirect: "follow" })).text();
+    return html.replace(/<script[\s\S]*?<\/script>/g, "").replace(/<[^>]*>/g, " ");
+  }
+
+  it("nos dois formulários, e nos dois passos", async () => {
+    // O /simular responde em tarifa: quem escolheu a A4 recebe de volta
+    // "Churrasqueira Grande (A)", que é o nome do preço e não o da coisa.
+    const casos = [
+      `${SITE}/reservar/day-use/?entrada=${d(30)}&i1=2&r6=1`,
+      `${SITE}/reservar/day-use/dados/?entrada=${d(30)}&i1=2&r6=1`,
+      `${SITE}/reservar/camping/?entrada=${d(30)}&saida=${d(31)}&i18=2&r6=1`,
+    ];
+    for (const url of casos) {
+      const t = await texto2(url);
+      expect(t, url).toMatch(/Churrasqueira A4/);
+      expect(t, url).not.toMatch(/Churrasqueira Grande \(A\)/);
+    }
   });
 });

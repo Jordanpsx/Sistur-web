@@ -166,3 +166,50 @@ describe("detalharOrcamento", () => {
     expect(soma).toBeCloseTo(o.total, 2);
   });
 });
+
+describe("a conta nomeia a unidade escolhida, não a tarifa", () => {
+  const comChurrasqueira: Orcamento = {
+    ...base,
+    items_breakdown: [
+      { item_id: 1, item_name: "Inteira", quantity: 2, unit_price: 35, item_total: 70, num_days: null },
+      {
+        item_id: 6,
+        item_name: "Churrasqueira Grande (A)",
+        quantity: 1,
+        unit_price: 120,
+        item_total: 120,
+        num_days: null,
+      },
+    ],
+    subtotal: 190,
+    total: 190,
+  };
+
+  it("troca o nome da tarifa pelo da churrasqueira", () => {
+    // O cliente escolheu a A4 na tela; ver "Churrasqueira Grande (A)" na conta
+    // faz duvidar se pegou a certa.
+    const linhas = detalharOrcamento(comChurrasqueira, { 6: ["Churrasqueira A4"] });
+    expect(linhas[1].titulo).toBe("Churrasqueira A4");
+  });
+
+  it("nomeia as duas quando a mesma tarifa leva duas unidades", () => {
+    // O /simular conta por tarifa e quantidade, então duas churrasqueiras do
+    // mesmo tipo voltam numa linha só.
+    const linhas = detalharOrcamento(comChurrasqueira, {
+      6: ["Churrasqueira A1", "Churrasqueira A4"],
+    });
+    expect(linhas[1].titulo).toBe("Churrasqueira A1 e Churrasqueira A4");
+  });
+
+  it("sem unidade física, mantém o nome da tarifa", () => {
+    // É o caso de todo item que se compra por quantidade — ingresso, lenha.
+    const linhas = detalharOrcamento(comChurrasqueira, { 6: [] });
+    expect(linhas[1].titulo).toBe("Churrasqueira Grande (A)");
+    expect(linhas[0].titulo).toBe("Inteira");
+  });
+
+  it("sem o mapa, nada muda", () => {
+    const linhas = detalharOrcamento(comChurrasqueira);
+    expect(linhas[1].titulo).toBe("Churrasqueira Grande (A)");
+  });
+});

@@ -21,12 +21,15 @@ import { DetalheValores } from "./detalhe-valores";
  */
 export function CarrinhoFixo({
   orcamento,
+  nomesPorTarifa,
   carregando,
   pendencia,
   totalItens,
   podeAvancar,
 }: {
   orcamento: Orcamento | null;
+  /** Tarifa → unidades físicas escolhidas. Ver `detalharOrcamento`. */
+  nomesPorTarifa?: Record<number, string[]>;
   carregando: boolean;
   /** Por que ainda não dá para avançar. Null = pode. */
   pendencia: string | null;
@@ -62,7 +65,7 @@ export function CarrinhoFixo({
               {/* Fechado por padrão: o total é o que a barra existe para
                   mostrar, e uma conta sempre aberta empurraria o botão para
                   fora da tela no celular. */}
-              <DetalheValores orcamento={orcamento} />
+              <DetalheValores orcamento={orcamento} nomesPorTarifa={nomesPorTarifa} />
             </div>
           )}
         </div>
