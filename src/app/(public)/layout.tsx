@@ -100,6 +100,16 @@ export default async function PublicLayout({
                   Reservas
                 </Link>
               </li>
+              {/* Fixa aqui, e não vinda do CMS como as demais: a política é
+                  rota em código enquanto o texto vinculante não existe, então
+                  não tem `nav_label` para entrar pela lista. Precisa estar em
+                  toda página — é onde a pessoa procura depois de já ter
+                  entregado o CPF. */}
+              <li>
+                <Link href="/privacidade/" className="hover:text-white">
+                  Política de Privacidade
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

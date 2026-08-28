@@ -95,3 +95,64 @@ descreve("o funil fica fora do índice", () => {
     }
   });
 });
+
+descreve("privacidade e transparência", () => {
+  const d = (n: number) => {
+    const x = new Date();
+    x.setUTCDate(x.getUTCDate() + n);
+    return x.toISOString().slice(0, 10);
+  };
+
+  it("a política existe e cobre o que a LGPD pede", async () => {
+    const res = await fetch(`${SITE}/privacidade/`, { redirect: "follow" });
+    expect(res.status).toBe(200);
+    const t = (await res.text())
+      .replace(/<script[\s\S]*?<\/script>/g, "")
+      .replace(/<[^>]*>/g, " ");
+    for (const secao of [
+      "Que dados coletamos",
+      "Para que usamos",
+      "Com quem compartilhamos",
+      "Por quanto tempo guardamos",
+      "Seus direitos",
+      "Encarregado de dados",
+    ]) {
+      expect(t, secao).toContain(secao);
+    }
+  });
+
+  it("está no rodapé de toda página pública", async () => {
+    // É onde a pessoa procura depois de já ter entregado o CPF.
+    for (const rota of ["/", "/fotos/", "/termos/", "/sobre-nos/"]) {
+      const html = await (await fetch(`${SITE}${rota}`, { redirect: "follow" })).text();
+      expect(html, rota).toMatch(/href="\/privacidade\/"/);
+    }
+  });
+
+  it("o funil avisa no ponto da coleta, e cita a base legal", async () => {
+    // Transparência tem de estar onde a pessoa acabou de digitar o CPF, não
+    // num link de rodapé que ela leria depois.
+    const html = await (
+      await fetch(`${SITE}/reservar/day-use/dados/?entrada=${d(30)}&i1=1`, {
+        redirect: "follow",
+      })
+    ).text();
+    const t = html.replace(/<[^>]*>/g, " ");
+    expect(t).toMatch(/Seus dados são coletados exclusivamente/);
+    expect(t).toMatch(/Art\. 7, V da LGPD/);
+    expect(html).toMatch(/href="\/privacidade\/"/);
+  });
+
+  it("não pede consentimento para o que é execução de contrato", async () => {
+    // A base legal é o Art. 7, V: o tratamento existe porque a reserva foi
+    // pedida. Uma caixa de aceite aqui sugeriria que dá para reservar sem
+    // informar o CPF, o que não é verdade — e não há rastreador a consentir.
+    const html = await (
+      await fetch(`${SITE}/reservar/day-use/dados/?entrada=${d(30)}&i1=1`, {
+        redirect: "follow",
+      })
+    ).text();
+    expect(html).not.toMatch(/type="checkbox"[^>]*(consent|privacidade|aceito)/i);
+    expect(html).not.toMatch(/aceito os termos|concordo com/i);
+  });
+});

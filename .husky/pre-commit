@@ -17,13 +17,18 @@ fi
 if command -v docker >/dev/null 2>&1; then
   # Quem lista os arquivos é o git do HOST, não o do contêiner: a imagem do
   # node não traz git, e o `lint-staged` depende dele para saber o que mudou.
-  arquivos=$(git diff --cached --name-only --diff-filter=ACMR \
-             | grep -E '\.(js|jsx|ts|tsx|mjs)$' || true)
+  # `git diff -z` e `xargs -0`: o repositório tem caminhos com parênteses —
+  # `src/app/(public)/…` é grupo de rota do Next — e interpolá-los numa string
+  # de shell os faz virar sintaxe. Já quebrou aqui uma vez.
+  arquivos=$(git diff --cached --name-only --diff-filter=ACMR -z \
+             | tr '\0' '\n' | grep -E '\.(js|jsx|ts|tsx|mjs)$' || true)
   [ -z "$arquivos" ] && exit 0
 
   echo "pre-commit: sem node local, verificando via Docker…"
-  docker run --rm -v "$(pwd)":/app -w /app node:20-alpine sh -c \
-    "npx eslint --max-warnings=0 $arquivos && npx prettier --check $arquivos" || {
+  # Os arquivos vão como argumentos posicionais, nunca dentro do comando.
+  printf '%s\n' "$arquivos" | tr '\n' '\0' | xargs -0 -- docker run --rm \
+    -v "$(pwd)":/app -w /app node:20-alpine \
+    sh -c 'npx eslint --max-warnings=0 "$@" && npx prettier --check "$@"' _ || {
       echo ""
       echo "pre-commit: reprovado. Rode 'npm run format' e confira o eslint."
       exit 1

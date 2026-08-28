@@ -240,6 +240,24 @@ export function PassoDados({
         <p className="f-hint" style={{ marginTop: "0.75rem" }}>
           Ao confirmar, sua vaga fica reservada por 15 minutos para o pagamento.
         </p>
+
+        {/* Aviso de tratamento, junto do botão e não escondido num rodapé.
+            Transparência é no ponto da coleta: é aqui que a pessoa acabou de
+            digitar o CPF, e é aqui que ela decide se entrega.
+
+            Não é pedido de consentimento e não tem caixa para marcar. A base
+            legal é execução de contrato (Art. 7, V) — o tratamento existe
+            porque a reserva foi solicitada. Uma caixa aqui sugeriria que dá
+            para reservar sem informar o CPF, o que não é verdade. */}
+        <p className="f-hint" style={{ marginTop: "0.75rem" }}>
+          Seus dados são coletados exclusivamente para a emissão e validação da sua
+          reserva (Art. 7, V da LGPD). Para saber mais sobre como protegemos suas
+          informações, leia nossa{" "}
+          <Link href="/privacidade/" className="font-medium underline underline-offset-2">
+            Política de Privacidade
+          </Link>
+          .
+        </p>
       </form>
     </div>
   );
