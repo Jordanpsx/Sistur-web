@@ -11,6 +11,21 @@ const nextConfig: NextConfig = {
 
   // Sistur and WordPress serve ResourceImage files from their own hosts.
   // next/image refuses remote hosts that are not listed here.
+  /*
+   * Sem `headers()` para o X-Robots-Tag, e a razão é o formato deste deploy.
+   *
+   * O Next compila `headers()` no routes-manifest durante o build, e este
+   * Dockerfile não recebe variável nenhuma no build — não há ARG, não há .env.
+   * O valor seria congelado como "não indexável" em toda imagem, produção
+   * inclusive, e o tráfego morreria em silêncio até alguém abrir o Search
+   * Console. A falha mais cara é a que não avisa.
+   *
+   * O sinal ficou no `app/robots.ts`, que é dinâmico e lê o ambiente a cada
+   * requisição. Para a segunda camada, o `X-Robots-Tag` pertence ao proxy
+   * reverso, onde staging e produção são hosts diferentes por construção e
+   * não há como marcar o errado.
+   */
+
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "cachoeiradogirassol.com.br" },

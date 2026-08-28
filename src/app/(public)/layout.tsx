@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Navbar } from "@/components/imersivo/navbar";
+import { DadosEstruturados } from "@/components/seo/dados-estruturados";
 import { getNav } from "@/lib/sistur/pages";
 
 /**
@@ -12,6 +13,9 @@ import { getNav } from "@/lib/sistur/pages";
  * Reads no cookies and no headers: either would opt these routes into dynamic
  * rendering and forfeit the ISR that justifies the whole project (§3.1).
  */
+
+/** O host público, o mesmo que o `metadataBase` usa. */
+const SITE = process.env.SITE_URL ?? "https://cachoeiradogirassol.com.br";
 
 const LOGO =
   "https://cachoeiradogirassol.com.br/wp-content/uploads/2025/09/logo-cachoeira.png";
@@ -27,6 +31,11 @@ export default async function PublicLayout({
 
   return (
     <>
+      {/* No shell público e não na home: /fotos e /restaurante também são porta
+          de entrada por busca, e o buscador precisa saber de que lugar elas
+          falam. Fora do funil de propósito — lá não há o que indexar. */}
+      <DadosEstruturados site={SITE} />
+
       <Navbar itens={nav} logo={LOGO} />
 
       {/* O cabeçalho é fixo, então tira o conteúdo de baixo dele — menos na

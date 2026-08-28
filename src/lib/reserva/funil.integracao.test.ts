@@ -376,9 +376,15 @@ descreve("funil de reserva", () => {
     expect(t).toMatch(/Total/);
   });
 
-  it("o seletor é indexável — é entrada de anúncio e link direto", async () => {
+  it("o seletor também fica fora do índice", async () => {
+    // Reversão deliberada: até aqui esta tela era indexável, por ser onde
+    // chega quem vem de anúncio ou link direto. Continua sendo — link de
+    // anúncio não depende do índice orgânico. O que muda é o buscador deixar
+    // de escolher entre a home e uma tela de dois cartões para a mesma
+    // intenção de busca.
     const html = await (await fetch(`${SITE}/reservar/`)).text();
-    expect(html).not.toMatch(/noindex/);
+    expect(html).toMatch(/<meta name="robots" content="noindex, nofollow"/);
+    expect(html).toMatch(/rel="canonical"/);
   });
 
   it("etapas que carregam seleção não são indexáveis", async () => {

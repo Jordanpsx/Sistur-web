@@ -34,9 +34,16 @@ export const metadata: Metadata = {
   // Sistur, e esta linha já ficou desatualizada uma vez — citava enoturismo
   // depois de a categoria ter perdido o slug e sumido da página.
   description: "Escolha a experiência e reserve online.",
-  // Indexável, ao contrário das etapas seguintes. É por onde chega quem vem de
-  // anúncio ou link direto; as etapas com seleção na URL é que não podem virar
-  // resultado de busca.
+  // Fora do índice, como o resto do funil.
+  //
+  // Isto reverte uma decisão anterior — a versão passada deixava esta tela
+  // indexável por ser onde chega quem vem de anúncio ou link direto. Continua
+  // sendo, e nada disso deixa de funcionar: link de anúncio não precisa que a
+  // página esteja no índice orgânico. O que muda é que o buscador deixa de
+  // escolher entre a home e uma tela de dois cartões para a mesma intenção.
+  robots: { index: false, follow: false },
+  // Autorreferente, para alinhar com o `robots.txt`, que bloqueia /reservar/.
+  alternates: { canonical: "/reservar/" },
 };
 
 export default async function EscolherExperiencia() {

@@ -53,6 +53,14 @@ export async function generateStaticParams(): Promise<Params[]> {
   }
 }
 
+/**
+ * Capa de compartilhamento do site, usada quando a página não define a sua.
+ *
+ * Vem da biblioteca de mídia, então trocar a foto é upload e não deploy — o
+ * caminho é relativo porque o host muda entre ambientes.
+ */
+const CAPA_PADRAO = `${process.env.SISTUR_MIDIA_URL ?? ""}/midia/91cd147e0fa44b08be4ff28c1d8fb82a.jpg`;
+
 export async function generateMetadata({
   params,
 }: {
@@ -76,8 +84,14 @@ export async function generateMetadata({
     openGraph: {
       title: seo.title ?? undefined,
       description: seo.description ?? undefined,
-      images: seo.og_image ? [seo.og_image] : undefined,
+      // Nunca sem imagem. Uma página do CMS que não define a sua cai na capa
+      // do site — link colado no WhatsApp sem imagem vira bloco de texto, num
+      // negócio que se vende pela paisagem. A capa é 1200x630 de propósito:
+      // WhatsApp e Facebook recortam pelo centro, e a foto original é retrato.
+      images: [seo.og_image ?? CAPA_PADRAO],
       type: "website",
+      locale: "pt_BR",
+      siteName: "Cachoeira do Girassol",
     },
   };
 }
