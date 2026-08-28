@@ -1,0 +1,53 @@
+name: CI
+
+# Em pull request e no que chega em main. O push cobre o merge direto — hoje
+# nada obriga a passar por PR, e um portão que só existe no PR não é portão.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Um push em cima do anterior cancela a execução antiga: sem isto, a fila fica
+# verificando commits que ninguém vai mais ler.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    name: Lint, tipos e testes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # `npm ci` e não `npm install`: instala exatamente o que está no lock e
+      # falha se package.json e lock discordarem. É o que impede um build da
+      # máquina de alguém de passar aqui por sorte.
+      - name: Instalar
+        run: npm ci
+
+      - name: Lint e formatação
+        run: npm run lint:strict
+
+      - name: Tipos
+        run: npm run typecheck
+
+      # Sem SISTUR_API_URL e sem SITE_URL, as suítes de integração se pulam
+      # sozinhas — sobram os 117 testes de lógica pura, que é justamente o que
+      # faz sentido aqui. Integração exige a pilha de pé e roda no staging.
+      - name: Testes
+        run: npm test
+
+      # Compilar é a última verificação: erro de tipo em rota ou em metadata só
+      # aparece aqui, e é o que quebraria o deploy.
+      - name: Build
+        run: npm run build
+        env:
+          SITE_URL: https://cachoeiradogirassol.com.br

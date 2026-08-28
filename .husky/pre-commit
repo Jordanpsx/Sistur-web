@@ -1,0 +1,35 @@
+#!/bin/sh
+# Portão local: ESLint e Prettier apenas no que está no stage.
+#
+# Três caminhos, porque as máquinas onde este repositório é editado não são
+# iguais. A estação de quem desenvolve tem node; a VPS onde ele também é
+# editado não tem — lá tudo roda em contêiner. Um hook que assume `npx`
+# quebraria todo commit feito no servidor.
+#
+# Sem node e sem Docker, avisa e deixa passar. É deliberado: o portão que não
+# se contorna é o CI. Um hook que trava todo commit numa máquina legítima seria
+# arrancado no primeiro dia, e aí não restaria nenhum dos dois.
+
+if command -v npx >/dev/null 2>&1; then
+  exec npx lint-staged
+fi
+
+if command -v docker >/dev/null 2>&1; then
+  # Quem lista os arquivos é o git do HOST, não o do contêiner: a imagem do
+  # node não traz git, e o `lint-staged` depende dele para saber o que mudou.
+  arquivos=$(git diff --cached --name-only --diff-filter=ACMR \
+             | grep -E '\.(js|jsx|ts|tsx|mjs)$' || true)
+  [ -z "$arquivos" ] && exit 0
+
+  echo "pre-commit: sem node local, verificando via Docker…"
+  docker run --rm -v "$(pwd)":/app -w /app node:20-alpine sh -c \
+    "npx eslint --max-warnings=0 $arquivos && npx prettier --check $arquivos" || {
+      echo ""
+      echo "pre-commit: reprovado. Rode 'npm run format' e confira o eslint."
+      exit 1
+    }
+  exit 0
+fi
+
+echo "pre-commit: sem node e sem Docker — verificação pulada."
+echo "            O CI roda 'npm run lint:strict' e vai barrar se houver problema."

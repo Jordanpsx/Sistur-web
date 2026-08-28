@@ -155,6 +155,24 @@ export async function simular(params: {
 }
 
 /**
+ * Uma linha pronta para o `criar`.
+ *
+ * `resource_id` só aparece quando a linha representa uma unidade física
+ * escolhida — a Churrasqueira A4. Sem ela, o Sistur atribui sozinho qualquer
+ * unidade livre da tarifa, que é o certo para o que se compra por quantidade.
+ *
+ * O tipo estava implícito, e o `tsc` do CI apontou: os testes já liam
+ * `resource_id` num retorno que não o declarava. O build do Next não verifica
+ * arquivo de teste, então isso atravessou sem aviso.
+ */
+export type LinhaParaCriar = {
+  item_id: number;
+  quantity: number;
+  price_override: number;
+  resource_id?: number;
+};
+
+/**
  * Spreads the final total across the item lines.
  *
  * `criar()` sums every `price_override` and compares the result against its own
@@ -173,7 +191,7 @@ export function ratearTotal(
   o: Orcamento,
   /** Recursos escolhidos por tarifa, quando o cliente pegou espaços específicos. */
   recursosPorTarifa: Record<number, number[]> = {},
-) {
+): LinhaParaCriar[] {
   const linhas = o.items_breakdown;
   const base = linhas.reduce((s, l) => s + l.item_total, 0);
   const cents = (v: number) => Math.round(v * 100);
