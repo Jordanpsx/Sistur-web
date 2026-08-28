@@ -41,8 +41,7 @@ function ehDataValida(s: string): boolean {
 }
 
 export function diasEntre(a: string, b: string): number {
-  const ms =
-    new Date(`${b}T12:00:00Z`).getTime() - new Date(`${a}T12:00:00Z`).getTime();
+  const ms = new Date(`${b}T12:00:00Z`).getTime() - new Date(`${a}T12:00:00Z`).getTime();
   return Math.round(ms / 86_400_000);
 }
 

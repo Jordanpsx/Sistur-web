@@ -104,16 +104,15 @@ export default async function Pagamento({
             </Aviso>
           ) : dados.expirada ? (
             <Aviso titulo="O prazo expirou">
-              Sua vaga ficava reservada por 15 minutos e o prazo passou, então ela
-              voltou a ficar disponível. Refaça a reserva — os valores podem ter
-              mudado.
+              Sua vaga ficava reservada por 15 minutos e o prazo passou, então ela voltou
+              a ficar disponível. Refaça a reserva — os valores podem ter mudado.
             </Aviso>
           ) : !chave ? (
             /* Sem a chave pública o Brick não inicializa. Dizer isso é melhor do
                que mostrar um espaço vazio onde deveria haver um formulário. */
             <Aviso titulo="Pagamento online indisponível">
-              Não foi possível carregar o pagamento no momento. Entre em contato
-              para concluir sua reserva.
+              Não foi possível carregar o pagamento no momento. Entre em contato para
+              concluir sua reserva.
             </Aviso>
           ) : (
             <>
@@ -125,8 +124,8 @@ export default async function Pagamento({
                 email={dados.payer.email ?? ""}
               />
               <p className="f-hint" style={{ marginTop: "1rem" }}>
-                Sua vaga está reservada por 15 minutos. Os dados do cartão vão
-                direto para o Mercado Pago e não passam pelo nosso site.
+                Sua vaga está reservada por 15 minutos. Os dados do cartão vão direto para
+                o Mercado Pago e não passam pelo nosso site.
               </p>
             </>
           )}

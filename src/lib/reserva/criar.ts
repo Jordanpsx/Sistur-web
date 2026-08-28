@@ -49,13 +49,15 @@ export async function criarReserva(
 
   // Quantities arrive as the same `i<id>` keys the URL uses, so one parser
   // serves both and the two cannot drift apart.
-  const campos = Object.fromEntries(
-    [...form.entries()].map(([k, v]) => [k, String(v)]),
-  );
+  const campos = Object.fromEntries([...form.entries()].map(([k, v]) => [k, String(v)]));
   const quantidades = lerQuantidades(campos);
   const recursosSel = lerRecursos(campos);
 
-  if (!slug || !entrada || (Object.keys(quantidades).length === 0 && recursosSel.length === 0)) {
+  if (
+    !slug ||
+    !entrada ||
+    (Object.keys(quantidades).length === 0 && recursosSel.length === 0)
+  ) {
     return { erro: "Sua seleção expirou. Volte e escolha as datas novamente." };
   }
 

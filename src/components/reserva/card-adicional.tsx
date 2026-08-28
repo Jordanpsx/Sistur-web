@@ -49,10 +49,11 @@ export function CardAdicional({
 
   return (
     <li
-      className={`flex flex-col overflow-hidden rounded-xl border bg-white transition-shadow
-                  ${selecionado
-                    ? "border-[var(--c-accent)] shadow-[0_0_0_1px_var(--c-accent)]"
-                    : "border-[var(--c-border)] hover:shadow-md"}`}
+      className={`flex flex-col overflow-hidden rounded-xl border bg-white transition-shadow ${
+        selecionado
+          ? "border-[var(--c-accent)] shadow-[0_0_0_1px_var(--c-accent)]"
+          : "border-[var(--c-border)] hover:shadow-md"
+      }`}
     >
       <div className="relative aspect-[4/3] w-full bg-[var(--c-surface)]">
         {grupo?.image_url ? (
@@ -73,17 +74,14 @@ export function CardAdicional({
         )}
 
         {selecionado && (
-          <span
-            className="absolute right-2 top-2 rounded-full bg-[var(--c-accent)] px-2 py-1
-                       text-xs font-semibold text-white"
-          >
+          <span className="absolute top-2 right-2 rounded-full bg-[var(--c-accent-dark)] px-2 py-1 text-xs font-semibold text-white">
             {quantidade} selecionado{quantidade > 1 ? "s" : ""}
           </span>
         )}
       </div>
 
       <div className="flex flex-1 flex-col gap-1 p-3">
-        <h4 className="text-sm font-semibold leading-snug text-[var(--c-fg)]">
+        <h4 className="text-sm leading-snug font-semibold text-[var(--c-fg)]">
           {item.name}
         </h4>
 

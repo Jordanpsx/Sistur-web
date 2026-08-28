@@ -137,7 +137,12 @@ export type Experiencia = z.infer<typeof CategorySchema> & {
 export function janelaDe(e: Experiencia): Janela | null {
   const { check_in_from: de, check_in_until: ate, check_out_until: saida } = e;
   if (!de || !ate || !saida) return null;
-  return { entradaDe: de, entradaAte: ate, saidaAte: saida, minHoras: e.min_stay_hours ?? 0 };
+  return {
+    entradaDe: de,
+    entradaAte: ate,
+    saidaAte: saida,
+    minHoras: e.min_stay_hours ?? 0,
+  };
 }
 
 export async function getExperiencias(): Promise<Experiencia[]> {
@@ -189,9 +194,7 @@ export async function getItensDaExperiencia(
     // A tarifa por tipo de dia faz um ingresso passar o outro — hoje mesmo a
     // Inteira está com price_weekday de R$ 0,01 —, e a lista mudaria de ordem
     // conforme a data escolhida.
-    ingressos: meus
-      .filter((i) => i.is_entry_ticket)
-      .sort((a, b) => b.price - a.price),
+    ingressos: meus.filter((i) => i.is_entry_ticket).sort((a, b) => b.price - a.price),
     adicionais: meus.filter((i) => !i.is_entry_ticket),
     grupos: cat.groups,
   };
@@ -225,10 +228,7 @@ export type Dia = "semana" | "fds" | "feriado";
  * Returns `null` when the slug does not exist, so the row renders nothing
  * rather than inventing a figure.
  */
-export async function resolverPreco(
-  slug: string,
-  dia: Dia,
-): Promise<number | null> {
+export async function resolverPreco(slug: string, dia: Dia): Promise<number | null> {
   const cat = await getCatalog();
   const item = cat.items.find((i) => i.internal_slug === slug);
   if (!item) return null;

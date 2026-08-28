@@ -33,16 +33,11 @@ export function Acordeao({
   return (
     <details
       open={aberto}
-      className={`group mt-4 overflow-hidden rounded-xl border transition-colors
-                  ${destaque
-                    ? "border-[var(--c-accent)]"
-                    : "border-[var(--c-border)]"}`}
+      className={`group mt-4 overflow-hidden rounded-xl border transition-colors ${
+        destaque ? "border-[var(--c-accent)]" : "border-[var(--c-border)]"
+      }`}
     >
-      <summary
-        className="flex min-h-[56px] cursor-pointer list-none items-center gap-3
-                   px-4 py-3 hover:bg-[var(--c-surface)]
-                   [&::-webkit-details-marker]:hidden"
-      >
+      <summary className="flex min-h-[56px] cursor-pointer list-none items-center gap-3 px-4 py-3 hover:bg-[var(--c-surface)] [&::-webkit-details-marker]:hidden">
         {emoji && (
           <span aria-hidden="true" className="text-xl">
             {emoji}
@@ -50,7 +45,7 @@ export function Acordeao({
         )}
 
         <span className="min-w-0 flex-1">
-          <span className="block text-base font-semibold leading-tight text-[var(--c-fg)]">
+          <span className="block text-base leading-tight font-semibold text-[var(--c-fg)]">
             {titulo}
           </span>
           {resumo && (
@@ -62,8 +57,7 @@ export function Acordeao({
             estado real do elemento sem precisar espelhá-lo em React. */}
         <span
           aria-hidden="true"
-          className="shrink-0 text-[var(--c-muted)] transition-transform
-                     group-open:rotate-180"
+          className="shrink-0 text-[var(--c-muted)] transition-transform group-open:rotate-180"
         >
           ▾
         </span>

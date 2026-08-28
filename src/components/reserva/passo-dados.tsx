@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { criarReserva, type EstadoCriacao } from "@/lib/reserva/criar";
-import { formatarBRL, type Orcamento, type Quantidades } from "@/lib/reserva/itens";
+import type { Orcamento, Quantidades } from "@/lib/reserva/itens";
 import { DetalheValores } from "./detalhe-valores";
 import { formatarData } from "@/lib/reserva/datas";
 import { Passos } from "./passos";
@@ -174,7 +174,9 @@ export function PassoDados({
             rows={2}
             style={{ minHeight: "auto" }}
           />
-          <p className="f-hint">Opcional. Alguma necessidade especial, horário de chegada…</p>
+          <p className="f-hint">
+            Opcional. Alguma necessidade especial, horário de chegada…
+          </p>
         </div>
 
         {/* Read-only recap. The visitor should not have to go back a step to

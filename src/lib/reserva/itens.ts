@@ -132,24 +132,21 @@ export async function simular(params: {
   if (items.length === 0) return null;
 
   try {
-    const res = await fetch(
-      `${process.env.SISTUR_API_URL}/reservas/api/public/simular`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          source_id: params.sourceId,
-          // Without this the discount rules attached to the category never
-          // apply, and the quote comes back ABOVE what will be charged.
-          category_id: params.categoryId,
-          check_in_date: params.entrada,
-          check_out_date: params.saida,
-          items,
-        }),
-        cache: "no-store",
-        signal: AbortSignal.timeout(8000),
-      },
-    );
+    const res = await fetch(`${process.env.SISTUR_API_URL}/reservas/api/public/simular`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source_id: params.sourceId,
+        // Without this the discount rules attached to the category never
+        // apply, and the quote comes back ABOVE what will be charged.
+        category_id: params.categoryId,
+        check_in_date: params.entrada,
+        check_out_date: params.saida,
+        items,
+      }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    });
     if (!res.ok) return null;
     return (await res.json()) as Orcamento;
   } catch {
@@ -202,7 +199,9 @@ export function ratearTotal(
   return porItem.flatMap((l) => {
     const ids = recursosPorTarifa[l.item_id] ?? [];
     if (ids.length === 0) {
-      return [{ item_id: l.item_id, quantity: l.quantity, price_override: l.centavos / 100 }];
+      return [
+        { item_id: l.item_id, quantity: l.quantity, price_override: l.centavos / 100 },
+      ];
     }
     let sobra = l.centavos;
     return ids.map((resource_id, i) => {

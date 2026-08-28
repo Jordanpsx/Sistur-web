@@ -4,8 +4,9 @@
    vem do `next/font` no layout raiz; a pilha depois dela é o que aparece nos
    milissegundos até a fonte carregar, e nas raras vezes em que ela falha. */
 @theme {
-  --font-sans: var(--fonte-base), ui-sans-serif, system-ui, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  --font-sans:
+    var(--fonte-base), ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
 }
 
 /*
@@ -29,19 +30,45 @@
   --c-border: #e5e7eb;
   --c-surface: #f7f7f7;
 
-  /* Primary = amber. Used for every CTA and for headings on dark ground. */
-  --c-primary: #f5b301;
-  --c-primary-dark: #d99e00;
+  /* ── Amarelo Girassol — a cor de ação da marca ────────────────────────
+     Exatamente #FAB005 do manual. Carrega texto escuro (7,9:1), nunca branco
+     (1,9:1) — é o erro mais fácil e o mais grave desta paleta. */
+  --c-primary: #fab005;
+  --c-primary-dark: #d89a00;
   --c-on-primary: #1f2937;
 
-  /* Secondary = green. "Selecionar" buttons and structure-card titles. */
-  --c-accent: #4caf50;
-  --c-accent-dark: #45a049;
+  /* ── Verde — três tokens porque são três trabalhos ────────────────────
+     O verde da marca não aguenta texto branco: #00A836 dá 3,2:1 contra os
+     4,5:1 do WCAG AA, e sobre --c-surface cai para 2,9:1. Forçá-lo em botão
+     sólido seria trocar acessibilidade por fidelidade de catálogo. Então o
+     tom da marca fica onde ele funciona, e a superfície que carrega texto
+     ganha o seu.
+
+     --c-accent       borda, ícone, preenchimento SEM texto. Cor da marca.
+     --c-accent-dark  superfície sólida com texto branco (5,9:1) e texto
+                      verde sobre fundo claro (5,5:1 sobre --c-surface).
+     --c-accent-deep  o hover dessa superfície (7,8:1). */
+  --c-accent: #00a836;
+  --c-accent-dark: #007525;
+  --c-accent-deep: #00601e;
   --c-on-accent: #ffffff;
 
-  /* Deep green panel behind the price table. */
+  /* ── Painel da tabela de valores ──────────────────────────────────────
+     Segue verde-mata de propósito. O marinho da marca existe e está logo
+     abaixo, mas aqui ele trocaria o clima de floresta por um painel
+     corporativo — decisão de interface, não desvio de manual. */
   --c-panel: #245c2b;
   --c-on-panel: #ffffff;
+
+  /* Azul-marinho da marca. Ainda sem uso; existe para quando um bloco pedir
+     a sobriedade dele em vez do verde. */
+  --c-brand-navy: #14284d;
+
+  /* ── Nota informativa ─────────────────────────────────────────────────
+     Azul de aviso — o "Reserva para o mesmo dia" e o box da experiência.
+     Estava cravado como #2f6fd0 e #eef4fb em duas páginas. */
+  --c-info: #2f6fd0;
+  --c-info-surface: #eef4fb;
 
   /* Cream callout behind the house rules. */
   --c-note-bg: #fdf3d0;
@@ -245,10 +272,20 @@ a[class*="min-h-[44px]"] {
 }
 
 @media (min-width: 640px) {
-  .f-head h1 { font-size: 1.5rem; }
-  .f-step-n { width: 2.75rem; height: 2.75rem; font-size: 1rem; }
-  .f-step-t { font-size: 0.8125rem; }
-  .f-steps::before { top: 1.375rem; }
+  .f-head h1 {
+    font-size: 1.5rem;
+  }
+  .f-step-n {
+    width: 2.75rem;
+    height: 2.75rem;
+    font-size: 1rem;
+  }
+  .f-step-t {
+    font-size: 0.8125rem;
+  }
+  .f-steps::before {
+    top: 1.375rem;
+  }
 }
 
 .f-body {
@@ -271,7 +308,9 @@ a[class*="min-h-[44px]"] {
 }
 
 @media (min-width: 640px) {
-  .f-row--2 { grid-template-columns: 1fr 1fr; }
+  .f-row--2 {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .f-label {
@@ -301,7 +340,9 @@ a[class*="min-h-[44px]"] {
 .f-input:focus {
   outline: none;
   border-color: var(--c-accent);
-  box-shadow: 0 0 0 3px rgb(76 175 80 / 0.18);
+  /* O anel de foco acompanha o verde da marca, em vez do rgb do tom
+     anterior cravado à mão. */
+  box-shadow: 0 0 0 3px rgb(0 168 54 / 0.22);
 }
 
 .f-hint {
@@ -325,7 +366,11 @@ a[class*="min-h-[44px]"] {
   margin-bottom: 0.25rem;
 }
 
-.f-info p { margin: 0; font-size: 0.875rem; line-height: 1.55; }
+.f-info p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
 
 .f-erro {
   background: var(--f-err-bg);
@@ -363,7 +408,9 @@ a[class*="min-h-[44px]"] {
   letter-spacing: 0.03em;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .f-btn--ir {
@@ -372,7 +419,10 @@ a[class*="min-h-[44px]"] {
   margin-left: auto;
 }
 
-.f-btn--ir:hover { background: var(--c-accent-dark); transform: translateY(-1px); }
+.f-btn--ir:hover {
+  background: var(--c-accent-dark);
+  transform: translateY(-1px);
+}
 
 .f-btn--voltar {
   background: transparent;
@@ -380,7 +430,9 @@ a[class*="min-h-[44px]"] {
   padding: 0 0.75rem;
 }
 
-.f-btn--voltar:hover { color: var(--c-fg); }
+.f-btn--voltar:hover {
+  color: var(--c-fg);
+}
 
 .f-btn:disabled {
   opacity: 0.45;
@@ -407,8 +459,12 @@ a[class*="min-h-[44px]"] {
   border-bottom: 1px solid var(--c-border);
 }
 
-.f-item:last-child { border-bottom: none; }
-.f-item:nth-child(odd) { background: #fbfbfb; }
+.f-item:last-child {
+  border-bottom: none;
+}
+.f-item:nth-child(odd) {
+  background: #fbfbfb;
+}
 
 .f-item-txt {
   flex: 1 1 auto;
@@ -470,7 +526,9 @@ a[class*="min-h-[44px]"] {
   list-style: none;
 }
 
-.f-det > summary::-webkit-details-marker { display: none; }
+.f-det > summary::-webkit-details-marker {
+  display: none;
+}
 
 .f-det > summary::before {
   content: "▸";
@@ -478,7 +536,9 @@ a[class*="min-h-[44px]"] {
   transition: transform 0.15s ease;
 }
 
-.f-det[open] > summary::before { transform: rotate(90deg); }
+.f-det[open] > summary::before {
+  transform: rotate(90deg);
+}
 
 .f-det-n {
   margin-left: auto;
@@ -520,8 +580,12 @@ a[class*="min-h-[44px]"] {
 
 /* Dimmed while a newer figure is in flight, so a stale number never looks
    settled. Kept subtle: the old total stays readable rather than flashing. */
-.f-total-box[data-carregando] { opacity: 0.5; }
-.f-total-box { transition: opacity 0.15s ease; }
+.f-total-box[data-carregando] {
+  opacity: 0.5;
+}
+.f-total-box {
+  transition: opacity 0.15s ease;
+}
 
 .f-linha {
   display: flex;
@@ -532,7 +596,9 @@ a[class*="min-h-[44px]"] {
   color: var(--c-fg);
 }
 
-.f-linha--desc { color: var(--c-accent-dark); }
+.f-linha--desc {
+  color: var(--c-accent-dark);
+}
 
 .f-linha--total {
   margin-top: 0.5rem;
@@ -595,13 +661,23 @@ a[class*="min-h-[44px]"] {
 }
 
 @keyframes pix-pulsar {
-  0%, 100% { opacity: 0.35; transform: scale(0.85); }
-  50%      { opacity: 1;    transform: scale(1); }
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Respeita quem pediu menos animação; o texto já comunica a espera. */
 @media (prefers-reduced-motion: reduce) {
-  .pix-pulso { animation: none; opacity: 0.8; }
+  .pix-pulso {
+    animation: none;
+    opacity: 0.8;
+  }
 }
 
 /* ---------------------------------------------------------------------------

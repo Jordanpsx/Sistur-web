@@ -37,11 +37,7 @@ export function DetalheValores({
 
   return (
     <details className="group mt-1">
-      <summary
-        className="inline-flex cursor-pointer list-none items-center gap-1 py-1
-                   text-xs font-medium text-[var(--c-accent-dark)]
-                   hover:underline [&::-webkit-details-marker]:hidden"
-      >
+      <summary className="inline-flex cursor-pointer list-none items-center gap-1 py-1 text-xs font-medium text-[var(--c-accent-dark)] hover:underline [&::-webkit-details-marker]:hidden">
         Ver detalhes do valor
         <span aria-hidden="true" className="transition-transform group-open:rotate-180">
           ▾

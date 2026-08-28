@@ -26,7 +26,13 @@ export type RespostaPagamento = {
 };
 
 export type Desfecho =
-  | { tipo: "pix"; payment_id: string; qr_code: string; qr_code_base64: string; ticket_url?: string }
+  | {
+      tipo: "pix";
+      payment_id: string;
+      qr_code: string;
+      qr_code_base64: string;
+      ticket_url?: string;
+    }
   | { tipo: "final"; payment_id: string; status: string };
 
 export function interpretarResposta(dados: RespostaPagamento | null): Desfecho {

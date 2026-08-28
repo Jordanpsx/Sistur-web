@@ -95,8 +95,7 @@ export function VideoDeFundo({
       tabIndex={-1}
       className={`h-full w-full object-cover ${className}`}
     >
-      {podeCarregar &&
-        src?.map((f) => <source key={f.url} src={f.url} type={f.tipo} />)}
+      {podeCarregar && src?.map((f) => <source key={f.url} src={f.url} type={f.tipo} />)}
     </video>
   );
 }

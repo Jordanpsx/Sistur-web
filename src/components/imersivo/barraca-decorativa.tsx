@@ -33,8 +33,7 @@ export function BarracaDecorativa({ src }: { src: string }) {
       // Medida em vh, como a faixa. Com largura, ela e a mata descasavam
       // conforme a proporção da tela mudava. O recuo negativo põe a base dela
       // dentro da grama em primeiro plano, na frente da linha de árvores.
-      className="pointer-events-none fixed -bottom-[5vh] right-0 z-0 hidden
-                 h-[30vh] select-none lg:block"
+      className="pointer-events-none fixed right-0 -bottom-[5vh] z-0 hidden h-[30vh] select-none lg:block"
     >
       <Image
         src={src}

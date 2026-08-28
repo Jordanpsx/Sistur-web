@@ -37,7 +37,11 @@ Variável, então os pesos de 300 a 800 saem de um arquivo só. Pedir peso a pes
 baixaria cinco arquivos para a mesma coisa.
 
 ```tsx
-const openSans = Open_Sans({ subsets: ["latin"], variable: "--fonte-base", display: "swap" });
+const openSans = Open_Sans({
+  subsets: ["latin"],
+  variable: "--fonte-base",
+  display: "swap",
+});
 // <html className={openSans.variable}> e --font-sans no @theme
 ```
 
@@ -49,21 +53,21 @@ Nunca deixe `--font-sans` terminar na variável sozinha.
 
 ## 2. A paleta
 
-| Cor | Hex | RGB | Significado |
-|---|---|---|---|
-| Laranja | `#F27405` | 242, 116, 5 | Alegria e diversão |
-| Amarelo Girassol | `#FAB005` | 250, 176, 5 | Alegria, diversão e confiança |
-| Verde | `#00A836` | 0, 168, 54 | Segurança e prazer |
-| Azul Intermediário | `#0A4D8C` | 10, 77, 140 | Segurança e prazer |
-| Azul Escuro / Marinho | `#14284D` | 20, 40, 77 | Confiança |
+| Cor                   | Hex       | RGB         | Significado                   |
+| --------------------- | --------- | ----------- | ----------------------------- |
+| Laranja               | `#F27405` | 242, 116, 5 | Alegria e diversão            |
+| Amarelo Girassol      | `#FAB005` | 250, 176, 5 | Alegria, diversão e confiança |
+| Verde                 | `#00A836` | 0, 168, 54  | Segurança e prazer            |
+| Azul Intermediário    | `#0A4D8C` | 10, 77, 140 | Segurança e prazer            |
+| Azul Escuro / Marinho | `#14284D` | 20, 40, 77  | Confiança                     |
 
 ### Os três pares da marca
 
-| Par | Cores | Uso |
-|---|---|---|
-| Alegria e Diversão | Laranja + Amarelo | Blocos, ícones, destaques de lazer |
-| Segurança e Prazer | Verde + Azul Intermediário | Confirmação, estados de sucesso |
-| Confiança | Amarelo + Azul Marinho | Chamada principal, cabeçalhos |
+| Par                | Cores                      | Uso                                |
+| ------------------ | -------------------------- | ---------------------------------- |
+| Alegria e Diversão | Laranja + Amarelo          | Blocos, ícones, destaques de lazer |
+| Segurança e Prazer | Verde + Azul Intermediário | Confirmação, estados de sucesso    |
+| Confiança          | Amarelo + Azul Marinho     | Chamada principal, cabeçalhos      |
 
 ---
 
@@ -73,11 +77,11 @@ Esta seção vale em toda tela, dentro ou fora da paleta.
 
 Contraste de cada par, um sobre o outro:
 
-| Par | Contraste | Serve para |
-|---|---|---|
-| Alegria (laranja sobre amarelo) | **1,5:1** | Só forma. **Nunca texto.** |
+| Par                                  | Contraste | Serve para                 |
+| ------------------------------------ | --------- | -------------------------- |
+| Alegria (laranja sobre amarelo)      | **1,5:1** | Só forma. **Nunca texto.** |
 | Segurança (verde sobre azul interm.) | **2,7:1** | Só forma. **Nunca texto.** |
-| Confiança (amarelo sobre marinho) | **7,8:1** | Texto à vontade |
+| Confiança (amarelo sobre marinho)    | **7,8:1** | Texto à vontade            |
 
 Dois dos três pares não passam nem perto dos 4,5:1 do WCAG AA. Eles descrevem
 **harmonia**, não legibilidade — use-os em áreas, bordas e ícones, e escolha a
@@ -85,13 +89,13 @@ cor do texto à parte.
 
 ### Texto sobre cada cor
 
-| Fundo | Texto branco | Texto marinho `#14284D` |
-|---|---|---|
-| Laranja | 2,9:1 ✗ | **5,1:1 ✓** |
-| Amarelo | 1,9:1 ✗ | **7,9:1 ✓** |
-| Verde | 3,2:1 ✗ | **4,6:1 ✓** |
-| Azul Intermediário | **8,6:1 ✓** | 1,7:1 ✗ |
-| Azul Marinho | **14,6:1 ✓** | — |
+| Fundo              | Texto branco | Texto marinho `#14284D` |
+| ------------------ | ------------ | ----------------------- |
+| Laranja            | 2,9:1 ✗      | **5,1:1 ✓**             |
+| Amarelo            | 1,9:1 ✗      | **7,9:1 ✓**             |
+| Verde              | 3,2:1 ✗      | **4,6:1 ✓**             |
+| Azul Intermediário | **8,6:1 ✓**  | 1,7:1 ✗                 |
+| Azul Marinho       | **14,6:1 ✓** | —                       |
 
 **Regra prática:** laranja, amarelo e verde pedem texto escuro. Os dois azuis
 pedem texto branco. Branco sobre amarelo (1,9:1) é o erro mais fácil de cometer
@@ -125,19 +129,27 @@ Cor fora da paleta também vira token — o tema noturno define os dele num esco
 ✅ className="bg-[var(--c-primary)]"
 ```
 
-### Onde a paleta está hoje
+### Os tokens de cor
 
-| Token | Valor atual | Cor da marca | Situação |
-|---|---|---|---|
-| `--c-primary` | `#f5b301` | Amarelo `#FAB005` | Praticamente igual (distância 12) |
-| `--c-accent` | `#4caf50` | Verde `#00A836` | Verde diferente (distância 109) |
-| `--c-panel` | `#245c2b` | Marinho `#14284D` | **É verde onde a marca é azul** |
-| — | — | Laranja `#F27405` | Não existe no código |
-| — | — | Azul interm. `#0A4D8C` | Não existe no código |
+| Token              | Valor     | Para quê                                                   |
+| ------------------ | --------- | ---------------------------------------------------------- |
+| `--c-primary`      | `#FAB005` | Amarelo da marca. Ação principal, com texto escuro         |
+| `--c-primary-dark` | `#D89A00` | Hover do amarelo                                           |
+| `--c-accent`       | `#00A836` | Verde da marca — borda, ícone, preenchimento **sem texto** |
+| `--c-accent-dark`  | `#007525` | Superfície sólida com texto branco (5,9:1) e texto verde   |
+| `--c-accent-deep`  | `#00601E` | Hover dessa superfície                                     |
+| `--c-panel`        | `#245c2b` | Painel da tabela de valores — verde-mata, por decisão      |
+| `--c-brand-navy`   | `#14284D` | Marinho da marca. Sem uso ainda                            |
+| `--c-info`         | `#2f6fd0` | Aviso informativo                                          |
+| `--c-info-surface` | `#eef4fb` | Fundo desse aviso                                          |
 
-Trocar `--c-panel` de verde para marinho muda a tabela de valores e o cabeçalho
-de cada formulário. Não é ajuste de tom, é troca de matiz — verifique as telas
-antes de dar como pronto.
+Três tokens de verde porque são três trabalhos, e o do meio existe por medição:
+o verde da marca dá 3,2:1 com texto branco e reprova. Nunca use `--c-accent`
+como fundo de algo escrito.
+
+O painel segue verde-mata de propósito. O marinho existe no token e está livre
+para quando um bloco pedir a sobriedade dele — trocar o painel por ele mudaria
+o clima de floresta da tabela de preços por um painel corporativo.
 
 Alinhar os tokens é sobre as **páginas de apresentação**. Um formulário que
 tenha razão para outra cor define a dele no próprio escopo.

@@ -30,7 +30,9 @@ describe("interpretarResposta", () => {
   it("só o copia-e-cola já basta para esperar", () => {
     // Sem a imagem o cliente ainda paga colando o código; redirecionar seria
     // deixá-lo sem saída.
-    expect(interpretarResposta({ status: "pending", qr_code: "0002012658" }).tipo).toBe("pix");
+    expect(interpretarResposta({ status: "pending", qr_code: "0002012658" }).tipo).toBe(
+      "pix",
+    );
   });
 
   it("só a imagem também basta", () => {

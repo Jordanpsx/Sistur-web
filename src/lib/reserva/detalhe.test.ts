@@ -36,7 +36,14 @@ describe("detalharOrcamento", () => {
     const linhas = detalharOrcamento({
       ...base,
       items_breakdown: [
-        { item_id: 1, item_name: "Inteira", quantity: 2, unit_price: 35, item_total: 70, num_days: null },
+        {
+          item_id: 1,
+          item_name: "Inteira",
+          quantity: 2,
+          unit_price: 35,
+          item_total: 70,
+          num_days: null,
+        },
       ],
       subtotal: 70,
       total: 70,
@@ -48,7 +55,14 @@ describe("detalharOrcamento", () => {
     const linhas = detalharOrcamento({
       ...base,
       items_breakdown: [
-        { item_id: 1, item_name: "Inteira", quantity: 2, unit_price: 90, item_total: 180, num_days: null },
+        {
+          item_id: 1,
+          item_name: "Inteira",
+          quantity: 2,
+          unit_price: 90,
+          item_total: 180,
+          num_days: null,
+        },
       ],
       subtotal: 180,
       discount_amount: 90,
@@ -67,7 +81,14 @@ describe("detalharOrcamento", () => {
     const linhas = detalharOrcamento({
       ...base,
       items_breakdown: [
-        { item_id: 1, item_name: "Inteira", quantity: 1, unit_price: 100, item_total: 100, num_days: null },
+        {
+          item_id: 1,
+          item_name: "Inteira",
+          quantity: 1,
+          unit_price: 100,
+          item_total: 100,
+          num_days: null,
+        },
       ],
       subtotal: 100,
       discount_amount: 10,
@@ -132,7 +153,14 @@ describe("detalharOrcamento", () => {
     const linhas = detalharOrcamento({
       ...base,
       items_breakdown: [
-        { item_id: 1, item_name: "X", quantity: 1, unit_price: 100, item_total: 100, num_days: null },
+        {
+          item_id: 1,
+          item_name: "X",
+          quantity: 1,
+          unit_price: 100,
+          item_total: 100,
+          num_days: null,
+        },
       ],
       subtotal: 100,
       service_fee: 8.1,
@@ -148,12 +176,28 @@ describe("detalharOrcamento", () => {
     const o: Orcamento = {
       ...base,
       items_breakdown: [
-        { item_id: 1, item_name: "A", quantity: 2, unit_price: 90, item_total: 180, num_days: null },
-        { item_id: 2, item_name: "B", quantity: 1, unit_price: 95, item_total: 95, num_days: null },
+        {
+          item_id: 1,
+          item_name: "A",
+          quantity: 2,
+          unit_price: 90,
+          item_total: 180,
+          num_days: null,
+        },
+        {
+          item_id: 2,
+          item_name: "B",
+          quantity: 1,
+          unit_price: 95,
+          item_total: 95,
+          num_days: null,
+        },
       ],
       subtotal: 275,
       discount_amount: 137.5,
-      discount_details: { advance_booking: { name: "Antecipada", percent: 50, amount: 137.5 } },
+      discount_details: {
+        advance_booking: { name: "Antecipada", percent: 50, amount: 137.5 },
+      },
       service_fee: 10,
       service_fee_details: { percent: 5 },
       total: 147.5,
@@ -171,7 +215,14 @@ describe("a conta nomeia a unidade escolhida, não a tarifa", () => {
   const comChurrasqueira: Orcamento = {
     ...base,
     items_breakdown: [
-      { item_id: 1, item_name: "Inteira", quantity: 2, unit_price: 35, item_total: 70, num_days: null },
+      {
+        item_id: 1,
+        item_name: "Inteira",
+        quantity: 2,
+        unit_price: 35,
+        item_total: 70,
+        num_days: null,
+      },
       {
         item_id: 6,
         item_name: "Churrasqueira Grande (A)",

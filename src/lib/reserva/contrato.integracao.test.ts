@@ -143,13 +143,61 @@ descreve("contrato de preços com o Sistur", () => {
 });
 
 descreve("rateio bate com o que o Sistur recalcula", () => {
-  const casos: Array<[string, number, number, number, Array<{ item_id: number; quantity: number }>]> = [
-    ["day use, 1 ingresso",        DAY_USE, 40, 0, [{ item_id: 1, quantity: 1 }]],
-    ["day use, adultos e criança", DAY_USE, 41, 0, [{ item_id: 1, quantity: 2 }, { item_id: 2, quantity: 1 }]],
-    ["day use, com isento",        DAY_USE, 42, 0, [{ item_id: 1, quantity: 2 }, { item_id: 2, quantity: 1 }, { item_id: 3, quantity: 1 }]],
-    ["day use, quantidade ímpar",  DAY_USE, 43, 0, [{ item_id: 1, quantity: 7 }, { item_id: 2, quantity: 3 }]],
-    ["camping, 2 noites",          CAMPING, 44, 2, [{ item_id: 18, quantity: 2 }, { item_id: 13, quantity: 1 }]],
-    ["camping, 4 noites",          CAMPING, 46, 4, [{ item_id: 18, quantity: 4 }, { item_id: 17, quantity: 3 }]],
+  const casos: Array<
+    [string, number, number, number, Array<{ item_id: number; quantity: number }>]
+  > = [
+    ["day use, 1 ingresso", DAY_USE, 40, 0, [{ item_id: 1, quantity: 1 }]],
+    [
+      "day use, adultos e criança",
+      DAY_USE,
+      41,
+      0,
+      [
+        { item_id: 1, quantity: 2 },
+        { item_id: 2, quantity: 1 },
+      ],
+    ],
+    [
+      "day use, com isento",
+      DAY_USE,
+      42,
+      0,
+      [
+        { item_id: 1, quantity: 2 },
+        { item_id: 2, quantity: 1 },
+        { item_id: 3, quantity: 1 },
+      ],
+    ],
+    [
+      "day use, quantidade ímpar",
+      DAY_USE,
+      43,
+      0,
+      [
+        { item_id: 1, quantity: 7 },
+        { item_id: 2, quantity: 3 },
+      ],
+    ],
+    [
+      "camping, 2 noites",
+      CAMPING,
+      44,
+      2,
+      [
+        { item_id: 18, quantity: 2 },
+        { item_id: 13, quantity: 1 },
+      ],
+    ],
+    [
+      "camping, 4 noites",
+      CAMPING,
+      46,
+      4,
+      [
+        { item_id: 18, quantity: 4 },
+        { item_id: 17, quantity: 3 },
+      ],
+    ],
   ];
 
   it.each(casos)("%s", async (_nome, categoria, offset, noites, items) => {
@@ -190,7 +238,10 @@ criaReservas("criação ponta a ponta", () => {
         category_id: DAY_USE,
         check_in_date: ci,
         check_out_date: ci,
-        items: [{ item_id: 1, quantity: 2 }, { item_id: 2, quantity: 1 }],
+        items: [
+          { item_id: 1, quantity: 2 },
+          { item_id: 2, quantity: 1 },
+        ],
       });
 
       r = await criar({

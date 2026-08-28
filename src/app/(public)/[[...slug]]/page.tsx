@@ -96,11 +96,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function LandingRoute({
-  params,
-}: {
-  params: Promise<Params>;
-}) {
+export default async function LandingRoute({ params }: { params: Promise<Params> }) {
   const page = await getLandingPage(toSlug(await params));
   if (!page) notFound();
 

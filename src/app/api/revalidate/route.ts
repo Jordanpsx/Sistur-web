@@ -83,10 +83,7 @@ export async function POST(req: Request) {
   // silent 200 would hide that until someone noticed a stale page.
   const unknown = tags.filter((t) => !isKnownTag(t));
   if (unknown.length > 0) {
-    return Response.json(
-      { error: "unknown tags", unknown },
-      { status: 422 },
-    );
+    return Response.json({ error: "unknown tags", unknown }, { status: 422 });
   }
 
   for (const tag of tags) revalidateTag(tag);

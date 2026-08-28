@@ -11,19 +11,75 @@ import type { Item } from "@/lib/sistur/catalog";
  */
 
 const grupos: Grupo[] = [
-  { id: 20, name: "Esportes e aventuras", parent_id: null, sort_order: 0, description: null, image_url: null },
-  { id: 2,  name: "Churrasqueiras", parent_id: null, sort_order: 1, description: null, image_url: null },
-  { id: 5,  name: "ÁREA A – DIVERSÃO (Permitido som ambiente)", parent_id: 2, sort_order: 1, description: null, image_url: null },
-  { id: 6,  name: "ÁREA B – SOSSEGO (Proibido som)", parent_id: 2, sort_order: 1, description: null, image_url: null },
-  { id: 4,  name: "Churrasqueiras grandes (A)", parent_id: 5, sort_order: 2, description: "até 8 pessoas", image_url: "/a.jpg" },
-  { id: 3,  name: "Churrasqueiras pequenas (A)", parent_id: 5, sort_order: 2, description: "até 4 pessoas", image_url: null },
-  { id: 8,  name: "Churrasqueiras Grandes (B)", parent_id: 6, sort_order: 2, description: null, image_url: null },
+  {
+    id: 20,
+    name: "Esportes e aventuras",
+    parent_id: null,
+    sort_order: 0,
+    description: null,
+    image_url: null,
+  },
+  {
+    id: 2,
+    name: "Churrasqueiras",
+    parent_id: null,
+    sort_order: 1,
+    description: null,
+    image_url: null,
+  },
+  {
+    id: 5,
+    name: "ÁREA A – DIVERSÃO (Permitido som ambiente)",
+    parent_id: 2,
+    sort_order: 1,
+    description: null,
+    image_url: null,
+  },
+  {
+    id: 6,
+    name: "ÁREA B – SOSSEGO (Proibido som)",
+    parent_id: 2,
+    sort_order: 1,
+    description: null,
+    image_url: null,
+  },
+  {
+    id: 4,
+    name: "Churrasqueiras grandes (A)",
+    parent_id: 5,
+    sort_order: 2,
+    description: "até 8 pessoas",
+    image_url: "/a.jpg",
+  },
+  {
+    id: 3,
+    name: "Churrasqueiras pequenas (A)",
+    parent_id: 5,
+    sort_order: 2,
+    description: "até 4 pessoas",
+    image_url: null,
+  },
+  {
+    id: 8,
+    name: "Churrasqueiras Grandes (B)",
+    parent_id: 6,
+    sort_order: 2,
+    description: null,
+    image_url: null,
+  },
 ];
 
 function item(id: number, group_id: number | null, price = 100): Item {
   return {
-    id, name: `Item ${id}`, internal_slug: null, category_id: 1, source_id: 1,
-    group_id, is_entry_ticket: false, description: null, price,
+    id,
+    name: `Item ${id}`,
+    internal_slug: null,
+    category_id: 1,
+    source_id: 1,
+    group_id,
+    is_entry_ticket: false,
+    description: null,
+    price,
     billing_type: "FIXED",
   } as Item;
 }
@@ -81,8 +137,22 @@ describe("agruparAdicionais", () => {
   it("ciclo na hierarquia não trava", () => {
     // Um pai apontando para o filho é dado corrompido; não pode congelar a página.
     const ciclo: Grupo[] = [
-      { id: 1, name: "A", parent_id: 2, sort_order: 0, description: null, image_url: null },
-      { id: 2, name: "B", parent_id: 1, sort_order: 0, description: null, image_url: null },
+      {
+        id: 1,
+        name: "A",
+        parent_id: 2,
+        sort_order: 0,
+        description: null,
+        image_url: null,
+      },
+      {
+        id: 2,
+        name: "B",
+        parent_id: 1,
+        sort_order: 0,
+        description: null,
+        image_url: null,
+      },
     ];
     expect(() => agruparAdicionais([item(1, 1)], ciclo)).not.toThrow();
   });

@@ -77,11 +77,12 @@ export async function POST(req: Request) {
   }
 
   const formData = (corpo.formData ?? {}) as Record<string, unknown>;
-  const metodo = String(
-    corpo.payment_method_id ?? formData.payment_method_id ?? "",
-  );
+  const metodo = String(corpo.payment_method_id ?? formData.payment_method_id ?? "");
   if (!metodo) {
-    return NextResponse.json({ erro: "Escolha uma forma de pagamento." }, { status: 400 });
+    return NextResponse.json(
+      { erro: "Escolha uma forma de pagamento." },
+      { status: 400 },
+    );
   }
 
   // Nomes dos campos recebidos, nunca os valores. Não havia registro nenhum do

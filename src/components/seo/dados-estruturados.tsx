@@ -69,8 +69,16 @@ export function DadosEstruturados({ site }: { site: string }) {
         amenityFeature: [
           { "@type": "LocationFeatureSpecification", name: "Camping", value: true },
           { "@type": "LocationFeatureSpecification", name: "Restaurante", value: true },
-          { "@type": "LocationFeatureSpecification", name: "Churrasqueiras", value: true },
-          { "@type": "LocationFeatureSpecification", name: "Piscinas naturais", value: true },
+          {
+            "@type": "LocationFeatureSpecification",
+            name: "Churrasqueiras",
+            value: true,
+          },
+          {
+            "@type": "LocationFeatureSpecification",
+            name: "Piscinas naturais",
+            value: true,
+          },
         ],
       },
       {

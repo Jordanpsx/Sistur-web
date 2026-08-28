@@ -70,7 +70,7 @@ export function ImmersiveGallery({
   return (
     <section className="mx-auto max-w-5xl px-4 py-12">
       {titulo && (
-        <h2 className="mb-6 text-center text-2xl font-semibold uppercase tracking-tight text-[var(--c-fg)]">
+        <h2 className="mb-6 text-center text-2xl font-semibold tracking-tight text-[var(--c-fg)] uppercase">
           {titulo}
         </h2>
       )}
@@ -81,9 +81,7 @@ export function ImmersiveGallery({
             <button
               type="button"
               onClick={() => setAberto(i)}
-              className="group relative block aspect-square w-full overflow-hidden rounded-xl
-                         bg-[var(--c-surface)] focus-visible:outline focus-visible:outline-2
-                         focus-visible:outline-offset-2 focus-visible:outline-[var(--c-accent)]"
+              className="group relative block aspect-square w-full overflow-hidden rounded-xl bg-[var(--c-surface)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--c-accent)]"
             >
               <Image
                 src={m.poster}
@@ -115,10 +113,7 @@ export function ImmersiveGallery({
 function Selo({ tipo }: { tipo: Exclude<MediaType, "image"> }) {
   const texto = tipo === "video" ? "▶ Vídeo" : "360°";
   return (
-    <span
-      className="pointer-events-none absolute bottom-2 left-2 rounded-full bg-black/70 px-2.5
-                 py-1 text-xs font-semibold text-white backdrop-blur"
-    >
+    <span className="pointer-events-none absolute bottom-2 left-2 rounded-full bg-black/70 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur">
       {texto}
     </span>
   );
@@ -149,24 +144,21 @@ function Visualizador({
       }}
     >
       <header className="flex shrink-0 items-center justify-between p-3">
-        <span className="text-sm tabular-nums text-white/70">
+        <span className="text-sm text-white/70 tabular-nums">
           {posicao} / {total}
         </span>
         <button
           type="button"
           onClick={onFechar}
           aria-label="Fechar"
-          className="flex h-11 w-11 items-center justify-center rounded-full text-2xl text-white
-                     hover:bg-white/10"
+          className="flex h-11 w-11 items-center justify-center rounded-full text-2xl text-white hover:bg-white/10"
         >
           ×
         </button>
       </header>
 
       <div className="relative flex min-h-0 flex-1 items-center justify-center px-2">
-        {total > 1 && (
-          <Seta lado="esquerda" onClick={() => onMover(-1)} />
-        )}
+        {total > 1 && <Seta lado="esquerda" onClick={() => onMover(-1)} />}
         <Conteudo item={item} />
         {total > 1 && <Seta lado="direita" onClick={() => onMover(1)} />}
       </div>
@@ -211,8 +203,7 @@ function Conteudo({ item }: { item: MediaItem }) {
             o pacote entra por dynamic() quando houver panorama de verdade. */}
         <div
           data-panorama={item.src ?? item.poster}
-          className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full
-                     bg-white/15 px-4 py-2 text-sm font-medium text-white backdrop-blur"
+          className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-white/15 px-4 py-2 text-sm font-medium text-white backdrop-blur"
         >
           360° View Enabled
         </div>
@@ -240,7 +231,7 @@ function Seta({ lado, onClick }: { lado: "esquerda" | "direita"; onClick: () => 
       aria-label={lado === "esquerda" ? "Anterior" : "Próxima"}
       className={
         "absolute top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center " +
-        "rounded-full bg-black/50 text-2xl text-white hover:bg-black/70 " +
+        "rounded-full bg-black/50 text-2xl text-white hover:bg-black/70" +
         (lado === "esquerda" ? "left-2" : "right-2")
       }
     >

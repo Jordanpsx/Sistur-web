@@ -90,7 +90,9 @@ export default async function Confirmacao({
 
           {pago ? (
             <div className="f-info" style={{ borderLeftColor: "var(--c-accent)" }}>
-              <strong style={{ color: "var(--c-accent-dark)" }}>Pagamento aprovado</strong>
+              <strong style={{ color: "var(--c-accent-dark)" }}>
+                Pagamento aprovado
+              </strong>
               {/* Sem instrução de apresentar o código na entrada — a portaria
                   não o pede. Mandar guardar algo que ninguém vai cobrar cria uma
                   exigência inexistente e preocupa quem perder o print. */}
@@ -100,17 +102,17 @@ export default async function Confirmacao({
             <div className="f-info">
               <strong>Aguardando confirmação do pagamento</strong>
               <p>
-                O PIX pode levar alguns instantes para compensar. Assim que o
-                Mercado Pago confirmar, sua reserva é liberada automaticamente —
-                não é preciso pagar de novo.
+                O PIX pode levar alguns instantes para compensar. Assim que o Mercado Pago
+                confirmar, sua reserva é liberada automaticamente — não é preciso pagar de
+                novo.
               </p>
             </div>
           ) : (
             <div className="f-info" style={{ borderLeftColor: "var(--f-step-now)" }}>
               <strong style={{ color: "var(--f-err-fg)" }}>Ainda não está paga</strong>
               <p>
-                Sua vaga fica reservada por 15 minutos. Depois disso ela volta a
-                ficar disponível para outras pessoas.
+                Sua vaga fica reservada por 15 minutos. Depois disso ela volta a ficar
+                disponível para outras pessoas.
               </p>
             </div>
           )}

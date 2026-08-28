@@ -35,9 +35,7 @@ export const metadata: Metadata = {
   // and the same image could never be promoted from staging to production.
   // `metadataBase` is evaluated server-side, so a runtime variable works and one
   // image serves both environments.
-  metadataBase: new URL(
-    process.env.SITE_URL ?? "https://cachoeiradogirassol.com.br",
-  ),
+  metadataBase: new URL(process.env.SITE_URL ?? "https://cachoeiradogirassol.com.br"),
   title: {
     default: "Cachoeira do Girassol",
     template: "%s · Cachoeira do Girassol",

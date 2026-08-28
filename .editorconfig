@@ -1,0 +1,18 @@
+# Regras que valem antes de qualquer ferramenta — o editor já as respeita.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+max_line_length = 90
+
+[*.md]
+# Em Markdown, dois espaços no fim da linha são uma quebra de linha.
+trim_trailing_whitespace = false
+
+[*.{yml,yaml}]
+indent_size = 2

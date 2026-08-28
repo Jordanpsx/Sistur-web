@@ -32,7 +32,5 @@ export const TAGS = {
 
 /** Tags accepted from the webhook. Anything else is rejected, not ignored. */
 export function isKnownTag(tag: string): boolean {
-  return (
-    tag === TAGS.pagesIndex || tag === TAGS.catalog || tag.startsWith("page:")
-  );
+  return tag === TAGS.pagesIndex || tag === TAGS.catalog || tag.startsWith("page:");
 }

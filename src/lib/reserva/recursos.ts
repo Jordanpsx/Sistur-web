@@ -39,9 +39,7 @@ const RespostaSchema = z.object({ resources: z.array(RecursoSchema).default([]) 
 export type Recurso = z.infer<typeof RecursoSchema>;
 
 /** Ids de recursos escolhidos, lidos da URL como `r<id>=1`. */
-export function lerRecursos(
-  sp: Record<string, string | string[] | undefined>,
-): number[] {
+export function lerRecursos(sp: Record<string, string | string[] | undefined>): number[] {
   const out: number[] = [];
   for (const chave of Object.keys(sp)) {
     const m = /^r(\d+)$/.exec(chave);

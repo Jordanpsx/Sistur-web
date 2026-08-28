@@ -70,8 +70,8 @@ export function HeroBanner({
         className="absolute inset-0 -z-10 bg-gradient-to-t from-black/80 via-black/40 to-black/10"
       />
 
-      <div className="mx-auto w-full max-w-5xl px-4 pb-16 pt-28 sm:pb-24">
-        <h1 className="max-w-3xl text-4xl font-extrabold uppercase leading-[1.05] tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)] md:text-6xl lg:text-7xl">
+      <div className="mx-auto w-full max-w-5xl px-4 pt-28 pb-16 sm:pb-24">
+        <h1 className="max-w-3xl text-4xl leading-[1.05] font-extrabold tracking-tight text-white uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)] md:text-6xl lg:text-7xl">
           {titulo}
         </h1>
 
@@ -93,13 +93,13 @@ export function HeroBanner({
                       // alternativas legítimas, não ações secundárias — daí
                       // contorno sólido em vez de link apagado.
                       "inline-flex min-h-[52px] w-full items-center justify-center rounded-full px-9 " +
-                      "text-base font-semibold uppercase tracking-wide transition-transform " +
-                      "duration-200 hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 " +
-                      "focus-visible:outline-offset-2 focus-visible:outline-white sm:w-auto " +
+                      "text-base font-semibold tracking-wide uppercase transition-transform" +
+                      "duration-200 hover:scale-[1.03] focus-visible:outline focus-visible:outline-2" +
+                      "focus-visible:outline-offset-2 focus-visible:outline-white sm:w-auto" +
                       (i === 0
-                        // Amarelo da marca, não o verde de reserva: sobre foto
-                        // escura o amarelo salta e o verde some no mato.
-                        ? "bg-[var(--c-primary)] text-[var(--c-on-primary)] shadow-xl shadow-black/30 hover:bg-[var(--c-primary-dark)]"
+                        ? // Amarelo da marca, não o verde de reserva: sobre foto
+                          // escura o amarelo salta e o verde some no mato.
+                          "bg-[var(--c-primary)] text-[var(--c-on-primary)] shadow-xl shadow-black/30 hover:bg-[var(--c-primary-dark)]"
                         : "border-2 border-white/80 bg-white/10 text-white backdrop-blur hover:bg-white/20")
                     }
                   >

@@ -111,9 +111,9 @@ export function PixAguardando({
       <div className="f-info" style={{ borderLeftColor: "var(--f-info-bar)" }}>
         <strong>Pague com PIX para confirmar</strong>
         <p>
-          Abra o app do seu banco, escaneie o código e conclua o pagamento.
-          Mantenha esta página aberta — ela confirma sozinha assim que o
-          pagamento cair. O código vale por {VALIDADE_MIN} minutos.
+          Abra o app do seu banco, escaneie o código e conclua o pagamento. Mantenha esta
+          página aberta — ela confirma sozinha assim que o pagamento cair. O código vale
+          por {VALIDADE_MIN} minutos.
         </p>
       </div>
 
@@ -151,9 +151,9 @@ export function PixAguardando({
 
       {desistiu ? (
         <p role="alert" className="f-erro">
-          O código PIX expirou e não recebemos a confirmação. Se você já pagou,
-          entre em contato com o código da sua reserva — <strong>não pague de
-          novo</strong>. Caso contrário, refaça a reserva.
+          O código PIX expirou e não recebemos a confirmação. Se você já pagou, entre em
+          contato com o código da sua reserva — <strong>não pague de novo</strong>. Caso
+          contrário, refaça a reserva.
         </p>
       ) : (
         <p className="pix-esperando" aria-live="polite">

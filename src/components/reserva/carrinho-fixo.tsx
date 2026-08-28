@@ -2,6 +2,7 @@
 
 import { formatarBRL, type Orcamento } from "@/lib/reserva/itens";
 import { DetalheValores } from "./detalhe-valores";
+import { Button } from "@/components/ui/button";
 
 /**
  * Sticky cart.
@@ -38,10 +39,7 @@ export function CarrinhoFixo({
 }) {
   return (
     <div
-      className="carrinho-fixo sticky bottom-0 z-20 -mx-4 mt-6 border-t border-[var(--c-border)]
-                 bg-white/95 px-4 py-3 backdrop-blur
-                 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]
-                 sm:-mx-5 sm:px-5"
+      className="carrinho-fixo sticky bottom-0 z-20 -mx-4 mt-6 border-t border-[var(--c-border)] bg-white/95 px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] backdrop-blur sm:-mx-5 sm:px-5"
       /* safe-area: em iPhone o gesture bar cobriria o botão. */
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
     >
@@ -50,16 +48,21 @@ export function CarrinhoFixo({
           {pendencia ? (
             <p className="text-sm text-[var(--c-muted)]">{pendencia}</p>
           ) : (
-            <div className={carregando ? "opacity-50 transition-opacity" : "transition-opacity"}>
+            <div
+              className={
+                carregando ? "opacity-50 transition-opacity" : "transition-opacity"
+              }
+            >
               <p className="text-xs text-[var(--c-muted)]">
                 {totalItens} {totalItens === 1 ? "item" : "itens"}
                 {orcamento && orcamento.discount_amount > 0 && (
                   <span className="text-[var(--c-accent-dark)]">
-                    {" "}· desconto de {formatarBRL(orcamento.discount_amount)}
+                    {" "}
+                    · desconto de {formatarBRL(orcamento.discount_amount)}
                   </span>
                 )}
               </p>
-              <p className="text-xl font-bold leading-tight text-[var(--c-fg)]">
+              <p className="text-xl leading-tight font-bold text-[var(--c-fg)]">
                 {orcamento ? formatarBRL(orcamento.total) : "—"}
               </p>
               {/* Fechado por padrão: o total é o que a barra existe para
@@ -70,17 +73,14 @@ export function CarrinhoFixo({
           )}
         </div>
 
-        <button
+        <Button
           type="submit"
+          tamanho="lg"
           disabled={!podeAvancar}
-          className="min-h-[48px] w-full rounded-lg bg-[var(--c-accent)] px-8
-                     text-base font-semibold uppercase tracking-wide text-white
-                     transition-colors hover:bg-[var(--c-accent-dark)]
-                     disabled:cursor-not-allowed disabled:opacity-40
-                     sm:w-auto"
+          className="w-full tracking-wide uppercase sm:w-auto"
         >
           Continuar →
-        </button>
+        </Button>
       </div>
     </div>
   );

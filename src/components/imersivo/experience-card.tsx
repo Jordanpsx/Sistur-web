@@ -90,7 +90,7 @@ export function ExperienceCard({
       onBlur={() => setApontado(false)}
       className={
         "group flex flex-col overflow-hidden rounded-2xl bg-[var(--c-panel)] " +
-        "shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-shadow hover:shadow-[0_8px_28px_rgba(0,0,0,0.14)] " +
+        "shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-shadow hover:shadow-[0_8px_28px_rgba(0,0,0,0.14)]" +
         (escolhido ? "ring-2 ring-[var(--c-accent)]" : "")
       }
     >
@@ -130,52 +130,49 @@ export function ExperienceCard({
         )}
 
         {vende && (
-        <div className="mt-auto flex items-center justify-between gap-3 pt-3">
-          <p className="text-base font-bold tabular-nums text-[var(--c-fg)]">
-            {preco != null ? (
-              formatarBRL(preco)
-            ) : (
-              <span className="text-sm font-normal text-[var(--c-muted)]">
-                Escolha a data para ver o valor
-              </span>
-            )}
-          </p>
+          <div className="mt-auto flex items-center justify-between gap-3 pt-3">
+            <p className="text-base font-bold text-[var(--c-fg)] tabular-nums">
+              {preco != null ? (
+                formatarBRL(preco)
+              ) : (
+                <span className="text-sm font-normal text-[var(--c-muted)]">
+                  Escolha a data para ver o valor
+                </span>
+              )}
+            </p>
 
-          {escolhido ? (
-            <div className="flex items-center gap-1 rounded-full border border-[var(--c-border)] p-1">
-              <BotaoQtd
-                rotulo={`Remover um ${atividade.titulo}`}
-                onClick={() => onQtd?.(quantidade - 1)}
+            {escolhido ? (
+              <div className="flex items-center gap-1 rounded-full border border-[var(--c-border)] p-1">
+                <BotaoQtd
+                  rotulo={`Remover um ${atividade.titulo}`}
+                  onClick={() => onQtd?.(quantidade - 1)}
+                >
+                  −
+                </BotaoQtd>
+                <span
+                  aria-live="polite"
+                  className="min-w-[2ch] text-center text-base font-semibold text-[var(--c-fg)] tabular-nums"
+                >
+                  {quantidade}
+                </span>
+                <BotaoQtd
+                  rotulo={`Adicionar mais um ${atividade.titulo}`}
+                  onClick={() => onQtd?.(Math.min(max, quantidade + 1))}
+                  desabilitado={quantidade >= max}
+                >
+                  +
+                </BotaoQtd>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => onQtd?.(1)}
+                className="min-h-[44px] shrink-0 rounded-full bg-[var(--c-accent-dark)] px-6 text-sm font-semibold tracking-wide text-[var(--c-on-accent)] uppercase transition-colors hover:bg-[var(--c-accent-deep)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
               >
-                −
-              </BotaoQtd>
-              <span
-                aria-live="polite"
-                className="min-w-[2ch] text-center text-base font-semibold tabular-nums text-[var(--c-fg)]"
-              >
-                {quantidade}
-              </span>
-              <BotaoQtd
-                rotulo={`Adicionar mais um ${atividade.titulo}`}
-                onClick={() => onQtd?.(Math.min(max, quantidade + 1))}
-                desabilitado={quantidade >= max}
-              >
-                +
-              </BotaoQtd>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => onQtd?.(1)}
-              className="min-h-[44px] shrink-0 rounded-full bg-[var(--c-accent)] px-6 text-sm
-                         font-semibold uppercase tracking-wide text-[var(--c-on-accent)]
-                         transition-colors hover:bg-[var(--c-accent-dark)]
-                         focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-            >
-              Adicionar
-            </button>
-          )}
-        </div>
+                Adicionar
+              </button>
+            )}
+          </div>
         )}
       </div>
     </article>
@@ -199,9 +196,7 @@ function BotaoQtd({
       onClick={onClick}
       disabled={desabilitado}
       aria-label={rotulo}
-      className="flex h-11 w-11 items-center justify-center rounded-full text-xl leading-none
-                 text-[var(--c-fg)] transition-colors hover:bg-[var(--c-surface)]
-                 disabled:cursor-not-allowed disabled:opacity-30"
+      className="flex h-11 w-11 items-center justify-center rounded-full text-xl leading-none text-[var(--c-fg)] transition-colors hover:bg-[var(--c-surface)] disabled:cursor-not-allowed disabled:opacity-30"
     >
       {children}
     </button>

@@ -96,6 +96,12 @@ async function criarReserva(): Promise<string> {
   throw new Error(`nenhuma data livre para reservar: ${JSON.stringify(ultimo)}`);
 }
 
+// Cancela no fim do arquivo tudo que a rodada criou. Esta linha já sumiu uma
+// vez, numa reescrita que substituiu o bloco em volta dela, e a suíte passou a
+// deixar reserva pendente na lista do operador sem ninguém notar — 224 delas.
+// O linter é que apontou, pelo import que ficou sem uso.
+afterAll(faxinar);
+
 function daqui(dias: number): string {
   const d = new Date();
   d.setUTCDate(d.getUTCDate() + dias);
@@ -151,15 +157,22 @@ descreve("funil de reserva", () => {
       const posicoes = ["Inteira", "Meia-Entrada", "Isento"].map((n) =>
         trecho.indexOf(n),
       );
-      expect(posicoes.every((p) => p >= 0), `faltou ingresso em ${d}`).toBe(true);
-      expect(posicoes, `ordem errada em ${d}`).toEqual([...posicoes].sort((a, b) => a - b));
+      expect(
+        posicoes.every((p) => p >= 0),
+        `faltou ingresso em ${d}`,
+      ).toBe(true);
+      expect(posicoes, `ordem errada em ${d}`).toEqual(
+        [...posicoes].sort((a, b) => a - b),
+      );
     }
   });
 
   it("o cartão pede miniatura, em qualidade acima do padrão", async () => {
     // Divisão de papéis: a grade fica escaneável com treze churrasqueiras, e
     // quem quer ver de perto abre a galeria.
-    const html = await (await fetch(`${SITE}/reservar/day-use/?entrada=${daqui(40)}`)).text();
+    const html = await (
+      await fetch(`${SITE}/reservar/day-use/?entrada=${daqui(40)}`)
+    ).text();
     expect(html).toMatch(/wp-content%2Fuploads[^"&]*&amp;w=\d+&amp;q=85/);
     expect(html).toContain("grid-cols-2");
   });
@@ -168,7 +181,9 @@ descreve("funil de reserva", () => {
     // Ela monta no clique, então não aparece no HTML do servidor. O que dá para
     // travar é o contrato dela dentro do bundle da página: a primeira versão
     // ficava presa a 768px e clicar na foto entregava outra foto pequena.
-    const html = await (await fetch(`${SITE}/reservar/day-use/?entrada=${daqui(40)}`)).text();
+    const html = await (
+      await fetch(`${SITE}/reservar/day-use/?entrada=${daqui(40)}`)
+    ).text();
     // Especificamente o chunk da PÁGINA. Procurar por "experiencia" pegava o
     // primeiro que casasse, e no dia em que o segmento ganhou um layout esse
     // primeiro passou a ser o layout — o teste acusou a galeria por uma
@@ -204,7 +219,9 @@ descreve("funil de reserva", () => {
   });
 
   it("cada churrasqueira traz suas próprias fotos", async () => {
-    const html = await (await fetch(`${SITE}/reservar/day-use/?entrada=${daqui(40)}`)).text();
+    const html = await (
+      await fetch(`${SITE}/reservar/day-use/?entrada=${daqui(40)}`)
+    ).text();
     expect(html).toContain("wp-content/uploads");
     // No HTML cru o React separa {n} de " fotos" com um comentário; comparar no
     // texto já limpo em vez de casar a marcação.
@@ -230,7 +247,9 @@ descreve("funil de reserva", () => {
   it("churrasqueiras vêm em acordeão; ingressos e esportes ficam abertos", async () => {
     // A regra sai da forma da árvore: seção com subseções vira acordeão, seção
     // plana fica aberta. Um grupo novo no admin se encaixa sozinho.
-    const html = await (await fetch(`${SITE}/reservar/day-use/?entrada=${daqui(40)}`)).text();
+    const html = await (
+      await fetch(`${SITE}/reservar/day-use/?entrada=${daqui(40)}`)
+    ).text();
     const t = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ");
 
     // Churrasqueiras (com Área A e Área B) + as duas áreas = 3 acordeões.
@@ -258,9 +277,9 @@ descreve("funil de reserva", () => {
     );
     expect(areaA, "esperava uma churrasqueira da Área A").toBeTruthy();
 
-    const html = await (await fetch(
-      `${SITE}/reservar/day-use/?entrada=${d}&i1=1&r${areaA.id}=1`,
-    )).text();
+    const html = await (
+      await fetch(`${SITE}/reservar/day-use/?entrada=${d}&i1=1&r${areaA.id}=1`)
+    ).text();
     // Churrasqueiras + a área que contém a escolhida.
     expect(html.match(/<details open/g) ?? []).toHaveLength(2);
     expect(html.replace(/<[^>]*>/g, " ")).toMatch(/1 selecionada/);
@@ -273,7 +292,9 @@ descreve("funil de reserva", () => {
   });
 
   it("as churrasqueiras mostram capacidade", async () => {
-    const html = await (await fetch(`${SITE}/reservar/day-use/?entrada=${daqui(40)}`)).text();
+    const html = await (
+      await fetch(`${SITE}/reservar/day-use/?entrada=${daqui(40)}`)
+    ).text();
     expect(html).toMatch(/capacidade para at[ée]/);
   });
 
@@ -299,7 +320,9 @@ descreve("funil de reserva", () => {
   it("data inválida é recusada com mensagem, sem derrubar a página", async () => {
     expect(await texto("/reservar/day-use/?entrada=abc")).toMatch(/inválida/i);
     expect(await texto("/reservar/day-use/?entrada=2027-02-31")).toMatch(/inválida/i);
-    expect(await texto("/reservar/day-use/?entrada=2020-01-01")).toMatch(/a partir de hoje/i);
+    expect(await texto("/reservar/day-use/?entrada=2020-01-01")).toMatch(
+      /a partir de hoje/i,
+    );
   });
 
   it("quantidade corrompida não derruba o resto da seleção", async () => {
@@ -334,9 +357,9 @@ descreve("funil de reserva", () => {
     const churras = disp.resources[0];
     expect(churras, "esperava uma churrasqueira disponível").toBeTruthy();
 
-    const html = await (await fetch(
-      `${SITE}/reservar/day-use/dados/?entrada=${d}&i1=1&r${churras.id}=1`,
-    )).text();
+    const html = await (
+      await fetch(`${SITE}/reservar/day-use/dados/?entrada=${d}&i1=1&r${churras.id}=1`)
+    ).text();
     // Precisa viajar como campo do formulário, senão a Server Action não a vê.
     expect(html).toContain(`name="r${churras.id}"`);
 
@@ -438,7 +461,9 @@ descreveCria("pagamento", () => {
     );
     expect(t).toMatch(/não encontrada/i);
     const html = await (
-      await fetch(`${SITE}/reservar/day-use/pagamento/?r=00000000-0000-0000-0000-000000000000`)
+      await fetch(
+        `${SITE}/reservar/day-use/pagamento/?r=00000000-0000-0000-0000-000000000000`,
+      )
     ).text();
     expect(html).not.toContain("brick-pagamento");
   });
@@ -503,7 +528,6 @@ descreve("status do pagamento (polling do PIX)", () => {
       expect(r.status, `p=${p}`).toBe(400);
     }
   });
-
 });
 
 descreveCria("status do pagamento — com reserva de verdade", () => {
@@ -583,8 +607,12 @@ descreve("camping — a hora é preço", () => {
   it("33 horas custam mais que 24 na mesma tarifa", async () => {
     // É a razão de todo o trabalho de horário existir: mandar só a data
     // anunciaria o preço de 24h e a portaria cobraria o de 33.
-    const longa = await totalDe(`entrada=${d(30)}&saida=${d(31)}&he=08:00&hs=17:00&i18=2`);
-    const curta = await totalDe(`entrada=${d(30)}&saida=${d(31)}&he=14:00&hs=14:00&i18=2`);
+    const longa = await totalDe(
+      `entrada=${d(30)}&saida=${d(31)}&he=08:00&hs=17:00&i18=2`,
+    );
+    const curta = await totalDe(
+      `entrada=${d(30)}&saida=${d(31)}&he=14:00&hs=14:00&i18=2`,
+    );
     expect(longa.horas).toBe(33);
     expect(curta.horas).toBe(24);
     expect(longa.total).toBeGreaterThan(curta.total);
@@ -882,7 +910,9 @@ descreve("hierarquia visual da home", () => {
 
   it("cada item da estrutura é um cartão, não texto solto no branco", async () => {
     const m = await markup();
-    const cartoes = m.match(/border border-\[var\(--c-border\)\] bg-\[var\(--c-bg\)\] p-6/g);
+    const cartoes = m.match(
+      /border border-\[var\(--c-border\)\] bg-\[var\(--c-bg\)\] p-6/g,
+    );
     expect(cartoes?.length ?? 0).toBeGreaterThanOrEqual(3);
   });
 
@@ -903,7 +933,9 @@ descreve("hierarquia visual da home", () => {
   it("o Reservar da tabela é sólido e ocupa a largura do cartão", async () => {
     // Contorno vazado lê como ação secundária, e é a única ação do bloco.
     const m = await markup();
-    const solidos = m.match(/w-full items-center justify-center\s+rounded-lg bg-\[var\(--c-on-panel\)\]/g);
+    const solidos = m.match(
+      /w-full items-center justify-center\s+rounded-lg bg-\[var\(--c-on-panel\)\]/g,
+    );
     expect(solidos?.length ?? 0).toBeGreaterThan(0);
     expect(m).not.toMatch(/border border-white\/70/);
   });
@@ -963,7 +995,14 @@ descreve("tema noturno do camping", () => {
     // A lua é elemento próprio, ancorada ao canto direito. Dentro da arte do
     // céu ela obedecia ao recorte do `cover`: caía em 37% da largura numa
     // 2560x1311 e sumia inteira do quadro no celular.
-    expect(html).toMatch(/class="absolute right-2 top-12/);
+    // As classes, não a ordem delas: o prettier-plugin-tailwindcss ordena
+    // classe utilitária no fonte, e travar a sequência aqui faz o teste
+    // quebrar quando o formatador roda, sem nada ter mudado na tela.
+    const luaEl = html.match(/<img[^>]*mix-blend-screen[^>]*>/)?.[0] ?? "";
+    expect(luaEl, "não achei a lua").toBeTruthy();
+    for (const c of ["absolute", "top-12", "right-2", "mix-blend-screen"]) {
+      expect(luaEl, c).toContain(c);
+    }
     // O formulário fica acima de tudo isso.
     expect(html).toMatch(/relative z-10 mx-auto max-w-4xl/);
   });
@@ -1032,7 +1071,8 @@ descreve("tema noturno do camping", () => {
     const html = await (await fetch(`${SITE}/reservar/camping/`)).text();
     const css = html.match(/\/_next\/static\/css\/[^"]+\.css/)?.[0];
     const folha = await (await fetch(`${SITE}${css}`)).text();
-    const regra = folha.match(/\[data-tema=["']?noturno["']?\]\s*\.f-card\{[^}]*\}/)?.[0] ?? "";
+    const regra =
+      folha.match(/\[data-tema=["']?noturno["']?\]\s*\.f-card\{[^}]*\}/)?.[0] ?? "";
     expect(regra, "não achei a regra do card no CSS entregue").toBeTruthy();
     // O que não pode é despencar para transparente: a 10% o texto secundário
     // fica em 1,1:1 contra o fundo. `d9` é 0.85 em hexadecimal.
@@ -1049,7 +1089,9 @@ descreve("tema noturno do camping", () => {
     expect(folha).toMatch(/\[data-tema=["']?noturno["']?\]/);
     // Campo branco sólido é inegociável — vidro fosco atrás de um <input>
     // destrói a legibilidade de quem digita CPF no sol.
-    expect(folha).toMatch(/\[data-tema=["']?noturno["']?\]\s*\.f-input\s*\{\s*background:\s*#fff/);
+    expect(folha).toMatch(
+      /\[data-tema=["']?noturno["']?\]\s*\.f-input\s*\{\s*background:\s*#fff/,
+    );
   });
 });
 
@@ -1130,7 +1172,12 @@ descreve("Open Sans em todo o sistema de páginas", () => {
   };
 
   it("chega às páginas de apresentação e aos formulários", async () => {
-    for (const rota of ["/", "/fotos/", `/reservar/day-use/?entrada=${d(30)}`, "/reservar/camping/"]) {
+    for (const rota of [
+      "/",
+      "/fotos/",
+      `/reservar/day-use/?entrada=${d(30)}`,
+      "/reservar/camping/",
+    ]) {
       const html = await (await fetch(`${SITE}${rota}`, { redirect: "follow" })).text();
       expect(html, rota).toMatch(/__variable_[a-z0-9]+/);
       expect(html, rota).toMatch(/\/_next\/static\/media\/[a-z0-9]+-s\.p\.woff2/);

@@ -33,7 +33,8 @@ export function Galeria({
     const tecla = (e: KeyboardEvent) => {
       if (e.key === "Escape") onFechar();
       if (e.key === "ArrowRight") setAtual((i) => (i + 1) % imagens.length);
-      if (e.key === "ArrowLeft") setAtual((i) => (i - 1 + imagens.length) % imagens.length);
+      if (e.key === "ArrowLeft")
+        setAtual((i) => (i - 1 + imagens.length) % imagens.length);
     };
     document.addEventListener("keydown", tecla);
     const overflow = document.body.style.overflow;
@@ -72,8 +73,7 @@ export function Galeria({
           type="button"
           onClick={onFechar}
           aria-label="Fechar"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full
-                     text-2xl leading-none hover:bg-white/10"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-2xl leading-none hover:bg-white/10"
         >
           ×
         </button>
@@ -81,10 +81,7 @@ export function Galeria({
 
       {/* min-h-0 é o que permite o flex-1 encolher abaixo do tamanho natural da
           imagem; sem isso a coluna transborda e a foto sai da tela. */}
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative min-h-0 flex-1"
-      >
+      <div onClick={(e) => e.stopPropagation()} className="relative min-h-0 flex-1">
         <Image
           src={imagens[atual]}
           alt={`${titulo} — foto ${atual + 1} de ${imagens.length}`}
@@ -103,9 +100,7 @@ export function Galeria({
               type="button"
               onClick={() => irPara(-1)}
               aria-label="Foto anterior"
-              className="absolute left-2 top-1/2 flex h-12 w-12 -translate-y-1/2
-                         items-center justify-center rounded-full bg-black/50
-                         text-2xl text-white hover:bg-black/70"
+              className="absolute top-1/2 left-2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-2xl text-white hover:bg-black/70"
             >
               ‹
             </button>
@@ -113,9 +108,7 @@ export function Galeria({
               type="button"
               onClick={() => irPara(1)}
               aria-label="Próxima foto"
-              className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2
-                         items-center justify-center rounded-full bg-black/50
-                         text-2xl text-white hover:bg-black/70"
+              className="absolute top-1/2 right-2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-2xl text-white hover:bg-black/70"
             >
               ›
             </button>
@@ -135,8 +128,7 @@ export function Galeria({
               onClick={() => setAtual(i)}
               aria-label={`Foto ${i + 1}`}
               aria-current={i === atual}
-              className={`relative h-14 w-20 shrink-0 overflow-hidden rounded
-                          ${i === atual ? "ring-2 ring-white" : "opacity-50 hover:opacity-100"}`}
+              className={`relative h-14 w-20 shrink-0 overflow-hidden rounded ${i === atual ? "ring-2 ring-white" : "opacity-50 hover:opacity-100"}`}
             >
               <Image src={src} alt="" fill sizes="80px" className="object-cover" />
             </button>

@@ -46,12 +46,13 @@ export function CardRecurso({
 
   return (
     <li
-      className={`flex flex-col overflow-hidden rounded-xl border bg-white transition
-                  ${indisponivel
-                    ? "border-[var(--c-border)] opacity-55"
-                    : selecionado
-                      ? "border-[var(--c-accent)] shadow-[0_0_0_1px_var(--c-accent)]"
-                      : "border-[var(--c-border)] hover:shadow-md"}`}
+      className={`flex flex-col overflow-hidden rounded-xl border bg-white transition ${
+        indisponivel
+          ? "border-[var(--c-border)] opacity-55"
+          : selecionado
+            ? "border-[var(--c-accent)] shadow-[0_0_0_1px_var(--c-accent)]"
+            : "border-[var(--c-border)] hover:shadow-md"
+      }`}
     >
       <div className="relative aspect-[4/3] w-full bg-[var(--c-surface)]">
         {capa ? (
@@ -72,10 +73,7 @@ export function CardRecurso({
               className="object-cover transition-transform group-hover:scale-105"
             />
             {recurso.images.length > 1 && (
-              <span
-                className="absolute bottom-2 right-2 rounded-full bg-black/60 px-2 py-1
-                           text-xs font-medium text-white"
-              >
+              <span className="absolute right-2 bottom-2 rounded-full bg-black/60 px-2 py-1 text-xs font-medium text-white">
                 {recurso.images.length} fotos
               </span>
             )}
@@ -87,17 +85,14 @@ export function CardRecurso({
         )}
 
         {indisponivel && (
-          <span
-            className="absolute left-2 top-2 rounded-full bg-[var(--f-err-fg)] px-2 py-1
-                       text-xs font-semibold text-white"
-          >
+          <span className="absolute top-2 left-2 rounded-full bg-[var(--f-err-fg)] px-2 py-1 text-xs font-semibold text-white">
             Indisponível
           </span>
         )}
       </div>
 
       <div className="flex flex-1 flex-col gap-1 p-3">
-        <h4 className="text-sm font-semibold leading-snug text-[var(--c-fg)]">
+        <h4 className="text-sm leading-snug font-semibold text-[var(--c-fg)]">
           {recurso.name}
         </h4>
 
@@ -111,7 +106,8 @@ export function CardRecurso({
           {formatarBRL(valor)}
           {noites > 1 && (
             <span className="font-normal text-[var(--c-muted)]">
-              {" "}· {noites} diárias = {formatarBRL(valor * noites)}
+              {" "}
+              · {noites} diárias = {formatarBRL(valor * noites)}
             </span>
           )}
         </p>
@@ -120,12 +116,11 @@ export function CardRecurso({
           type="button"
           disabled={indisponivel}
           onClick={() => onToggle(!selecionado)}
-          className={`mt-2 min-h-[44px] rounded-lg px-4 text-sm font-semibold transition-colors
-                      ${selecionado
-                        ? "bg-[var(--c-accent)] text-white hover:bg-[var(--c-accent-dark)]"
-                        : "border border-[var(--c-accent)] text-[var(--c-accent-dark)] hover:bg-[var(--c-surface)]"}
-                      disabled:cursor-not-allowed disabled:border-[var(--c-border)]
-                      disabled:bg-transparent disabled:text-[var(--c-muted)]`}
+          className={`mt-2 min-h-[44px] rounded-lg px-4 text-sm font-semibold transition-colors ${
+            selecionado
+              ? "bg-[var(--c-accent-dark)] text-white hover:bg-[var(--c-accent-deep)]"
+              : "border border-[var(--c-accent)] text-[var(--c-accent-dark)] hover:bg-[var(--c-surface)]"
+          } disabled:cursor-not-allowed disabled:border-[var(--c-border)] disabled:bg-transparent disabled:text-[var(--c-muted)]`}
         >
           {indisponivel
             ? "Reservada"

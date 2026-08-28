@@ -39,8 +39,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ erro: "Corpo inválido." }, { status: 400 });
   }
 
-  const { source_id, category_id, check_in_date, check_out_date, items } =
-    (corpo ?? {}) as {
+  const { source_id, category_id, check_in_date, check_out_date, items } = (corpo ??
+    {}) as {
     source_id?: unknown;
     category_id?: unknown;
     check_in_date?: unknown;

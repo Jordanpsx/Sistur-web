@@ -39,18 +39,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return [{ url: `${SITE}/`, changeFrequency: "weekly", priority: 1 }];
   }
 
-  return paginas
-    // Página marcada como `noindex` no admin não entra: listá-la no sitemap
-    // seria pedir ao buscador que visite exatamente o que o operador escondeu.
-    .filter((p) => !p.noindex)
-    .map(({ slug, updated_at }) => {
-      const caminho = slug ? `/${slug}/` : "/";
-      return {
-        url: `${SITE}${caminho}`,
-        lastModified: updated_at ? new Date(updated_at) : undefined,
-        // A home é a porta de entrada; as demais são conteúdo de apoio.
-        changeFrequency: slug ? ("monthly" as const) : ("weekly" as const),
-        priority: slug ? 0.7 : 1,
-      };
-    });
+  return (
+    paginas
+      // Página marcada como `noindex` no admin não entra: listá-la no sitemap
+      // seria pedir ao buscador que visite exatamente o que o operador escondeu.
+      .filter((p) => !p.noindex)
+      .map(({ slug, updated_at }) => {
+        const caminho = slug ? `/${slug}/` : "/";
+        return {
+          url: `${SITE}${caminho}`,
+          lastModified: updated_at ? new Date(updated_at) : undefined,
+          // A home é a porta de entrada; as demais são conteúdo de apoio.
+          changeFrequency: slug ? ("monthly" as const) : ("weekly" as const),
+          priority: slug ? 0.7 : 1,
+        };
+      })
+  );
 }

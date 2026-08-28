@@ -59,8 +59,8 @@ export function agruparAdicionais<T extends Agrupavel>(
   const secoes = new Map<number | null, Map<number | null, T[]>>();
 
   const ordenados = [...itens].sort((a, b) => {
-    const ga = a.group_id != null ? ordem.get(a.group_id) ?? 1e9 : 1e9;
-    const gb = b.group_id != null ? ordem.get(b.group_id) ?? 1e9 : 1e9;
+    const ga = a.group_id != null ? (ordem.get(a.group_id) ?? 1e9) : 1e9;
+    const gb = b.group_id != null ? (ordem.get(b.group_id) ?? 1e9) : 1e9;
     return ga - gb || a.price - b.price;
   });
 
@@ -83,7 +83,7 @@ export function agruparAdicionais<T extends Agrupavel>(
     id: secaoId,
     titulo: (secaoId != null ? porId.get(secaoId)?.name : null) ?? "Outros",
     sub: [...subs.entries()].map(([subId, itens]) => ({
-      grupo: subId != null ? porId.get(subId) ?? null : null,
+      grupo: subId != null ? (porId.get(subId) ?? null) : null,
       itens,
     })),
   }));

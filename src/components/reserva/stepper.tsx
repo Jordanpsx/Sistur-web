@@ -31,17 +31,13 @@ export function Stepper({
   const vazio = valor === 0;
 
   return (
-    <div className="flex items-center gap-1 shrink-0">
+    <div className="flex shrink-0 items-center gap-1">
       <button
         type="button"
         onClick={() => onChange(Math.max(0, valor - 1))}
         disabled={vazio}
         aria-label={`Remover um ${rotulo}`}
-        className="flex h-11 w-11 items-center justify-center rounded-full border
-                   border-[var(--c-border)] bg-white text-xl leading-none
-                   text-[var(--c-fg)] transition-colors
-                   hover:bg-[var(--c-surface)] active:bg-[var(--c-surface)]
-                   disabled:cursor-not-allowed disabled:opacity-30"
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--c-border)] bg-white text-xl leading-none text-[var(--c-fg)] transition-colors hover:bg-[var(--c-surface)] active:bg-[var(--c-surface)] disabled:cursor-not-allowed disabled:opacity-30"
       >
         −
       </button>
@@ -55,9 +51,7 @@ export function Stepper({
         readOnly
         tabIndex={-1}
         aria-label={`Quantidade de ${rotulo}`}
-        className={`w-10 border-0 bg-transparent p-0 text-center text-base
-                    font-semibold tabular-nums focus:outline-none
-                    ${vazio ? "text-[var(--c-muted)]" : "text-[var(--c-fg)]"}`}
+        className={`w-10 border-0 bg-transparent p-0 text-center text-base font-semibold tabular-nums focus:outline-none ${vazio ? "text-[var(--c-muted)]" : "text-[var(--c-fg)]"}`}
       />
 
       <button
@@ -65,10 +59,7 @@ export function Stepper({
         onClick={() => onChange(Math.min(max, valor + 1))}
         disabled={valor >= max}
         aria-label={`Adicionar um ${rotulo}`}
-        className="flex h-11 w-11 items-center justify-center rounded-full
-                   bg-[var(--c-accent)] text-xl leading-none text-white
-                   transition-colors hover:bg-[var(--c-accent-dark)]
-                   disabled:cursor-not-allowed disabled:opacity-30"
+        className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--c-accent-dark)] text-xl leading-none text-white transition-colors hover:bg-[var(--c-accent-deep)] disabled:cursor-not-allowed disabled:opacity-30"
       >
         +
       </button>

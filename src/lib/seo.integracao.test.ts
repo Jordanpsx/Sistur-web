@@ -32,7 +32,9 @@ descreve("robots e sitemap", () => {
     for (const rota of ["/robots.txt", "/sitemap.xml"]) {
       const res = await fetch(`${SITE}${rota}`);
       expect(res.status, rota).toBe(200);
-      expect(res.headers.get("cache-control"), rota).toMatch(/no-store|no-cache|max-age=0/);
+      expect(res.headers.get("cache-control"), rota).toMatch(
+        /no-store|no-cache|max-age=0/,
+      );
     }
   });
 });

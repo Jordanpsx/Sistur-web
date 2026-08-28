@@ -16,10 +16,7 @@ import { ratearTotal, type Orcamento } from "./itens";
  * the cent** — because that is the single property Sistur checks.
  */
 
-function orcamento(
-  linhas: Array<[number, number, number]>,
-  total: number,
-): Orcamento {
+function orcamento(linhas: Array<[number, number, number]>, total: number): Orcamento {
   const items_breakdown = linhas.map(([item_id, quantity, item_total]) => ({
     item_id,
     item_name: `Item ${item_id}`,
@@ -44,7 +41,15 @@ const soma = (itens: Array<{ price_override: number }>) =>
 
 describe("ratearTotal", () => {
   it("sem desconto, devolve os valores originais", () => {
-    const r = ratearTotal(orcamento([[1, 2, 70], [2, 1, 17.5]], 87.5));
+    const r = ratearTotal(
+      orcamento(
+        [
+          [1, 2, 70],
+          [2, 1, 17.5],
+        ],
+        87.5,
+      ),
+    );
     expect(soma(r)).toBe(87.5);
     expect(r.map((i) => i.price_override)).toEqual([70, 17.5]);
   });
@@ -56,13 +61,29 @@ describe("ratearTotal", () => {
   });
 
   it("preserva item_id e quantity", () => {
-    const r = ratearTotal(orcamento([[1, 2, 70], [2, 1, 17.5]], 61.25));
+    const r = ratearTotal(
+      orcamento(
+        [
+          [1, 2, 70],
+          [2, 1, 17.5],
+        ],
+        61.25,
+      ),
+    );
     expect(r.map((i) => i.item_id)).toEqual([1, 2]);
     expect(r.map((i) => i.quantity)).toEqual([2, 1]);
   });
 
   it("distribui proporcionalmente ao peso de cada linha", () => {
-    const r = ratearTotal(orcamento([[1, 1, 100], [2, 1, 300]], 200));
+    const r = ratearTotal(
+      orcamento(
+        [
+          [1, 1, 100],
+          [2, 1, 300],
+        ],
+        200,
+      ),
+    );
     // 100/400 e 300/400 de 200.
     expect(r[0].price_override).toBeCloseTo(50, 2);
     expect(r[1].price_override).toBeCloseTo(150, 2);
@@ -72,16 +93,26 @@ describe("ratearTotal", () => {
   it("a última linha absorve o arredondamento", () => {
     // 3 linhas iguais e um total que não divide por 3: arredondar cada uma
     // isoladamente daria 33.33×3 = 99.99 e estouraria a tolerância.
-    const r = ratearTotal(orcamento([[1, 1, 10], [2, 1, 10], [3, 1, 10]], 100));
+    const r = ratearTotal(
+      orcamento(
+        [
+          [1, 1, 10],
+          [2, 1, 10],
+          [3, 1, 10],
+        ],
+        100,
+      ),
+    );
     expect(soma(r)).toBe(100);
   });
 
   it("nunca desvia mais de um centavo, em carrinho grande", () => {
     // Onde o arredondamento por linha realmente quebraria.
-    const linhas: Array<[number, number, number]> = Array.from(
-      { length: 20 },
-      (_, i) => [i + 1, 1, 7.77],
-    );
+    const linhas: Array<[number, number, number]> = Array.from({ length: 20 }, (_, i) => [
+      i + 1,
+      1,
+      7.77,
+    ]);
     const total = 111.11;
     const r = ratearTotal(orcamento(linhas, total));
     expect(Math.abs(soma(r) - total)).toBeLessThanOrEqual(0.01);
@@ -96,7 +127,15 @@ describe("ratearTotal", () => {
 
   it("subtotal zero não gera NaN", () => {
     // Itens isentos: preço 0,01 pode arredondar para zero na base.
-    const r = ratearTotal(orcamento([[1, 1, 0], [2, 1, 0]], 0));
+    const r = ratearTotal(
+      orcamento(
+        [
+          [1, 1, 0],
+          [2, 1, 0],
+        ],
+        0,
+      ),
+    );
     expect(r.every((i) => Number.isFinite(i.price_override))).toBe(true);
     expect(soma(r)).toBe(0);
   });
@@ -119,7 +158,13 @@ describe("ratearTotal com recursos físicos", () => {
   });
 
   it("mistura ingressos sem recurso e churrasqueiras com recurso", () => {
-    const o = orcamento([[1, 2, 70], [7, 1, 120]], 133);
+    const o = orcamento(
+      [
+        [1, 2, 70],
+        [7, 1, 120],
+      ],
+      133,
+    );
     const r = ratearTotal(o, { 7: [6] });
     expect(r.find((x) => x.item_id === 1)?.resource_id).toBeUndefined();
     expect(r.find((x) => x.item_id === 7)?.resource_id).toBe(6);

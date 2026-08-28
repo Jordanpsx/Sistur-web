@@ -11,7 +11,6 @@ import {
   type Quantidades,
 } from "@/lib/reserva/itens";
 import {
-  formatarData,
   diasEntre,
   hoje,
   horasEntre,
@@ -22,7 +21,6 @@ import {
 import { agruparAdicionais, emojiDaSecao, type Grupo } from "@/lib/reserva/secoes";
 import {
   escreverRecursos,
-  lerRecursos,
   quantidadesPorTarifa,
   type Recurso,
 } from "@/lib/reserva/recursos";
@@ -163,8 +161,12 @@ export function PassoReserva({
       return soma;
     })(),
   };
-  const totalItens =
-    Object.values(qtds).reduce((a, b) => a + b, 0) + recursosSel.length;
+  // Assinatura das quantidades, para o efeito comparar valor e não referência.
+  // Extraída porque `JSON.stringify(...)` dentro do array de dependências não é
+  // verificável estaticamente — o lint não consegue dizer se falta alguma.
+  const chaveDasQuantidades = JSON.stringify(qtdsCompletas);
+
+  const totalItens = Object.values(qtds).reduce((a, b) => a + b, 0) + recursosSel.length;
 
   // Ignores the response of a request that a newer one has already superseded.
   // Without this, typing quickly can land an older total last.
@@ -241,7 +243,7 @@ export function PassoReserva({
     saida,
     horaEntrada,
     horaSaida,
-    JSON.stringify(qtdsCompletas),
+    chaveDasQuantidades,
     selecao.completa,
     totalItens,
   ]);
@@ -288,7 +290,14 @@ export function PassoReserva({
       vivo = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selecao.entrada, selecao.saida, horaEntrada, horaSaida, selecao.completa, todosIds]);
+  }, [
+    selecao.entrada,
+    selecao.saida,
+    horaEntrada,
+    horaSaida,
+    selecao.completa,
+    todosIds,
+  ]);
 
   useEffect(() => {
     if (!selecao.completa || !selecao.entrada) {
@@ -532,7 +541,12 @@ export function PassoReserva({
         {janela && selecao.completa && selecao.saida && (
           <p className="f-hint">
             {(() => {
-              const h = horasEntre(selecao.entrada!, horaEntrada, selecao.saida, horaSaida);
+              const h = horasEntre(
+                selecao.entrada!,
+                horaEntrada,
+                selecao.saida,
+                horaSaida,
+              );
               const diarias = h / 24;
               return Number.isInteger(diarias)
                 ? `${h} horas — ${diarias} diária${diarias > 1 ? "s" : ""} cheia${diarias > 1 ? "s" : ""}.`
@@ -550,9 +564,7 @@ export function PassoReserva({
         {cutoff && (
           <div className="f-info">
             <strong>Reserva para o mesmo dia</strong>
-            <p>
-              Para chegar hoje, a reserva precisa ser feita até às {cutoff}.
-            </p>
+            <p>Para chegar hoje, a reserva precisa ser feita até às {cutoff}.</p>
           </div>
         )}
 
@@ -615,9 +627,7 @@ export function PassoReserva({
                   onToggle={(m) => setRecurso(r.id, m)}
                   unit={precos[r.item_id]}
                   noites={noites}
-                  outraEscolhida={
-                    recursosSel.length > 0 && !recursosSel.includes(r.id)
-                  }
+                  outraEscolhida={recursosSel.length > 0 && !recursosSel.includes(r.id)}
                 />
               ))}
             </ul>
@@ -714,8 +724,7 @@ export function PassoReserva({
               destaque={escolhidos > 0}
             >
               {secoesComTravaDentro.has(sec.id) && (
-                <p className="mb-3 rounded-lg border border-dashed border-[var(--c-border)]
-                              bg-[var(--c-surface)] px-4 py-3 text-sm text-[var(--c-muted)]">
+                <p className="mb-3 rounded-lg border border-dashed border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-3 text-sm text-[var(--c-muted)]">
                   Escolha uma data primeiro para ver o resto desta seção
                 </p>
               )}
@@ -746,29 +755,22 @@ export function PassoReserva({
             churrasqueira; oferecer sem data deixaria ela escolher errado. */}
         {secoesTravadas.map((sec) => (
           <section key={`t${sec.id ?? "outros"}`} className="mt-8">
-            <div
-              className="flex items-center gap-3 rounded-xl border border-dashed
-                         border-[var(--c-border)] bg-[var(--c-surface)] p-5"
-            >
+            <div className="flex items-center gap-3 rounded-xl border border-dashed border-[var(--c-border)] bg-[var(--c-surface)] p-5">
               <span aria-hidden="true" className="text-xl opacity-50">
                 {emojiDaSecao(sec.titulo)}
               </span>
               <div className="min-w-0">
-                <h2 className="!mb-0 !mt-0 text-base font-semibold text-[var(--c-muted)]">
+                <h2 className="!mt-0 !mb-0 text-base font-semibold text-[var(--c-muted)]">
                   {sec.titulo}
                 </h2>
-                <p className="text-sm text-[var(--c-muted)]">
-                  Escolha uma data primeiro
-                </p>
+                <p className="text-sm text-[var(--c-muted)]">Escolha uma data primeiro</p>
               </div>
             </div>
           </section>
         ))}
 
         {selecao.completa && recursos.length === 0 && secoesItens.length === 0 && (
-          <p className="f-hint mt-6">
-            Nenhum espaço disponível para esta data.
-          </p>
+          <p className="f-hint mt-6">Nenhum espaço disponível para esta data.</p>
         )}
 
         <CarrinhoFixo
@@ -781,7 +783,10 @@ export function PassoReserva({
         />
 
         <p className="mt-3 text-center">
-          <Link className="text-sm text-[var(--c-muted)] hover:underline" href="/reservar/">
+          <Link
+            className="text-sm text-[var(--c-muted)] hover:underline"
+            href="/reservar/"
+          >
             ← Trocar experiência
           </Link>
         </p>
@@ -795,179 +800,5 @@ export function PassoReserva({
         </noscript>
       </form>
     </div>
-  );
-}
-
-/**
- * One row per item: name and quantity — deliberately no unit price.
- *
- * The row used to print "a partir de {price}". That number is Sistur's `price`
- * column, and for the admissions it is never what gets charged: Inteira has all
- * three day tiers filled (30,01 weekday / 35,00 weekend / 40,03 holiday), so the
- * 30,00 shown was a fallback the engine never reaches. A figure beside the field
- * that disagrees with the total below it reads as a bug in the site.
- *
- * The price now appears once, in the summary, resolved by Sistur for the date
- * actually chosen — which is the only place it can be stated correctly.
- */
-function ListaItens({
-  itens,
-  qtds,
-  onQtd,
-  precos,
-  noites,
-}: {
-  itens: Item[];
-  qtds: Quantidades;
-  onQtd: (id: number, v: number) => void;
-  precos: Record<number, number>;
-  noites: number;
-}) {
-  if (itens.length === 0) {
-    return <p className="f-hint">Nada disponível para esta experiência.</p>;
-  }
-  return (
-    <ul className="f-itens">
-      {itens.map((i) => {
-        // Sistur stores R$ 0,01 as the sentinel for a free admission — the
-        // "Isento" tier for small children. Worth saying out loud, since a
-        // visitor otherwise cannot tell it from a paid ticket.
-        const gratuito = i.price <= 0.01;
-        const unit = precos[i.id];
-        const porDia = i.billing_type !== "FIXED";
-        return (
-          <li key={i.id} className="f-item">
-            <div className="f-item-txt">
-              <span className="f-item-nome">{i.name}</span>
-              {gratuito ? (
-                <span className="f-item-preco">Sem custo</span>
-              ) : unit !== undefined ? (
-                <span className="f-item-preco">
-                  {formatarBRL(unit)}
-                  {porDia ? " por diária" : " nesta data"}
-                  {porDia && noites > 1
-                    ? ` · ${noites} diárias = ${formatarBRL(unit * noites)}`
-                    : ""}
-                </span>
-              ) : null}
-            </div>
-            <input
-              className="f-qtd"
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={99}
-              step={1}
-              name={`i${i.id}`}
-              aria-label={`Quantidade — ${i.name}`}
-              value={qtds[i.id] ?? 0}
-              onChange={(ev) => onQtd(i.id, Number(ev.target.value) || 0)}
-            />
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-/** The running total, or the reason there isn't one yet. */
-function Resumo({
-  selecao,
-  diaUnico,
-  noites,
-  totalItens,
-  orcamento,
-  carregando,
-  falhou,
-}: {
-  selecao: ReturnType<typeof validarSelecao>;
-  diaUnico: boolean;
-  noites: number;
-  totalItens: number;
-  orcamento: Orcamento | null;
-  carregando: boolean;
-  falhou: boolean;
-}) {
-  let pendencia: string | null = null;
-  if (!selecao.completa) {
-    pendencia = diaUnico
-      ? "Escolha a data para ver o valor."
-      : "Escolha entrada e saída para ver o valor.";
-  } else if (totalItens === 0) {
-    pendencia = "Escolha ao menos um ingresso para ver o valor.";
-  }
-
-  return (
-    <section className="f-total" aria-live="polite">
-      <h3>Resumo</h3>
-
-      {selecao.completa && selecao.entrada && (
-        <p className="f-total-data">
-          {formatarData(selecao.entrada)}
-          {selecao.saida && (
-            <>
-              {" até "}
-              {formatarData(selecao.saida)} · {noites}{" "}
-              {noites === 1 ? "noite" : "noites"}
-            </>
-          )}
-        </p>
-      )}
-
-      {pendencia && <p className="f-hint">{pendencia}</p>}
-
-      {!pendencia && falhou && (
-        <p className="f-hint">
-          Não foi possível calcular o valor agora. Você pode continuar — o total
-          é confirmado na próxima etapa.
-        </p>
-      )}
-
-      {!pendencia && !falhou && orcamento && (
-        <div data-carregando={carregando ? "" : undefined} className="f-total-box">
-          {orcamento.items_breakdown.map((l) => (
-            <div key={l.item_id} className="f-linha">
-              <span>
-                {l.quantity}× {l.item_name}
-                {l.num_days ? ` · ${l.num_days} diárias` : ""}
-              </span>
-              <span>{formatarBRL(l.item_total)}</span>
-            </div>
-          ))}
-
-          {orcamento.discount_amount > 0 && (
-            <div className="f-linha f-linha--desc">
-              <span>Desconto</span>
-              <span>− {formatarBRL(orcamento.discount_amount)}</span>
-            </div>
-          )}
-          {orcamento.service_fee > 0 && (
-            <div className="f-linha">
-              <span>Taxa de serviço</span>
-              <span>{formatarBRL(orcamento.service_fee)}</span>
-            </div>
-          )}
-
-          <div className="f-linha f-linha--total">
-            <span>Total</span>
-            <span>{formatarBRL(orcamento.total)}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Without JavaScript the total does not refresh on change. The form now
-          submits forward to step 3, so recalculating needs its own control that
-          returns here instead. */}
-      <noscript>
-        <button
-          type="submit"
-          formAction=""
-          className="f-btn f-btn--ir"
-          style={{ marginTop: "1rem" }}
-        >
-          Atualizar valores
-        </button>
-      </noscript>
-    </section>
   );
 }

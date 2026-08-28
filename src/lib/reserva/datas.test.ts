@@ -117,12 +117,16 @@ describe("validarSelecao — período", () => {
 
   it("exige saída depois da entrada", () => {
     congelar("2027-05-01T12:00:00Z");
-    expect(validarSelecao("2027-05-10", "2027-05-09", periodo).erro).toMatch(/pelo menos um dia/);
+    expect(validarSelecao("2027-05-10", "2027-05-09", periodo).erro).toMatch(
+      /pelo menos um dia/,
+    );
   });
 
   it("recusa entrada igual à saída", () => {
     congelar("2027-05-01T12:00:00Z");
-    expect(validarSelecao("2027-05-10", "2027-05-10", periodo).erro).toMatch(/pelo menos um dia/);
+    expect(validarSelecao("2027-05-10", "2027-05-10", periodo).erro).toMatch(
+      /pelo menos um dia/,
+    );
   });
 
   it("com entrada e sem saída, fica incompleta sem erro", () => {

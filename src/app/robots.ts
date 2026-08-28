@@ -37,7 +37,7 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow: "/",
         disallow: [
-          "/reservar/",   // o funil inteiro, incluindo os passos
+          "/reservar/", // o funil inteiro, incluindo os passos
           "/api/",
         ],
       },

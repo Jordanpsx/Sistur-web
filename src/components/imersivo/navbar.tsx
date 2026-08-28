@@ -59,72 +59,70 @@ export function Navbar({
 
   return (
     <>
-    <header
-      className={
-        "fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow,backdrop-filter] duration-300 " +
-        (transparente
-          ? "bg-transparent"
-          : "border-b border-[var(--c-border)] bg-[var(--c-bg)]/95 shadow-md backdrop-blur")
-      }
-    >
-      <div
+      <header
         className={
-          "mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 transition-[height] duration-300 " +
-          (transparente ? "h-24" : "h-20")
+          "fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow,backdrop-filter] duration-300 " +
+          (transparente
+            ? "bg-transparent"
+            : "border-b border-[var(--c-border)] bg-[var(--c-bg)]/95 shadow-md backdrop-blur")
         }
       >
-        <Link href="/" className="shrink-0" aria-label="Cachoeira do Girassol — início">
-          <Image
-            src={logo}
-            alt=""
-            width={500}
-            height={500}
-            priority
-            className={
-              "object-contain transition-all duration-300 " +
-              (transparente ? "h-16 w-16 drop-shadow-lg" : "h-14 w-14")
-            }
-          />
-        </Link>
-
-        <div className="flex items-center gap-2 sm:gap-6">
-          <ul className="hidden items-center gap-5 md:flex">
-            {itens.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={
-                    "inline-flex min-h-[44px] items-center text-xs font-medium uppercase " +
-                    "tracking-wide transition-colors " +
-                    (transparente
-                      ? "text-white drop-shadow hover:text-[var(--c-primary)]"
-                      : "text-[var(--c-fg)] hover:text-[var(--c-primary-dark)]")
-                  }
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-
-          {/* O botão nunca fica transparente: é a ação da página, e some se
-              acompanhar o resto do cabeçalho na foto. */}
-          <Link
-            href="/reservar"
-            className="inline-flex min-h-[44px] items-center rounded-md bg-[var(--c-primary)]
-                       px-4 text-xs font-semibold uppercase tracking-wide text-[var(--c-on-primary)]
-                       shadow-sm transition-colors hover:bg-[var(--c-primary-dark)] sm:px-5"
-          >
-            Faça sua reserva
+        <div
+          className={
+            "mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 transition-[height] duration-300 " +
+            (transparente ? "h-24" : "h-20")
+          }
+        >
+          <Link href="/" className="shrink-0" aria-label="Cachoeira do Girassol — início">
+            <Image
+              src={logo}
+              alt=""
+              width={500}
+              height={500}
+              priority
+              className={
+                "object-contain transition-all duration-300 " +
+                (transparente ? "h-16 w-16 drop-shadow-lg" : "h-14 w-14")
+              }
+            />
           </Link>
-        </div>
-      </div>
-    </header>
 
-    {/* O cabeçalho é fixo, então sai do fluxo. Na home isso é o ponto — a hero
+          <div className="flex items-center gap-2 sm:gap-6">
+            <ul className="hidden items-center gap-5 md:flex">
+              {itens.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={
+                      "inline-flex min-h-[44px] items-center text-xs font-medium uppercase " +
+                      "tracking-wide transition-colors" +
+                      (transparente
+                        ? "text-white drop-shadow hover:text-[var(--c-primary)]"
+                        : "text-[var(--c-fg)] hover:text-[var(--c-primary-dark)]")
+                    }
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            {/* O botão nunca fica transparente: é a ação da página, e some se
+              acompanhar o resto do cabeçalho na foto. */}
+            <Link
+              href="/reservar"
+              className="inline-flex min-h-[44px] items-center rounded-md bg-[var(--c-primary)] px-4 text-xs font-semibold tracking-wide text-[var(--c-on-primary)] uppercase shadow-sm transition-colors hover:bg-[var(--c-primary-dark)] sm:px-5"
+            >
+              Faça sua reserva
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* O cabeçalho é fixo, então sai do fluxo. Na home isso é o ponto — a hero
         começa no topo da tela e passa por trás dele. Nas outras páginas, sem
         este espaçador o primeiro parágrafo nasce escondido atrás do menu. */}
-    {!podeSerTransparente && <div aria-hidden="true" className="h-20" />}
+      {!podeSerTransparente && <div aria-hidden="true" className="h-20" />}
     </>
   );
 }

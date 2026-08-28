@@ -49,7 +49,7 @@ export function ExperienceChoice({
 
   return (
     <section id="experiencias" className="mx-auto max-w-6xl px-4 py-16">
-      <h2 className="text-center text-2xl font-extrabold uppercase tracking-tight text-[var(--c-fg)] md:text-3xl">
+      <h2 className="text-center text-2xl font-extrabold tracking-tight text-[var(--c-fg)] uppercase md:text-3xl">
         {titulo}
       </h2>
       {subtitulo && (
@@ -63,9 +63,7 @@ export function ExperienceChoice({
           <li key={e.slug}>
             <Link
               href={`/reservar/${e.slug}/`}
-              className="group relative flex aspect-[4/5] w-full overflow-hidden rounded-2xl
-                         focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4
-                         focus-visible:outline-[var(--c-primary)] sm:aspect-[3/2] md:aspect-[4/5]"
+              className="group relative flex aspect-[4/5] w-full overflow-hidden rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--c-primary)] sm:aspect-[3/2] md:aspect-[4/5]"
             >
               {/* Sem foto o cartão não inventa uma: fica um painel neutro,
                   com a mesma forma e o mesmo comportamento. A ausência aparece
@@ -76,52 +74,40 @@ export function ExperienceChoice({
                   alt=""
                   fill
                   sizes="(min-width: 768px) 45vw, 92vw"
-                  className="object-cover transition-transform duration-500 ease-out
-                             group-hover:scale-[1.04]"
+                  className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
                 />
               ) : (
-                <div aria-hidden="true" className="absolute inset-0 bg-[var(--c-primary-dark)]" />
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-[var(--c-primary-dark)]"
+                />
               )}
 
               {/* Véu leve por padrão; fecha ao apontar. Também escurece por
                   baixo sempre, para o nome não flutuar sobre céu claro. */}
               <div
                 aria-hidden="true"
-                className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/10
-                           transition-colors duration-300 group-hover:from-black/85
-                           group-hover:via-black/60 group-hover:to-black/40
-                           group-focus-within:from-black/85 group-focus-within:via-black/60"
+                className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/10 transition-colors duration-300 group-focus-within:from-black/85 group-focus-within:via-black/60 group-hover:from-black/85 group-hover:via-black/60 group-hover:to-black/40"
               />
 
               <div className="relative flex w-full flex-col items-center justify-end gap-3 p-6 text-center">
-                <h3 className="text-3xl font-extrabold uppercase tracking-tight text-white drop-shadow-lg md:text-4xl">
+                <h3 className="text-3xl font-extrabold tracking-tight text-white uppercase drop-shadow-lg md:text-4xl">
                   {e.nome}
                 </h3>
 
                 {/* Visível no toque, revelado no mouse. Ver a nota no topo. */}
-                <div
-                  className="flex flex-col items-center gap-3 transition-all duration-300 ease-out
-                             pointer-fine:translate-y-4 pointer-fine:opacity-0
-                             pointer-fine:group-hover:translate-y-0 pointer-fine:group-hover:opacity-100
-                             pointer-fine:group-focus-within:translate-y-0
-                             pointer-fine:group-focus-within:opacity-100"
-                >
+                <div className="flex flex-col items-center gap-3 transition-all duration-300 ease-out pointer-fine:translate-y-4 pointer-fine:opacity-0 pointer-fine:group-focus-within:translate-y-0 pointer-fine:group-focus-within:opacity-100 pointer-fine:group-hover:translate-y-0 pointer-fine:group-hover:opacity-100">
                   {e.descricao && (
                     <p className="max-w-sm text-sm leading-relaxed text-white/90">
                       {e.descricao}
                     </p>
                   )}
                   {e.nota && (
-                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--c-primary)]">
+                    <p className="text-xs font-semibold tracking-wide text-[var(--c-primary)] uppercase">
                       {e.nota}
                     </p>
                   )}
-                  <span
-                    className="mt-1 inline-flex min-h-[48px] items-center rounded-full
-                               bg-[var(--c-primary)] px-8 text-sm font-bold uppercase tracking-wide
-                               text-[var(--c-on-primary)] shadow-lg transition-transform
-                               group-hover:scale-105"
-                  >
+                  <span className="mt-1 inline-flex min-h-[48px] items-center rounded-full bg-[var(--c-primary)] px-8 text-sm font-bold tracking-wide text-[var(--c-on-primary)] uppercase shadow-lg transition-transform group-hover:scale-105">
                     Selecionar
                   </span>
                 </div>

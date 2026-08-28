@@ -126,7 +126,9 @@ export default async function DadosDoCliente({
           recursos.filter((r) => recursosSel.includes(r.id)).map((r) => [r.id, r.name]),
         )}
         tarifaDosRecursos={Object.fromEntries(
-          recursos.filter((r) => recursosSel.includes(r.id)).map((r) => [r.id, r.item_id]),
+          recursos
+            .filter((r) => recursosSel.includes(r.id))
+            .map((r) => [r.id, r.item_id]),
         )}
         orcamento={orcamento}
       />

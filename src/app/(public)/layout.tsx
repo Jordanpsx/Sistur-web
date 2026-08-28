@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Navbar } from "@/components/imersivo/navbar";
 import { DadosEstruturados } from "@/components/seo/dados-estruturados";
 import { getNav } from "@/lib/sistur/pages";
@@ -45,7 +44,7 @@ export default async function PublicLayout({
       <footer className="bg-[var(--c-footer-bg)] text-[var(--c-footer-fg)]">
         <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-4 py-14 sm:grid-cols-3">
           <div>
-            <h2 className="mb-4 text-lg uppercase text-[var(--c-primary)]">
+            <h2 className="mb-4 text-lg text-[var(--c-primary)] uppercase">
               Localização
             </h2>
             <p className="text-sm leading-relaxed">
@@ -59,14 +58,14 @@ export default async function PublicLayout({
               href={MAPS}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-5 inline-flex min-h-[44px] items-center rounded-full bg-[#2f6fd0] px-5 text-sm font-medium text-white"
+              className="mt-5 inline-flex min-h-[44px] items-center rounded-full bg-[var(--c-info)] px-5 text-sm font-medium text-white"
             >
               Ver no Google Maps
             </a>
           </div>
 
           <div>
-            <h2 className="mb-4 text-lg uppercase text-[var(--c-primary)]">
+            <h2 className="mb-4 text-lg text-[var(--c-primary)] uppercase">
               Atendimento
             </h2>
             <p className="text-sm leading-relaxed">
@@ -78,14 +77,14 @@ export default async function PublicLayout({
               href={WHATSAPP}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-5 inline-flex min-h-[44px] items-center rounded-full bg-[var(--c-accent)] px-5 text-sm font-medium text-[var(--c-on-accent)]"
+              className="mt-5 inline-flex min-h-[44px] items-center rounded-full bg-[var(--c-accent-dark)] px-5 text-sm font-medium text-[var(--c-on-accent)]"
             >
               Falar com Consultor
             </a>
           </div>
 
           <div>
-            <h2 className="mb-4 text-lg uppercase text-[var(--c-primary)]">
+            <h2 className="mb-4 text-lg text-[var(--c-primary)] uppercase">
               Institucional
             </h2>
             <ul className="space-y-2 text-sm">

@@ -26,7 +26,7 @@ function CtaPill({ href, children }: { href: string; children: React.ReactNode }
   return (
     <Link
       href={href}
-      className="inline-flex min-h-[44px] items-center rounded-full bg-[var(--c-primary)] px-7 text-sm font-semibold uppercase tracking-wide text-[var(--c-on-primary)] transition-colors hover:bg-[var(--c-primary-dark)]"
+      className="inline-flex min-h-[44px] items-center rounded-full bg-[var(--c-primary)] px-7 text-sm font-semibold tracking-wide text-[var(--c-on-primary)] uppercase transition-colors hover:bg-[var(--c-primary-dark)]"
     >
       {children}
     </Link>
@@ -88,7 +88,7 @@ function FeatureGrid({ title, items }: PropsOf<"feature_grid">) {
                 className="absolute inset-0 -z-10 bg-gradient-to-t from-black/80 via-black/30 to-transparent"
               />
               <div className="flex h-full flex-col justify-end p-4">
-                <h3 className="text-lg uppercase text-white drop-shadow-sm sm:text-xl">
+                <h3 className="text-lg text-white uppercase drop-shadow-sm sm:text-xl">
                   {item.title}
                 </h3>
                 {item.description && (
@@ -103,10 +103,9 @@ function FeatureGrid({ title, items }: PropsOf<"feature_grid">) {
               key={i}
               // Borda além da sombra: em tela clara a sombra sozinha some, e os
               // itens ficam boiando no branco sem virar cartão.
-              className="rounded-lg border border-[var(--c-border)] bg-[var(--c-bg)] p-6
-                         text-center shadow-md transition-shadow hover:shadow-lg"
+              className="rounded-lg border border-[var(--c-border)] bg-[var(--c-bg)] p-6 text-center shadow-md transition-shadow hover:shadow-lg"
             >
-              <h3 className="text-lg uppercase text-[var(--c-accent)]">
+              <h3 className="text-lg text-[var(--c-accent-dark)] uppercase">
                 {item.title}
               </h3>
               {item.description && (
@@ -142,7 +141,7 @@ function CtaBanner({ title, subtitle, cta_label, cta_href }: PropsOf<"cta_banner
       <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
         <SectionTitle>{title}</SectionTitle>
         {subtitle && (
-          <p className="-mt-6 text-lg font-semibold uppercase text-[var(--c-fg)]">
+          <p className="-mt-6 text-lg font-semibold text-[var(--c-fg)] uppercase">
             {subtitle}
           </p>
         )}
@@ -205,12 +204,9 @@ async function PriceTable({ title, nota, rows }: PropsOf<"price_table">) {
           {visiveis.map((r, i) => (
             <li
               key={i}
-              className="flex flex-col items-center gap-2 rounded-xl bg-[var(--c-panel)]
-                         px-4 py-6 text-center text-[var(--c-on-panel)] shadow-lg"
+              className="flex flex-col items-center gap-2 rounded-xl bg-[var(--c-panel)] px-4 py-6 text-center text-[var(--c-on-panel)] shadow-lg"
             >
-              <p className="text-xs font-medium text-[var(--c-primary)]">
-                {r.label}
-              </p>
+              <p className="text-xs font-medium text-[var(--c-primary)]">{r.label}</p>
               <p className="text-xl font-bold text-[var(--c-on-panel)] tabular-nums">
                 {r.prefixo && (
                   <span className="mr-1 text-sm font-normal">{r.prefixo}</span>
@@ -221,19 +217,14 @@ async function PriceTable({ title, nota, rows }: PropsOf<"price_table">) {
                   como ação secundária, e esta é a única ação do bloco. */}
               <Link
                 href="/reservar"
-                className="mt-2 inline-flex min-h-[44px] w-full items-center justify-center
-                           rounded-lg bg-[var(--c-on-panel)] px-4 text-xs font-bold uppercase
-                           tracking-wide text-[var(--c-panel)] transition-colors
-                           hover:bg-[var(--c-surface)]"
+                className="mt-2 inline-flex min-h-[44px] w-full items-center justify-center rounded-lg bg-[var(--c-on-panel)] px-4 text-xs font-bold tracking-wide text-[var(--c-panel)] uppercase transition-colors hover:bg-[var(--c-surface)]"
               >
                 Reservar
               </Link>
             </li>
           ))}
         </ul>
-        {nota && (
-          <p className="mt-8 text-center text-xs text-[var(--c-muted)]">{nota}</p>
-        )}
+        {nota && <p className="mt-8 text-center text-xs text-[var(--c-muted)]">{nota}</p>}
       </div>
     </section>
   );
@@ -267,9 +258,7 @@ async function ExperienceSelector({ title, subtitle }: PropsOf<"experience_selec
         slug: e.slug!,
         nome: e.name,
         descricao: e.description,
-        nota: e.single_day_only
-          ? "Reserva para um único dia"
-          : "Permite mais de um dia",
+        nota: e.single_day_only ? "Reserva para um único dia" : "Permite mais de um dia",
         imagem: e.image_url,
       }))}
     />

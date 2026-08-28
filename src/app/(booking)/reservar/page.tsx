@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { CabecalhoFunil } from "@/components/reserva/cabecalho-funil";
 import type { Metadata } from "next";
 import { getExperiencias } from "@/lib/sistur/catalog";
@@ -64,47 +64,47 @@ export default async function EscolherExperiencia() {
     <>
       <CabecalhoFunil />
       <main className="mx-auto max-w-4xl px-4 pb-24">
-    <section className="py-14">
-      <h1 className="sec-title mb-4 text-3xl sm:text-4xl">Faça sua reserva</h1>
-      <p className="mb-10 text-center text-lg font-semibold uppercase text-[var(--c-fg)]">
-        Escolha a opção de reserva que deseja
-      </p>
+        <section className="py-14">
+          <h1 className="sec-title mb-4 text-3xl sm:text-4xl">Faça sua reserva</h1>
+          <p className="mb-10 text-center text-lg font-semibold text-[var(--c-fg)] uppercase">
+            Escolha a opção de reserva que deseja
+          </p>
 
-      <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        {experiencias.map((e) => (
-          <li
-            key={e.slug}
-            className="flex flex-col rounded-lg bg-[var(--c-bg)] p-7 shadow-[0_2px_10px_rgba(0,0,0,0.08)]"
-          >
-            {/* O venue não é exibido: hoje as duas experiências ficam no mesmo
+          <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            {experiencias.map((e) => (
+              <li
+                key={e.slug}
+                className="flex flex-col rounded-lg bg-[var(--c-bg)] p-7 shadow-[0_2px_10px_rgba(0,0,0,0.08)]"
+              >
+                {/* O venue não é exibido: hoje as duas experiências ficam no mesmo
                 lugar, então repetir "Cachoeira" em cada cartão só ocupa espaço
                 sem distinguir nada. `Experiencia.venue` continua existindo para
                 quando houver reserva em mais de um local. */}
-            <h2 className="text-center text-lg uppercase text-[var(--c-fg)]">
-              {e.name}
-            </h2>
+                <h2 className="text-center text-lg text-[var(--c-fg)] uppercase">
+                  {e.name}
+                </h2>
 
-            <div className="mt-5 flex-1 rounded-md border-l-4 border-[#2f6fd0] bg-[#eef4fb] p-4">
-              <p className="text-sm leading-relaxed text-[var(--c-fg)]">
-                {e.description ?? "Detalhes desta experiência em breve."}
-              </p>
-              <p className="mt-3 text-xs text-[var(--c-muted)]">
-                {e.single_day_only
-                  ? "Reserva para um único dia."
-                  : "Permite reserva com mais de um dia."}
-              </p>
-            </div>
+                <div className="mt-5 flex-1 rounded-md border-l-4 border-[var(--c-info)] bg-[var(--c-info-surface)] p-4">
+                  <p className="text-sm leading-relaxed text-[var(--c-fg)]">
+                    {e.description ?? "Detalhes desta experiência em breve."}
+                  </p>
+                  <p className="mt-3 text-xs text-[var(--c-muted)]">
+                    {e.single_day_only
+                      ? "Reserva para um único dia."
+                      : "Permite reserva com mais de um dia."}
+                  </p>
+                </div>
 
-            <Link
-              href={`/reservar/${e.slug}/`}
-              className="mt-6 inline-flex min-h-[44px] items-center justify-center rounded-full bg-[var(--c-accent)] px-6 text-sm font-semibold text-[var(--c-on-accent)] transition-colors hover:bg-[var(--c-accent-dark)]"
-            >
-              Selecionar {e.name}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
+                <Button
+                  href={`/reservar/${e.slug}/`}
+                  className="mt-6 w-full tracking-wide uppercase"
+                >
+                  Selecionar {e.name}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </section>
       </main>
     </>
   );

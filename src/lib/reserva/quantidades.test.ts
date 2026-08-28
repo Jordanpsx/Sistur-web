@@ -15,7 +15,9 @@ describe("lerQuantidades", () => {
   });
 
   it("ignora parâmetros que não são quantidade", () => {
-    expect(lerQuantidades({ entrada: "2027-01-01", saida: "2027-01-02", i1: "2" })).toEqual({
+    expect(
+      lerQuantidades({ entrada: "2027-01-01", saida: "2027-01-02", i1: "2" }),
+    ).toEqual({
       1: 2,
     });
   });
@@ -41,7 +43,7 @@ describe("lerQuantidades", () => {
   });
 
   it("ignora chave parecida mas errada", () => {
-    expect(lerQuantidades({ item1: "2", i: "2", "i1x": "2", "ia": "2" })).toEqual({});
+    expect(lerQuantidades({ item1: "2", i: "2", i1x: "2", ia: "2" })).toEqual({});
   });
 
   it("usa o primeiro valor quando o parâmetro se repete", () => {

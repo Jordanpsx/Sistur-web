@@ -1,3 +1,4 @@
+import Image from "next/image";
 /**
  * O cenário: céu, lua, estrelas e chão.
  *
@@ -55,11 +56,15 @@ export function CenarioNoturno({
           screen o escuro não soma nada e só a luz da lua atravessa, então o
           recorte pousa sobre qualquer parte do céu sem deixar marca. */}
       {lua && (
-        <img
+        <Image
           src={lua}
           alt=""
-          className="absolute right-2 top-12 w-28 select-none mix-blend-screen
-                     sm:right-8 sm:top-16 sm:w-36 lg:right-16 lg:top-20 lg:w-52"
+          width={600}
+          height={600}
+          // Decoração: não disputa a primeira pintura com o formulário.
+          loading="lazy"
+          sizes="(min-width: 1024px) 13rem, (min-width: 640px) 9rem, 7rem"
+          className="absolute top-12 right-2 h-auto w-28 mix-blend-screen select-none sm:top-16 sm:right-8 sm:w-36 lg:top-20 lg:right-16 lg:w-52"
         />
       )}
 

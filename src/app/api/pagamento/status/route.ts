@@ -29,8 +29,11 @@ async function statusDaReserva(groupId: string): Promise<string | null> {
   try {
     const res = await fetch(
       `${API}/api/public/reservas/${encodeURIComponent(groupId)}/pagamento`,
-      { headers: { "X-Web-Api-Key": CHAVE }, cache: "no-store",
-        signal: AbortSignal.timeout(8000) },
+      {
+        headers: { "X-Web-Api-Key": CHAVE },
+        cache: "no-store",
+        signal: AbortSignal.timeout(8000),
+      },
     );
     if (!res.ok) return null;
     const d = await res.json();

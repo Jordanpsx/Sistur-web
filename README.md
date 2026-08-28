@@ -14,13 +14,13 @@ of truth for catalog, pricing, availability and persistence.
 
 ## What is here
 
-| Path | Role |
-|---|---|
-| `src/app/(public)/[[...slug]]/page.tsx` | Catch-all ISR renderer for CMS-driven pages |
-| `src/components/blocks/index.tsx` | Block type → React component registry |
-| `src/lib/sistur/pages.ts` | Typed fetchers for the Landing CMS + Zod contract |
-| `src/lib/sistur/tags.ts` | Cache tag registry, mirrored by a Postgres trigger |
-| `src/app/api/revalidate/route.ts` | HMAC-verified webhook receiver from Sistur |
+| Path                                    | Role                                               |
+| --------------------------------------- | -------------------------------------------------- |
+| `src/app/(public)/[[...slug]]/page.tsx` | Catch-all ISR renderer for CMS-driven pages        |
+| `src/components/blocks/index.tsx`       | Block type → React component registry              |
+| `src/lib/sistur/pages.ts`               | Typed fetchers for the Landing CMS + Zod contract  |
+| `src/lib/sistur/tags.ts`                | Cache tag registry, mirrored by a Postgres trigger |
+| `src/app/api/revalidate/route.ts`       | HMAC-verified webhook receiver from Sistur         |
 
 ## The idea
 
@@ -91,13 +91,13 @@ docker run --rm --network sistur_shared_net --env-file .env \
 
 Três camadas, com propósitos distintos:
 
-| Arquivo | O que garante |
-|---|---|
-| `rateio.test.ts` | A soma dos `price_override` bate com o total, ao centavo |
-| `datas.test.ts` | Regras de data e fuso — o container roda UTC, o negócio roda em São Paulo |
-| `quantidades.test.ts` | Estado na URL sobrevive à ida e volta, e entrada hostil não derruba a seleção |
+| Arquivo                       | O que garante                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------------- |
+| `rateio.test.ts`              | A soma dos `price_override` bate com o total, ao centavo                        |
+| `datas.test.ts`               | Regras de data e fuso — o container roda UTC, o negócio roda em São Paulo       |
+| `quantidades.test.ts`         | Estado na URL sobrevive à ida e volta, e entrada hostil não derruba a seleção   |
 | `contrato.integracao.test.ts` | O Sistur concorda com o nosso cálculo — só uma ida real detecta regra mudada lá |
-| `funil.integracao.test.ts` | O site em execução se comporta; pega container defasado, que já aconteceu |
+| `funil.integracao.test.ts`    | O site em execução se comporta; pega container defasado, que já aconteceu       |
 
 Os arquivos `*.integracao.test.ts` se auto-ignoram quando `SISTUR_API_URL` /
 `SITE_URL` não estão definidos, então a suíte fica verde numa máquina sem backend.
