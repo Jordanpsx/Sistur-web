@@ -1,6 +1,21 @@
 # Design System — Cachoeira do Girassol
 
-Aplica-se ao `sistur-web`. Leia antes de escolher qualquer cor.
+Aplica-se ao `sistur-web`.
+
+## O que isto é, e o que não é
+
+É **padronização de apresentação**, não exclusividade. As páginas públicas —
+home, fotos, restaurante, sobre nós, termos — vestem a paleta da marca, e é
+nelas que a consistência importa: são a cara do lugar, e alguém que chega por
+uma delas precisa reconhecer as outras.
+
+**Formulários podem sair da paleta.** O funil tem outro trabalho: ele veste a
+experiência que está sendo vendida. O tema noturno do camping usa azul-marinho
+tirado da própria arte do céu, e isso é acerto, não desvio — a cor ali serve à
+noite de acampamento, não ao manual.
+
+O que não muda em lugar nenhum é a **seção 2**: contraste é acessibilidade, e
+não tem versão temática.
 
 ---
 
@@ -25,6 +40,8 @@ Aplica-se ao `sistur-web`. Leia antes de escolher qualquer cor.
 ---
 
 ## 2. O que cada par aguenta — medido, não estimado
+
+Esta seção vale em toda tela, dentro ou fora da paleta.
 
 Contraste de cada par, um sobre o outro:
 
@@ -68,9 +85,12 @@ preenchimento sem texto.
 
 ### Sempre por token, nunca literal
 
-O site inteiro lê `var(--c-*)`, definidos em `src/app/globals.css`. Escrever
-`bg-[#FAB005]` ou `bg-yellow-400` num componente quebra o white-label e espalha
-a decisão de cor por dentro da lógica.
+Vale para qualquer cor, da marca ou não. O site lê `var(--c-*)`, definidos em
+`src/app/globals.css`. Escrever `bg-[#FAB005]` ou `bg-green-800` num componente
+quebra o white-label e espalha decisão de aparência por dentro da lógica.
+
+Cor fora da paleta também vira token — o tema noturno define os dele num escopo
+`[data-tema="noturno"]`, sem tocar no claro.
 
 ```
 ❌ className="bg-[#FAB005]"      ❌ className="bg-green-800"
@@ -90,6 +110,9 @@ a decisão de cor por dentro da lógica.
 Trocar `--c-panel` de verde para marinho muda a tabela de valores e o cabeçalho
 de cada formulário. Não é ajuste de tom, é troca de matiz — verifique as telas
 antes de dar como pronto.
+
+Alinhar os tokens é sobre as **páginas de apresentação**. Um formulário que
+tenha razão para outra cor define a dele no próprio escopo.
 
 ---
 
@@ -121,8 +144,9 @@ escuro põe o texto secundário em 1,1:1. O número decide, não o gosto.
 
 ## 5. Antes de dar por pronto
 
-- [ ] Nenhum hex literal de marca no componente — só `var(--c-*)`
-- [ ] Todo texto sobre cor de marca ≥ 4,5:1 (≥ 3:1 se ≥ 24px ou negrito ≥ 19px)
+- [ ] Nenhum hex literal no componente — só `var(--c-*)`
+- [ ] Página de apresentação veste a paleta da marca
+- [ ] Todo texto sobre qualquer cor ≥ 4,5:1 (≥ 3:1 se ≥ 24px ou negrito ≥ 19px)
 - [ ] Alvos de toque ≥ 44px
 - [ ] Funciona a 375px sem rolagem horizontal
 - [ ] O que aparece no hover está visível no toque
