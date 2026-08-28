@@ -1074,3 +1074,44 @@ descreve("a conta nomeia a churrasqueira escolhida", () => {
     }
   });
 });
+
+descreve("sem data, o que depende dela fica travado", () => {
+  const d = (n: number) => {
+    const x = new Date();
+    x.setUTCDate(x.getUTCDate() + n);
+    return x.toISOString().slice(0, 10);
+  };
+
+  async function visivel(url: string): Promise<string> {
+    const html = await (await fetch(url, { redirect: "follow" })).text();
+    return html.replace(/<script[\s\S]*?<\/script>/g, "").replace(/<[^>]*>/g, " ");
+  }
+
+  it("as churrasqueiras não são oferecidas antes da data", async () => {
+    // O defeito: sem data o site não consulta disponibilidade, e oferecia a
+    // TARIFA como contador — "2 × Churrasqueira Grande (A)". Nome do preço, e
+    // um jeito de escolher que não existe para churrasqueira. Ao escolher a
+    // data elas viravam cards com o nome certo, e o carrinho ficava incoerente.
+    for (const exp of ["day-use", "camping"]) {
+      const t = await visivel(`${SITE}/reservar/${exp}/`);
+      expect(t, exp).toMatch(/Escolha uma data primeiro/);
+      expect(t, exp).not.toMatch(/Churrasqueira (Pequena|Grande|Super) \(/);
+      // A seção continua visível: escondê-la deixaria a pessoa sem saber que
+      // existe churrasqueira.
+      expect(t, exp).toMatch(/Churrasqueiras/);
+    }
+  });
+
+  it("o que não depende de data continua escolhível", async () => {
+    // A lenha não tem unidade física, então nada sobre ela muda com a data.
+    const t = await visivel(`${SITE}/reservar/camping/`);
+    expect(t).toMatch(/Lenha/);
+    expect(t).toMatch(/Escolha uma data primeiro para ver o resto desta seção/);
+  });
+
+  it("com a data, as unidades aparecem pelo nome delas", async () => {
+    const t = await visivel(`${SITE}/reservar/day-use/?entrada=${d(30)}`);
+    expect(t).toMatch(/Churrasqueira A4/);
+    expect(t).not.toMatch(/Escolha uma data primeiro/);
+  });
+});

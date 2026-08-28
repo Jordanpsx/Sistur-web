@@ -374,6 +374,14 @@ export function PassoReserva({
   // A decisão é por seção inteira, não por tarifa. "Itens para Camping" tem
   // Barraca Pequena com estoque 8 e Barraca Grande com estoque 1; decidindo uma
   // a uma, a seção saía com cinco contadores e um card "Selecionar" no meio.
+  // Sem data escolhida não há disponibilidade consultada, então tudo que
+  // depende dela fica travado. Antes, essas tarifas caíam no contador e a
+  // pessoa podia somar "2 × Churrasqueira Grande (A)" — o nome do preço, e um
+  // jeito de escolher que não existe para churrasqueira. Ao escolher a data
+  // elas viravam cards com o nome certo, e o que já estava no carrinho não
+  // fazia sentido nenhum.
+  const dependeDeData = (i: Item) => i.has_units;
+
   const tarifasEmPool = new Set(
     recursos.filter((r) => (r.stock ?? 1) > 1).map((r) => r.item_id),
   );
@@ -388,8 +396,26 @@ export function PassoReserva({
     secoes.flatMap((sec) => sec.sub.flatMap((x) => x.itens.map((r) => r.item_id))),
   );
   const secoesItens = agruparAdicionais(
-    adicionais.filter((i) => !porUnidade.has(i.id)),
+    adicionais.filter(
+      (i) => !porUnidade.has(i.id) && !(!selecao.completa && dependeDeData(i)),
+    ),
     grupos,
+  );
+
+  // As seções travadas: existem no catálogo, dependem de data, e a data ainda
+  // não foi escolhida. Aparecem com o motivo em vez de sumirem — some, e a
+  // pessoa não descobre que existe churrasqueira.
+  const todasTravadas = selecao.completa
+    ? []
+    : agruparAdicionais(adicionais.filter(dependeDeData), grupos);
+  // Uma seção pode ter item livre e item travado ao mesmo tempo: em "Itens para
+  // Camping" a lenha não depende de data, as barracas dependem. Nesse caso a
+  // seção aparece uma vez só, com o aviso dentro dela — duas seções de mesmo
+  // título, uma escolhível e outra travada, é a mesma coisa dita duas vezes.
+  const idsComItemLivre = new Set(secoesItens.map((sec) => sec.id));
+  const secoesTravadas = todasTravadas.filter((sec) => !idsComItemLivre.has(sec.id));
+  const secoesComTravaDentro = new Set(
+    todasTravadas.filter((sec) => idsComItemLivre.has(sec.id)).map((sec) => sec.id),
   );
 
   // Uma frase só, dizendo o que falta. Botão desabilitado sem explicação deixa
@@ -687,6 +713,12 @@ export function PassoReserva({
               aberto={escolhidos > 0}
               destaque={escolhidos > 0}
             >
+              {secoesComTravaDentro.has(sec.id) && (
+                <p className="mb-3 rounded-lg border border-dashed border-[var(--c-border)]
+                              bg-[var(--c-surface)] px-4 py-3 text-sm text-[var(--c-muted)]">
+                  Escolha uma data primeiro para ver o resto desta seção
+                </p>
+              )}
               {sec.sub.map((sub) => {
                 const n = sub.itens.reduce((t, i) => t + (qtds[i.id] ?? 0), 0);
                 return sub.grupo ? (
@@ -708,6 +740,30 @@ export function PassoReserva({
             </Acordeao>
           );
         })}
+
+        {/* Travadas: a seção aparece, diz o porquê, e não oferece controle
+            nenhum. Esconder deixaria a pessoa sem saber que existe
+            churrasqueira; oferecer sem data deixaria ela escolher errado. */}
+        {secoesTravadas.map((sec) => (
+          <section key={`t${sec.id ?? "outros"}`} className="mt-8">
+            <div
+              className="flex items-center gap-3 rounded-xl border border-dashed
+                         border-[var(--c-border)] bg-[var(--c-surface)] p-5"
+            >
+              <span aria-hidden="true" className="text-xl opacity-50">
+                {emojiDaSecao(sec.titulo)}
+              </span>
+              <div className="min-w-0">
+                <h2 className="!mb-0 !mt-0 text-base font-semibold text-[var(--c-muted)]">
+                  {sec.titulo}
+                </h2>
+                <p className="text-sm text-[var(--c-muted)]">
+                  Escolha uma data primeiro
+                </p>
+              </div>
+            </div>
+          </section>
+        ))}
 
         {selecao.completa && recursos.length === 0 && secoesItens.length === 0 && (
           <p className="f-hint mt-6">

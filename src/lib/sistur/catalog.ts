@@ -49,6 +49,12 @@ const ItemSchema = z.object({
   // convenção de procurar `_entrada_` no internal_slug — um remendo sobre
   // nomenclatura, que quebraria num item mal batizado.
   is_entry_ticket: z.boolean().default(false),
+  /**
+   * Se a tarifa é atendida por unidades físicas — a Churrasqueira A4, e não
+   * "uma churrasqueira grande". O site precisa saber disto antes de haver data,
+   * porque é sem data que ele não consulta disponibilidade.
+   */
+  has_units: z.boolean().default(false),
   // Microcopy editável no admin: quem paga meia, quem não paga.
   description: z.string().nullable().optional(),
   price: z.number(),
