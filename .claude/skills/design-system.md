@@ -14,12 +14,40 @@ experiência que está sendo vendida. O tema noturno do camping usa azul-marinho
 tirado da própria arte do céu, e isso é acerto, não desvio — a cor ali serve à
 noite de acampamento, não ao manual.
 
-O que não muda em lugar nenhum é a **seção 2**: contraste é acessibilidade, e
-não tem versão temática.
+O que não muda em lugar nenhum: a **fonte** (seção 1) e o **contraste**
+(seção 3). Tipografia e acessibilidade não têm versão temática.
 
 ---
 
-## 1. A paleta
+## 1. Tipografia
+
+**Open Sans em todo o sistema de páginas** — apresentação e formulários. Aqui
+não há a distinção da paleta: a fonte é padrão em toda tela.
+
+Carregada por `next/font/google` no layout raiz, nunca por `<link>` para o
+Google. A diferença não é estilística:
+
+- baixada no build e servida do nosso domínio — uma requisição a menos a um
+  terceiro em cada visita;
+- sem salto de layout quando ela chega;
+- a página continua correta onde o Google está bloqueado, o que acontece em
+  Wi-Fi corporativo e em algumas redes móveis.
+
+Variável, então os pesos de 300 a 800 saem de um arquivo só. Pedir peso a peso
+baixaria cinco arquivos para a mesma coisa.
+
+```tsx
+const openSans = Open_Sans({ subsets: ["latin"], variable: "--fonte-base", display: "swap" });
+// <html className={openSans.variable}> e --font-sans no @theme
+```
+
+A pilha depois da variável (`system-ui`, `Segoe UI`, Roboto…) é o que aparece
+nos milissegundos até a fonte carregar, e nas raras vezes em que ela falha.
+Nunca deixe `--font-sans` terminar na variável sozinha.
+
+---
+
+## 2. A paleta
 
 | Cor | Hex | RGB | Significado |
 |---|---|---|---|
@@ -39,7 +67,7 @@ não tem versão temática.
 
 ---
 
-## 2. O que cada par aguenta — medido, não estimado
+## 3. O que cada par aguenta — medido, não estimado
 
 Esta seção vale em toda tela, dentro ou fora da paleta.
 
@@ -81,7 +109,7 @@ preenchimento sem texto.
 
 ---
 
-## 3. Como aplicar neste projeto
+## 4. Como aplicar neste projeto
 
 ### Sempre por token, nunca literal
 
@@ -116,7 +144,7 @@ tenha razão para outra cor define a dele no próprio escopo.
 
 ---
 
-## 4. Regras que já custaram caro
+## 5. Regras que já custaram caro
 
 Não são preferências: cada uma veio de um defeito real neste projeto.
 
@@ -142,8 +170,9 @@ escuro põe o texto secundário em 1,1:1. O número decide, não o gosto.
 
 ---
 
-## 5. Antes de dar por pronto
+## 6. Antes de dar por pronto
 
+- [ ] Open Sans carregando por `next/font`, com pilha de reserva
 - [ ] Nenhum hex literal no componente — só `var(--c-*)`
 - [ ] Página de apresentação veste a paleta da marca
 - [ ] Todo texto sobre qualquer cor ≥ 4,5:1 (≥ 3:1 se ≥ 24px ou negrito ≥ 19px)

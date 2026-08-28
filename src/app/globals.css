@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Open Sans em todo lugar — páginas de apresentação e formulários. A variável
+   vem do `next/font` no layout raiz; a pilha depois dela é o que aparece nos
+   milissegundos até a fonte carregar, e nas raras vezes em que ela falha. */
+@theme {
+  --font-sans: var(--fonte-base), ui-sans-serif, system-ui, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+
 /*
  * Design tokens, taken from the live site rather than invented.
  *

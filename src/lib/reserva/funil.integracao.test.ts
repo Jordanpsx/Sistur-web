@@ -1115,3 +1115,42 @@ descreve("sem data, o que depende dela fica travado", () => {
     expect(t).not.toMatch(/Escolha uma data primeiro/);
   });
 });
+
+descreve("Open Sans em todo o sistema de páginas", () => {
+  const d = (n: number) => {
+    const x = new Date();
+    x.setUTCDate(x.getUTCDate() + n);
+    return x.toISOString().slice(0, 10);
+  };
+
+  it("chega às páginas de apresentação e aos formulários", async () => {
+    for (const rota of ["/", "/fotos/", `/reservar/day-use/?entrada=${d(30)}`, "/reservar/camping/"]) {
+      const html = await (await fetch(`${SITE}${rota}`, { redirect: "follow" })).text();
+      expect(html, rota).toMatch(/__variable_[a-z0-9]+/);
+      expect(html, rota).toMatch(/\/_next\/static\/media\/[a-z0-9]+-s\.p\.woff2/);
+    }
+  });
+
+  it("é auto-hospedada, sem pedir nada ao Google", async () => {
+    // Por next/font e não por <link>: uma requisição a menos a um terceiro em
+    // cada visita, e a página continua correta onde o Google está bloqueado —
+    // comum em Wi-Fi corporativo.
+    const html = await (await fetch(`${SITE}/`, { redirect: "follow" })).text();
+    expect(html).not.toMatch(/fonts\.googleapis\.com/);
+    expect(html).not.toMatch(/fonts\.gstatic\.com/);
+
+    const woff = html.match(/\/_next\/static\/media\/[a-z0-9]+-s\.p\.woff2/)?.[0];
+    expect(woff, "não achei o arquivo da fonte").toBeTruthy();
+    const res = await fetch(`${SITE}${woff}`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toMatch(/font\/woff2/);
+  });
+
+  it("a pilha de reserva sobrevive à fonte não carregar", async () => {
+    const html = await (await fetch(`${SITE}/`, { redirect: "follow" })).text();
+    const css = html.match(/\/_next\/static\/css\/[^"]+\.css/)?.[0];
+    const folha = await (await fetch(`${SITE}${css}`)).text();
+    expect(folha).toMatch(/--font-sans:var\(--fonte-base\)/);
+    expect(folha).toMatch(/system-ui/);
+  });
+});
