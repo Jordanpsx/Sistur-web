@@ -42,3 +42,7 @@ pnpm-debug.log*
 
 # Deploy
 .vercel
+
+# Topologia do ambiente — ver docker-compose.example.yml
+docker-compose.yml
+docker-compose.override.yml
