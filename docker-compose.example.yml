@@ -1,0 +1,41 @@
+# Modelo do compose. Copie para `docker-compose.yml` e ajuste ao ambiente.
+#
+# O arquivo real não é versionado: ele nomeia a rede Docker e o container do
+# ERP, que são topologia interna e não pertencem a um repositório público.
+# Cada ambiente tem os seus, e são justamente eles que separam produção de
+# staging — trocar um por engano faz o site de teste falar com o ERP real.
+#
+# Preencha `<...>` com os valores do ambiente. Ver .env.example para o resto.
+
+# O nome do projeto prefixa container, rede e volume. Precisa ser DIFERENTE
+# em cada ambiente: com o mesmo nome, `docker compose up` de um substitui o
+# container do outro em vez de subir ao lado dele.
+name: <sistur-web|sistur-web-teste>
+
+services:
+  sistur-web:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      # Portas distintas por ambiente, senão o segundo a subir não consegue
+      # publicar e falha.
+      - "${APP_PORT:-3000}:3000"
+    networks:
+      # A rede compartilhada com o ERP DAQUELE ambiente. Produção e staging
+      # têm redes separadas de propósito: o container de teste fica fisicamente
+      # incapaz de alcançar o ERP de produção.
+      - <rede_compartilhada_do_ambiente>
+    healthcheck:
+      # `/` é servida pelo catch-all do CMS, então 200 significa que o Next
+      # subiu E alcançou o Sistur — serve de sinal de integração.
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+networks:
+  <rede_compartilhada_do_ambiente>:
+    external: true
