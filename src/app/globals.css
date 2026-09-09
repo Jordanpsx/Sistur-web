@@ -803,3 +803,46 @@ a[class*="min-h-[44px]"] {
   -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 14%, #000 100%);
   mask-image: linear-gradient(to right, transparent 0%, #000 14%, #000 100%);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Tema diurno (day use) — mesma arquitetura do noturno acima: card sempre
+ * branco sólido, texto fora do card lendo sobre uma cor chapada e conhecida,
+ * nunca sobre a foto crua. Ver CenarioDiurno para o porquê da faixa no
+ * rodapé em vez de `cover` de tela inteira.
+ * ───────────────────────────────────────────────────────────────────────── */
+
+/* Céu chapado, não fotografia — a arte original não tem céu (fundo branco
+   de render), então aqui não há cor "certa" a copiar dela como no noturno.
+   Azul claro e quente, coerente com um dia de sol na cachoeira. */
+.ceu-diurno {
+  background-color: #eaf5fb;
+  background-image: linear-gradient(to bottom, #d7ecfa 0%, #eaf5fb 55%, #fdf6e6 100%);
+}
+
+/* A faixa de paisagem dissolve para cima no céu chapado, escondendo o branco
+   do render e a linha irregular da copa das árvores — mesmo truque do
+   `.chao-noturno`, cor invertida (claro em vez de escuro). */
+.paisagem-diurno {
+  -webkit-mask-image: linear-gradient(to top, #000 55%, transparent 100%);
+  mask-image: linear-gradient(to top, #000 55%, transparent 100%);
+}
+
+/* Borda esquerda do deck dissolve antes de chegar à coluna do formulário —
+   ver a mesma nota em `.barraca-cenario`. */
+.deck-cenario {
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 38%, #000 100%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 38%, #000 100%);
+}
+
+/* Entre 1024px e ~1250px o card centralizado (`max-w-4xl`) e o deck ancorado
+   à direita se sobrepõem — o mesmo que já acontece com a barraca do noturno
+   nessa faixa. Lá o card a 85% deixa a barraca aparecer por baixo; aqui,
+   com `.f-card` no branco 100% sólido padrão, o deck simplesmente desaparece
+   atrás do card em vez de só desbotar. A paisagem é clara — diferente do céu
+   noturno — então dá para ser generoso na transparência sem custar contraste:
+   texto escuro sobre branco a 90% continua muito acima de 4,5:1. */
+[data-tema="diurno"] .f-card {
+  background: rgb(255 255 255 / 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}

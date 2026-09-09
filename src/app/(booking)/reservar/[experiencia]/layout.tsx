@@ -2,6 +2,8 @@ import { getExperiencia } from "@/lib/sistur/catalog";
 import { listarMidia } from "@/lib/sistur/midia";
 import { BarracaDecorativa } from "@/components/imersivo/barraca-decorativa";
 import { CenarioNoturno } from "@/components/imersivo/cenario-noturno";
+import { CenarioDiurno } from "@/components/imersivo/cenario-diurno";
+import { DeckDecorativo } from "@/components/imersivo/deck-decorativo";
 import { CabecalhoFunil } from "@/components/reserva/cabecalho-funil";
 
 /**
@@ -9,7 +11,8 @@ import { CabecalhoFunil } from "@/components/reserva/cabecalho-funil";
  *
  * O tema vive neste nível, e não no layout do funil inteiro, porque é por
  * experiência: céu estrelado faz sentido em quem reserva uma noite e não faria
- * numa visita à vinícola. Envolve os quatro passos, então o fundo não troca
+ * numa visita à vinícola; a paisagem da cachoeira combina com o day use e não
+ * combina com o camping. Envolve os quatro passos, então o fundo não troca
  * entre escolher a data e pagar.
  *
  * Quem decide é o dado. A categoria carrega `tema`, editável na tela do
@@ -36,7 +39,9 @@ export default async function ExperienciaLayout({
   params: Promise<{ experiencia: string }>;
 }) {
   const e = await getExperiencia((await params).experiencia);
-  const noturno = e?.tema === "noturno";
+  const tema = e?.tema === "noturno" || e?.tema === "diurno" ? e.tema : undefined;
+  const noturno = tema === "noturno";
+  const diurno = tema === "diurno";
   // A ilustração vem da biblioteca, por uma etiqueta só dela. Buscar por
   // "camping" traria também a foto do cartão da experiência, e o cenário
   // viraria uma paisagem esticada no canto na próxima vez que alguém subisse
@@ -48,8 +53,12 @@ export default async function ExperienciaLayout({
   const [ceu] = noturno ? await listarMidia({ tag: "cenario-ceu" }) : [];
   const [lua] = noturno ? await listarMidia({ tag: "cenario-lua" }) : [];
 
+  // Mesma lógica do noturno, peças do cenário do dia.
+  const [paisagem] = diurno ? await listarMidia({ tag: "cenario-dayuse-paisagem" }) : [];
+  const [deck] = diurno ? await listarMidia({ tag: "cenario-dayuse-prop" }) : [];
+
   return (
-    <div data-tema={noturno ? "noturno" : undefined} className="relative">
+    <div data-tema={tema} className="relative">
       {noturno && (
         <>
           {/* Céu, lua, estrelas e chão. Fixo e atrás de tudo, inclusive do
@@ -63,7 +72,14 @@ export default async function ExperienciaLayout({
         </>
       )}
 
-      <CabecalhoFunil noturno={noturno} />
+      {diurno && (
+        <>
+          <CenarioDiurno paisagem={paisagem?.url_absoluta} />
+          {deck && <DeckDecorativo src={deck.url_absoluta} />}
+        </>
+      )}
+
+      <CabecalhoFunil tema={tema} />
 
       {/* Acima do enfeite: sem isto o formulário disputaria o clique com uma
           ilustração que não deveria receber nenhum. */}

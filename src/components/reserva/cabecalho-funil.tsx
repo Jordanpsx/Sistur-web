@@ -9,14 +9,18 @@ import Link from "next/link";
  * única porta que esta moldura oferece.
  *
  * Vive como componente, e não dentro do layout do funil, porque o tema é por
- * experiência: o layout de cima não sabe se está sobre céu estrelado ou sobre
- * branco, e quem sabe precisa poder dizer.
+ * experiência: o layout de cima não sabe se está sobre céu estrelado, sobre
+ * a paisagem do dia ou sobre branco, e quem sabe precisa poder dizer.
  */
-export function CabecalhoFunil({ noturno = false }: { noturno?: boolean }) {
+export function CabecalhoFunil({ tema }: { tema?: "noturno" | "diurno" }) {
+  // Os dois temas ilustrados têm cenário atrás do cabeçalho — ele precisa ser
+  // transparente para o céu aparecer. Só o padrão claro tem fundo próprio,
+  // porque não há nada atrás dele além da página branca.
+  const sobreIlustracao = tema === "noturno" || tema === "diurno";
   return (
     <header
       className={
-        noturno
+        sobreIlustracao
           ? "border-b border-white/10 bg-transparent"
           : "border-b border-[var(--c-border)] bg-[var(--c-bg)]"
       }
@@ -29,7 +33,9 @@ export function CabecalhoFunil({ noturno = false }: { noturno?: boolean }) {
             width={500}
             height={500}
             priority
-            className={"h-16 w-16 object-contain " + (noturno ? "drop-shadow-lg" : "")}
+            className={
+              "h-16 w-16 object-contain " + (sobreIlustracao ? "drop-shadow-lg" : "")
+            }
           />
         </Link>
       </div>
