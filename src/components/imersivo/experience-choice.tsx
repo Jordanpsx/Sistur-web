@@ -48,7 +48,7 @@ export function ExperienceChoice({
   if (experiencias.length === 0) return null;
 
   return (
-    <section id="experiencias" className="mx-auto max-w-6xl px-4 py-16">
+    <section id="experiencias" className="mx-auto max-w-5xl px-4 py-20">
       <h2 className="text-center text-2xl font-extrabold tracking-tight text-[var(--c-fg)] uppercase md:text-3xl">
         {titulo}
       </h2>
@@ -58,12 +58,12 @@ export function ExperienceChoice({
         </p>
       )}
 
-      <ul className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
+      <ul className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-10">
         {experiencias.map((e) => (
           <li key={e.slug}>
             <Link
               href={`/reservar/${e.slug}/`}
-              className="group relative flex aspect-[4/5] w-full overflow-hidden rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--c-primary)] sm:aspect-[3/2] md:aspect-[4/5]"
+              className="group relative flex aspect-[3/4] w-full overflow-hidden rounded-3xl shadow-xl shadow-black/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--c-primary)]"
             >
               {/* Sem foto o cartão não inventa uma: fica um painel neutro,
                   com a mesma forma e o mesmo comportamento. A ausência aparece
@@ -83,22 +83,23 @@ export function ExperienceChoice({
                 />
               )}
 
-              {/* Véu leve por padrão; fecha ao apontar. Também escurece por
-                  baixo sempre, para o nome não flutuar sobre céu claro. */}
+              {/* Só o pé da foto escurece — é onde o texto fica. O resto da
+                  imagem mantém a luz que tem. Ao apontar, o degradê sobe um
+                  pouco para dar lugar à descrição, sem virar véu preto. */}
               <div
                 aria-hidden="true"
-                className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/10 transition-colors duration-300 group-focus-within:from-black/85 group-focus-within:via-black/60 group-hover:from-black/85 group-hover:via-black/60 group-hover:to-black/40"
+                className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black/65 via-black/20 to-transparent transition-all duration-300 group-focus-within:h-4/5 group-focus-within:from-black/75 group-hover:h-4/5 group-hover:from-black/75"
               />
 
-              <div className="relative flex w-full flex-col items-center justify-end gap-3 p-6 text-center">
-                <h3 className="text-3xl font-extrabold tracking-tight text-white uppercase drop-shadow-lg md:text-4xl">
+              <div className="relative flex w-full flex-col items-center justify-end gap-3 p-8 text-center">
+                <h3 className="text-3xl font-extrabold tracking-tight text-white uppercase [text-shadow:0_2px_12px_rgb(0_0_0/0.45)] md:text-4xl">
                   {e.nome}
                 </h3>
 
                 {/* Visível no toque, revelado no mouse. Ver a nota no topo. */}
                 <div className="flex flex-col items-center gap-3 transition-all duration-300 ease-out pointer-fine:translate-y-4 pointer-fine:opacity-0 pointer-fine:group-focus-within:translate-y-0 pointer-fine:group-focus-within:opacity-100 pointer-fine:group-hover:translate-y-0 pointer-fine:group-hover:opacity-100">
                   {e.descricao && (
-                    <p className="max-w-sm text-sm leading-relaxed text-white/90">
+                    <p className="max-w-sm text-sm leading-relaxed text-white [text-shadow:0_1px_6px_rgb(0_0_0/0.5)]">
                       {e.descricao}
                     </p>
                   )}

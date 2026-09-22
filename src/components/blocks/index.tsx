@@ -1,9 +1,14 @@
-import Image from "next/image";
 import { ExperienceChoice } from "@/components/imersivo/experience-choice";
 import { HeroBanner } from "@/components/imersivo/hero-banner";
+import { LocalizacaoAvaliacoes } from "@/components/imersivo/localizacao-avaliacoes";
+import { obterAvaliacoes } from "@/lib/google/avaliacoes";
 import Link from "next/link";
 import type { Block } from "@/lib/sistur/pages";
-import { resolverPreco, formatarBRL, getExperiencias } from "@/lib/sistur/catalog";
+import { resolverPreco, getCatalog, getExperiencias } from "@/lib/sistur/catalog";
+import { CarrosselFotos } from "@/components/imersivo/carrossel-fotos";
+import { PainelValores } from "@/components/imersivo/painel-valores";
+import { Icone, ehIcone } from "@/components/ui/icone";
+import { agruparValores, type LinhaResolvida } from "@/lib/reserva/tabela-valores";
 
 /**
  * Block components — the only place presentation exists.
@@ -53,69 +58,53 @@ function SectionTitle({
 
 /**
  * Two presentations from one block, chosen by the data rather than by a prop:
- * items **with** an image render as a photo card with the label overlaid, the
- * way "Além da Água" does; items **without** one render as a white card with a
- * green title, the way "Nossa Estrutura" does.
+ * items **with** an image become a photo carousel with captions over the
+ * pictures, the way "Além da Água" does; items **without** one render as white
+ * cards with a line icon over a green title, the way "Nossa Estrutura" does.
  */
 function FeatureGrid({ title, items }: PropsOf<"feature_grid">) {
-  const comImagem = items.some((i) => i.image);
+  const fotos = items.flatMap((i) =>
+    i.image ? [{ titulo: i.title, descricao: i.description, imagem: i.image }] : [],
+  );
+  if (fotos.length > 0) {
+    return (
+      <section className="mx-auto max-w-6xl px-4 py-16">
+        {title && <SectionTitle>{title}</SectionTitle>}
+        <CarrosselFotos fotos={fotos} />
+      </section>
+    );
+  }
+
   return (
-    <section className="mx-auto max-w-5xl px-4 py-14">
+    <section className="mx-auto max-w-5xl px-4 py-16">
       {title && <SectionTitle>{title}</SectionTitle>}
       <ul
         className={`grid grid-cols-1 gap-6 ${
           items.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"
         }`}
       >
-        {items.map((item, i) =>
-          comImagem && item.image ? (
-            <li
-              key={i}
-              className="relative isolate aspect-[4/3] overflow-hidden rounded-lg"
-            >
-              <Image
-                src={item.image}
-                alt={item.title}
-                fill
-                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                className="absolute inset-0 -z-20 object-cover"
-              />
-              {/* Gradiente direcional, não véu uniforme: escurece onde o texto
-                  pousa e deixa a foto limpa em cima. Véu parelho sobre a imagem
-                  inteira apaga a paisagem, e a paisagem é o que vende. */}
-              <div
-                aria-hidden="true"
-                className="absolute inset-0 -z-10 bg-gradient-to-t from-black/80 via-black/30 to-transparent"
-              />
-              <div className="flex h-full flex-col justify-end p-4">
-                <h3 className="text-lg text-white uppercase drop-shadow-sm sm:text-xl">
-                  {item.title}
-                </h3>
-                {item.description && (
-                  <p className="mt-1 text-sm leading-snug text-white/85">
-                    {item.description}
-                  </p>
-                )}
-              </div>
-            </li>
-          ) : (
-            <li
-              key={i}
-              // Borda além da sombra: em tela clara a sombra sozinha some, e os
-              // itens ficam boiando no branco sem virar cartão.
-              className="rounded-lg border border-[var(--c-border)] bg-[var(--c-bg)] p-6 text-center shadow-md transition-shadow hover:shadow-lg"
-            >
-              <h3 className="text-lg text-[var(--c-accent-dark)] uppercase">
-                {item.title}
-              </h3>
-              {item.description && (
-                <p className="mt-3 text-sm leading-relaxed text-[var(--c-muted)]">
-                  {item.description}
-                </p>
-              )}
-            </li>
-          ),
-        )}
+        {items.map((item, i) => (
+          <li
+            key={i}
+            // Borda além da sombra: em tela clara a sombra sozinha some, e os
+            // itens ficam boiando no branco sem virar cartão.
+            className="flex flex-col items-center rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg)] p-8 text-center shadow-sm transition-shadow hover:shadow-md"
+          >
+            {ehIcone(item.icon) && (
+              <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--c-surface)] text-[var(--c-accent-dark)]">
+                <Icone nome={item.icon} className="h-7 w-7" />
+              </span>
+            )}
+            <h3 className="text-lg text-[var(--c-accent-dark)] uppercase">
+              {item.title}
+            </h3>
+            {item.description && (
+              <p className="mt-3 text-sm leading-relaxed text-[var(--c-muted)]">
+                {item.description}
+              </p>
+            )}
+          </li>
+        ))}
       </ul>
     </section>
   );
@@ -151,23 +140,30 @@ function CtaBanner({ title, subtitle, cta_label, cta_href }: PropsOf<"cta_banner
   );
 }
 
-/** House rules — cream callout with an amber rule down its left edge. */
+/**
+ * House rules as a welcome, not a warning: a quiet panel with one line icon per
+ * rule. The warning signs that used to mark every line read as danger, and most
+ * of these rules are about comfort — silence at night, where pets may go.
+ */
 function Faq({ title, items }: PropsOf<"faq">) {
   return (
-    <section className="mx-auto max-w-5xl px-4 py-14">
+    <section className="mx-auto max-w-5xl px-4 py-16">
       {title && <SectionTitle>{title}</SectionTitle>}
-      <div className="rounded-lg border-l-4 border-[var(--c-note-border)] bg-[var(--c-note-bg)] p-6 sm:p-8">
-        <dl className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="rounded-3xl bg-[var(--c-surface)] p-6 sm:p-10">
+        <dl className="grid grid-cols-1 gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item, i) => (
-            <div key={i} className="flex gap-2 text-sm">
-              <span aria-hidden className="shrink-0">
-                ⚠️
+            <div key={i} className="flex gap-4">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--c-bg)] text-[var(--c-accent-dark)] shadow-sm">
+                <Icone
+                  nome={ehIcone(item.icon) ? item.icon : "info"}
+                  className="h-5 w-5"
+                />
               </span>
-              <div>
-                <dt className="inline font-semibold text-[var(--c-fg)]">
-                  {item.question}:{" "}
-                </dt>
-                <dd className="inline text-[var(--c-muted)]">{item.answer}</dd>
+              <div className="text-sm">
+                <dt className="font-semibold text-[var(--c-fg)]">{item.question}</dt>
+                <dd className="mt-1 leading-relaxed text-[var(--c-muted)]">
+                  {item.answer}
+                </dd>
               </div>
             </div>
           ))}
@@ -187,44 +183,39 @@ function Faq({ title, items }: PropsOf<"faq">) {
  * different weekend prices in two places, neither matching what is charged.
  */
 async function PriceTable({ title, nota, rows }: PropsOf<"price_table">) {
-  const resolvidas = await Promise.all(
-    rows.map(async (r) => ({ ...r, valor: await resolverPreco(r.slug, r.dia) })),
+  const cat = await getCatalog();
+  const categorias = new Map(
+    cat.sources.flatMap((src) => src.categories).map((c) => [c.id, c] as const),
   );
-  const visiveis = resolvidas.filter((r) => r.valor !== null);
-  if (visiveis.length === 0) return null;
+
+  const resolvidas = await Promise.all(
+    rows.map(async (r): Promise<LinhaResolvida | null> => {
+      const item = cat.items.find((i) => i.internal_slug === r.slug);
+      const categoria =
+        item?.category_id != null ? categorias.get(item.category_id) : undefined;
+      const valor = await resolverPreco(r.slug, r.dia);
+      if (!item || !categoria || valor === null) return null;
+      return {
+        slug: r.slug,
+        dia: r.dia,
+        label: r.label,
+        prefixo: r.prefixo,
+        valor,
+        item: { nome: item.name, entrada: item.is_entry_ticket },
+        categoria: { id: categoria.id, nome: categoria.name, slug: categoria.slug },
+      };
+    }),
+  );
+  const { abas, adicionais } = agruparValores(
+    resolvidas.filter((r): r is LinhaResolvida => r !== null),
+  );
+  if (abas.length === 0 && adicionais.length === 0) return null;
 
   return (
-    // Invertido: a seção clara e os cartões escuros. O bloco verde inteiro
-    // pesava no meio da página e os preços se perdiam dentro dele; agora cada
-    // preço é um objeto sobre o fundo, e é neles que o olho pousa.
-    <section className="bg-[var(--c-surface)] py-14">
+    <section className="bg-[var(--c-surface)] py-16">
       <div className="mx-auto max-w-6xl px-4">
         {title && <SectionTitle>{title}</SectionTitle>}
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-          {visiveis.map((r, i) => (
-            <li
-              key={i}
-              className="flex flex-col items-center gap-2 rounded-xl bg-[var(--c-panel)] px-4 py-6 text-center text-[var(--c-on-panel)] shadow-lg"
-            >
-              <p className="text-xs font-medium text-[var(--c-primary)]">{r.label}</p>
-              <p className="text-xl font-bold text-[var(--c-on-panel)] tabular-nums">
-                {r.prefixo && (
-                  <span className="mr-1 text-sm font-normal">{r.prefixo}</span>
-                )}
-                {formatarBRL(r.valor as number)}
-              </p>
-              {/* Sólido, e ocupando a largura do cartão. Contorno vazado lê
-                  como ação secundária, e esta é a única ação do bloco. */}
-              <Link
-                href="/reservar"
-                className="mt-2 inline-flex min-h-[44px] w-full items-center justify-center rounded-lg bg-[var(--c-on-panel)] px-4 text-xs font-bold tracking-wide text-[var(--c-panel)] uppercase transition-colors hover:bg-[var(--c-surface)]"
-              >
-                Reservar
-              </Link>
-            </li>
-          ))}
-        </ul>
-        {nota && <p className="mt-8 text-center text-xs text-[var(--c-muted)]">{nota}</p>}
+        <PainelValores abas={abas} adicionais={adicionais} nota={nota} />
       </div>
     </section>
   );
@@ -262,6 +253,28 @@ async function ExperienceSelector({ title, subtitle }: PropsOf<"experience_selec
         imagem: e.image_url,
       }))}
     />
+  );
+}
+
+/**
+ * Location and Google reviews, side by side. Only the heading is CMS content:
+ * the address is fixed in lib/local.ts and the rating comes from Google at
+ * render time, so neither can drift from the truth inside the editor.
+ */
+async function LocationReviews({ title, subtitle }: PropsOf<"location_reviews">) {
+  const avaliacoes = await obterAvaliacoes();
+  return (
+    <section className="py-14">
+      <div className="mx-auto max-w-6xl px-4">
+        {title && <SectionTitle>{title}</SectionTitle>}
+        {subtitle && (
+          <p className="mx-auto -mt-4 mb-10 max-w-2xl text-center text-base text-[var(--c-muted)]">
+            {subtitle}
+          </p>
+        )}
+        <LocalizacaoAvaliacoes avaliacoes={avaliacoes} />
+      </div>
+    </section>
   );
 }
 
@@ -310,5 +323,7 @@ export function renderBlock(block: Block, key: number) {
       return <PriceTable key={key} {...block.props} />;
     case "experience_selector":
       return <ExperienceSelector key={key} {...block.props} />;
+    case "location_reviews":
+      return <LocationReviews key={key} {...block.props} />;
   }
 }

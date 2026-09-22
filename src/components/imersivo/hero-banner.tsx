@@ -13,9 +13,10 @@ import { VideoDeFundo } from "./video-de-fundo";
  * assume e a seção fica idêntica em tudo o mais. Isso não é tolerância a falha,
  * é o estado de hoje — não existe filmagem na biblioteca ainda.
  *
- * O gradiente vai de baixo para cima, mais forte embaixo, porque é lá que o
- * texto fica. Um véu uniforme sobre a imagem inteira transforma a paisagem num
- * retângulo cinza, e a paisagem é o argumento de venda.
+ * O escurecimento fica só onde o texto pousa — da esquerda, onde está o
+ * título, e um pouco de baixo, onde está o botão. O resto da foto fica com a
+ * luz que tem. Um véu uniforme transforma a paisagem num retângulo cinza, e a
+ * paisagem é o argumento de venda.
  *
  * `min-h-[88svh]` e não `h-screen`: no celular, `100vh` conta a barra do
  * navegador que se retrai ao rolar, então o botão nasce fora da tela e volta
@@ -67,7 +68,11 @@ export function HeroBanner({
       {/* Escurece só onde o texto pousa. Ver a nota no topo. */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-gradient-to-t from-black/80 via-black/40 to-black/10"
+        className="absolute inset-0 -z-10 bg-gradient-to-r from-black/65 via-black/25 to-transparent"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 bottom-0 -z-10 h-1/2 bg-gradient-to-t from-black/45 to-transparent"
       />
 
       <div className="mx-auto w-full max-w-5xl px-4 pt-28 pb-16 sm:pb-24">
@@ -88,20 +93,23 @@ export function HeroBanner({
                 <li key={c.href}>
                   <Link
                     href={c.href}
-                    className={
+                    className={[
+                      // Em lista, e não somando strings: a soma sem espaço
+                      // colava "sm:w-auto" em "bg-[…]" e o botão principal
+                      // perdia o fundo amarelo, sumindo contra a foto.
+                      "inline-flex min-h-[52px] w-full items-center justify-center rounded-full px-9",
+                      "text-base font-semibold tracking-wide uppercase transition-transform",
+                      "duration-200 hover:scale-[1.03] focus-visible:outline focus-visible:outline-2",
+                      "focus-visible:outline-offset-2 focus-visible:outline-white sm:w-auto",
                       // O primeiro é o caminho principal; os demais são
                       // alternativas legítimas, não ações secundárias — daí
                       // contorno sólido em vez de link apagado.
-                      "inline-flex min-h-[52px] w-full items-center justify-center rounded-full px-9 " +
-                      "text-base font-semibold tracking-wide uppercase transition-transform" +
-                      "duration-200 hover:scale-[1.03] focus-visible:outline focus-visible:outline-2" +
-                      "focus-visible:outline-offset-2 focus-visible:outline-white sm:w-auto" +
-                      (i === 0
+                      i === 0
                         ? // Amarelo da marca, não o verde de reserva: sobre foto
                           // escura o amarelo salta e o verde some no mato.
                           "bg-[var(--c-primary)] text-[var(--c-on-primary)] shadow-xl shadow-black/30 hover:bg-[var(--c-primary-dark)]"
-                        : "border-2 border-white/80 bg-white/10 text-white backdrop-blur hover:bg-white/20")
-                    }
+                        : "border-2 border-white/80 bg-white/10 text-white backdrop-blur hover:bg-white/20",
+                    ].join(" ")}
                   >
                     {c.label}
                   </Link>

@@ -84,6 +84,13 @@ const BlockSchema = z.discriminatedUnion("type", [
     }),
   }),
   z.object({
+    type: z.literal("location_reviews"),
+    props: z.object({
+      title: z.string().optional(),
+      subtitle: z.string().optional(),
+    }),
+  }),
+  z.object({
     type: z.literal("price_table"),
     props: z.object({
       title: z.string().optional(),
@@ -105,7 +112,15 @@ const BlockSchema = z.discriminatedUnion("type", [
     type: z.literal("faq"),
     props: z.object({
       title: z.string().optional(),
-      items: z.array(z.object({ question: z.string(), answer: z.string() })).max(30),
+      items: z
+        .array(
+          z.object({
+            question: z.string(),
+            answer: z.string(),
+            icon: z.string().optional(),
+          }),
+        )
+        .max(30),
     }),
   }),
 ]);
