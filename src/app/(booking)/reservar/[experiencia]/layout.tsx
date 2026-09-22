@@ -3,7 +3,6 @@ import { listarMidia } from "@/lib/sistur/midia";
 import { BarracaDecorativa } from "@/components/imersivo/barraca-decorativa";
 import { CenarioNoturno } from "@/components/imersivo/cenario-noturno";
 import { CenarioDiurno } from "@/components/imersivo/cenario-diurno";
-import { DeckDecorativo } from "@/components/imersivo/deck-decorativo";
 import { CabecalhoFunil } from "@/components/reserva/cabecalho-funil";
 
 /**
@@ -53,9 +52,11 @@ export default async function ExperienciaLayout({
   const [ceu] = noturno ? await listarMidia({ tag: "cenario-ceu" }) : [];
   const [lua] = noturno ? await listarMidia({ tag: "cenario-lua" }) : [];
 
-  // Mesma lógica do noturno, peças do cenário do dia.
+  // A paisagem do dia já traz a churrasqueira na clareira de grama. É uma peça
+  // só de propósito: como camada separada, ancorada ao canto da viewport, a
+  // churrasqueira caía sobre a vegetação de primeiro plano — a posição dela na
+  // tela não acompanha a da grama.
   const [paisagem] = diurno ? await listarMidia({ tag: "cenario-dayuse-paisagem" }) : [];
-  const [deck] = diurno ? await listarMidia({ tag: "cenario-dayuse-prop" }) : [];
 
   return (
     <div data-tema={tema} className="relative">
@@ -72,12 +73,7 @@ export default async function ExperienciaLayout({
         </>
       )}
 
-      {diurno && (
-        <>
-          <CenarioDiurno paisagem={paisagem?.url_absoluta} />
-          {deck && <DeckDecorativo src={deck.url_absoluta} />}
-        </>
-      )}
+      {diurno && <CenarioDiurno paisagem={paisagem?.url_absoluta} />}
 
       <CabecalhoFunil tema={tema} />
 
