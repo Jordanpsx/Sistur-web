@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/imersivo/navbar";
 import { DadosEstruturados } from "@/components/seo/dados-estruturados";
 import { getNav } from "@/lib/sistur/pages";
+import { CONTATO, ENDERECO, MAPS_FICHA } from "@/lib/local";
 
 /**
  * Public shell — header and footer shared by every CMS-driven page.
@@ -18,10 +19,6 @@ const SITE = process.env.SITE_URL ?? "https://cachoeiradogirassol.com.br";
 
 const LOGO =
   "https://cachoeiradogirassol.com.br/wp-content/uploads/2025/09/logo-cachoeira.png";
-
-const MAPS =
-  "https://www.google.com/maps/search/?api=1&query=Cachoeira+do+Girassol+Cocalzinho+de+Goias";
-const WHATSAPP = "https://wa.me/5561998369133";
 
 export default async function PublicLayout({
   children,
@@ -50,12 +47,12 @@ export default async function PublicLayout({
             <p className="text-sm leading-relaxed">
               Distrito de Girassol
               <br />
-              Cocalzinho de Goiás — GO
+              {ENDERECO.cidade} — {ENDERECO.uf}
               <br />
-              Aprox. 65km de Brasília
+              {ENDERECO.referencia}
             </p>
             <a
-              href={MAPS}
+              href={MAPS_FICHA}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-5 inline-flex min-h-[44px] items-center rounded-full bg-[var(--c-info)] px-5 text-sm font-medium text-white"
@@ -69,12 +66,12 @@ export default async function PublicLayout({
               Atendimento
             </h2>
             <p className="text-sm leading-relaxed">
-              WhatsApp: (61) 9 9836-9133
+              WhatsApp: {CONTATO.whatsapp}
               <br />
-              E-mail: contato@cachoeiradogirassol.com.br
+              E-mail: {CONTATO.email}
             </p>
             <a
-              href={WHATSAPP}
+              href={CONTATO.whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-5 inline-flex min-h-[44px] items-center rounded-full bg-[var(--c-accent-dark)] px-5 text-sm font-medium text-[var(--c-on-accent)]"

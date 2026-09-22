@@ -16,6 +16,8 @@
  * que chega depois com JavaScript.
  */
 
+import { COORDENADAS, ENDERECO } from "@/lib/local";
+
 const TELEFONE = "+5561998369133";
 
 export function DadosEstruturados({ site }: { site: string }) {
@@ -23,18 +25,14 @@ export function DadosEstruturados({ site }: { site: string }) {
 
   const endereco = {
     "@type": "PostalAddress",
-    streetAddress: "Distrito de Girassol, Km 21,5, s/n — Zona Rural",
-    addressLocality: "Cocalzinho de Goiás",
-    addressRegion: "GO",
-    postalCode: "72979-000",
+    streetAddress: ENDERECO.logradouro,
+    addressLocality: ENDERECO.cidade,
+    addressRegion: ENDERECO.uf,
+    postalCode: ENDERECO.cep,
     addressCountry: "BR",
   };
 
-  const geo = {
-    "@type": "GeoCoordinates",
-    latitude: -15.722427,
-    longitude: -48.390884,
-  };
+  const geo = { "@type": "GeoCoordinates", ...COORDENADAS };
 
   // Quinta a domingo, 08:00 às 17:00 — o horário da portaria, que é o que
   // decide se alguém consegue entrar. O camping fica aberto 24h, mas quem
