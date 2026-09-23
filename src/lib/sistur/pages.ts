@@ -84,6 +84,14 @@ const BlockSchema = z.discriminatedUnion("type", [
     }),
   }),
   z.object({
+    type: z.literal("perguntas_frequentes"),
+    props: z.object({
+      title: z.string().optional(),
+      subtitle: z.string().optional(),
+      items: z.array(z.object({ question: z.string(), answer: z.string() })).max(20),
+    }),
+  }),
+  z.object({
     type: z.literal("location_reviews"),
     props: z.object({
       title: z.string().optional(),

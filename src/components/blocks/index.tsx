@@ -7,6 +7,7 @@ import type { Block } from "@/lib/sistur/pages";
 import { resolverPreco, getCatalog, getExperiencias } from "@/lib/sistur/catalog";
 import { CarrosselFotos } from "@/components/imersivo/carrossel-fotos";
 import { PainelValores } from "@/components/imersivo/painel-valores";
+import { PerguntasFrequentes } from "@/components/imersivo/perguntas-frequentes";
 import { Icone, ehIcone } from "@/components/ui/icone";
 import { agruparValores, type LinhaResolvida } from "@/lib/reserva/tabela-valores";
 
@@ -327,5 +328,14 @@ export function renderBlock(block: Block, key: number) {
       return <ExperienceSelector key={key} {...block.props} />;
     case "location_reviews":
       return <LocationReviews key={key} {...block.props} />;
+    case "perguntas_frequentes":
+      return (
+        <PerguntasFrequentes
+          key={key}
+          titulo={block.props.title}
+          subtitulo={block.props.subtitle}
+          perguntas={block.props.items}
+        />
+      );
   }
 }
