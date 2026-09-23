@@ -88,10 +88,12 @@ function FeatureGrid({ title, items }: PropsOf<"feature_grid">) {
             key={i}
             // Borda além da sombra: em tela clara a sombra sozinha some, e os
             // itens ficam boiando no branco sem virar cartão.
-            className="flex flex-col items-center rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg)] p-8 text-center shadow-sm transition-shadow hover:shadow-md"
+            // O cartão não é link: o hover dá vida sem prometer clique — sobe
+            // pouco, e o ícone acende. O deslocamento some com movimento reduzido.
+            className="group flex flex-col items-center rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg)] p-8 text-center shadow-sm transition-[box-shadow,border-color,translate] duration-300 hover:border-[var(--c-accent)]/40 hover:shadow-xl motion-safe:hover:-translate-y-1.5"
           >
             {ehIcone(item.icon) && (
-              <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--c-surface)] text-[var(--c-accent-dark)]">
+              <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--c-surface)] text-[var(--c-accent-dark)] transition-colors duration-300 group-hover:bg-[var(--c-accent-dark)] group-hover:text-[var(--c-on-accent)]">
                 <Icone nome={item.icon} className="h-7 w-7" />
               </span>
             )}
