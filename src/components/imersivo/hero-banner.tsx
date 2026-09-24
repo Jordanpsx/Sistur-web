@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { VideoDeFundo } from "./video-de-fundo";
+import { Icone } from "@/components/ui/icone";
 
 /**
  * O convite: a primeira dobra da home.
@@ -33,12 +34,15 @@ export type CtaExperiencia = {
 export function HeroBanner({
   titulo,
   subtitulo,
+  aviso,
   poster,
   video,
   ctas,
 }: {
   titulo: string;
   subtitulo?: string;
+  /** Linha operacional abaixo do botão — "Fechado às quartas-feiras". */
+  aviso?: string;
   /** O que se vê antes, durante o carregamento e no lugar do vídeo. Ausente,
    *  a seção usa um fundo sólido da marca — a falta aparece na tela, que é
    *  como alguém descobre que precisa subir uma foto. */
@@ -117,6 +121,13 @@ export function HeroBanner({
               ))}
             </ul>
           </nav>
+        )}
+
+        {aviso && (
+          <p className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-white [text-shadow:0_1px_6px_rgb(0_0_0/0.6)]">
+            <Icone nome="calendario" className="h-4 w-4 shrink-0" />
+            {aviso}
+          </p>
         )}
       </div>
     </section>

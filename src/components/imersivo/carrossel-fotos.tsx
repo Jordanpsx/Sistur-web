@@ -69,7 +69,9 @@ export function CarrosselFotos({ fotos }: { fotos: FotoCarrossel[] }) {
           >
             <Image
               src={f.imagem}
-              alt={f.titulo}
+              // Vazio de propósito: a legenda logo abaixo já diz o nome, e com
+              // alt o leitor de tela anunciava "Vinhedo Girassol" duas vezes.
+              alt=""
               fill
               sizes="(min-width: 1024px) 36vw, (min-width: 640px) 46vw, 80vw"
               className="-z-20 object-cover"

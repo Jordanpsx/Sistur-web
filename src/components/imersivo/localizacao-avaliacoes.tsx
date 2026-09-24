@@ -83,7 +83,9 @@ function Localizacao() {
             href={MAPS_ROTA}
             target="_blank"
             rel="noopener noreferrer"
-            className={`${BOTAO} bg-[var(--c-primary)] text-[var(--c-on-primary)] hover:bg-[var(--c-primary-dark)] focus-visible:outline-[var(--c-primary-dark)]`}
+            // Verde, não amarelo: amarelo é só reserva em todo o site. Chegar é
+            // ação de quem já decidiu ir — secundária, e o verde é a secundária.
+            className={`${BOTAO} bg-[var(--c-accent-dark)] text-[var(--c-on-accent)] hover:bg-[var(--c-accent-deep)] focus-visible:outline-[var(--c-accent-dark)]`}
           >
             Como chegar
           </a>

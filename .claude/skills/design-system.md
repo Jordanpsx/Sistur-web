@@ -174,8 +174,13 @@ gerar nada — baixe a folha e confira.
 
 **Conteúdo só no `:hover` não existe no toque.** A maioria acessa por celular.
 Se algo se revela no hover, ele precisa estar visível por padrão e recolher-se
-só onde há mouse (`pointer-fine`), com `group-focus-within` acompanhando para
-o teclado.
+só onde há mouse (`com-mouse:`, que exige `hover: hover` e `pointer: fine` —
+só `pointer-fine` esconde para sempre em caneta e híbridos sem hover), com
+`group-focus-within` acompanhando para o teclado.
+
+**Texto sobre foto leva o véu no texto, não na foto.** A foto vem do CMS e
+muda; um degradê sobre ela deixa o contraste à mercê da imagem. Ponha o fundo
+escuro no bloco de texto, com opacidade que passe mesmo sobre branco puro.
 
 **Calcule o contraste antes de escolher a opacidade.** Vidro a 10% sobre fundo
 escuro põe o texto secundário em 1,1:1. O número decide, não o gosto.
