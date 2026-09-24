@@ -35,6 +35,7 @@ const BlockSchema = z.discriminatedUnion("type", [
       image: HrefSchema.optional(),
       cta_label: z.string().optional(),
       cta_href: HrefSchema.optional(),
+      aviso: z.string().optional(),
     }),
   }),
   z.object({

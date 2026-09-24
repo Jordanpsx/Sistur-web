@@ -204,7 +204,11 @@ async function PriceTable({ title, nota, rows }: PropsOf<"price_table">) {
         label: r.label,
         prefixo: r.prefixo,
         valor,
-        item: { nome: item.name, entrada: item.is_entry_ticket },
+        item: {
+          nome: item.name,
+          entrada: item.is_entry_ticket,
+          descricao: item.description,
+        },
         categoria: { id: categoria.id, nome: categoria.name, slug: categoria.slug },
       };
     }),
@@ -213,6 +217,23 @@ async function PriceTable({ title, nota, rows }: PropsOf<"price_table">) {
     resolvidas.filter((r): r is LinhaResolvida => r !== null),
   );
   if (abas.length === 0 && adicionais.length === 0) return null;
+
+  // Toda linha precisa de preço em todo tipo de dia que o seletor da aba
+  // oferece. Se o CMS listou a meia só no dia de semana, o seletor mostraria
+  // esse preço no fim de semana — um valor anunciado errado. A faixa que falta
+  // é lida do Sistur, como as outras; se ele não tiver, a linha fica sem preço.
+  await Promise.all(
+    abas.flatMap((aba) =>
+      aba.linhas.flatMap((linha) =>
+        aba.dias
+          .filter((dia) => !linha.tarifas.some((t) => t.dia === dia))
+          .map(async (dia) => {
+            const valor = await resolverPreco(linha.slug, dia);
+            if (valor !== null) linha.tarifas.push({ dia, valor });
+          }),
+      ),
+    ),
+  );
 
   return (
     <section className="bg-[var(--c-surface)] py-16">
@@ -304,6 +325,7 @@ export function renderBlock(block: Block, key: number) {
           key={key}
           titulo={block.props.title}
           subtitulo={block.props.subtitle}
+          aviso={block.props.aviso}
           poster={block.props.image}
           ctas={
             block.props.cta_label && block.props.cta_href

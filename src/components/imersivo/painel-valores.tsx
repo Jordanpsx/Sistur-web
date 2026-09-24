@@ -5,10 +5,11 @@ import { useId, useRef, useState, type KeyboardEvent } from "react";
 import { formatarBRL } from "@/lib/reserva/itens";
 import {
   ROTULO_DIA,
+  tarifaDoDia,
   type AbaValores,
   type Adicional,
-  type LinhaValor,
 } from "@/lib/reserva/tabela-valores";
+import { Icone } from "@/components/ui/icone";
 
 /**
  * Tabela de valores em abas — uma por experiência — com os adicionais à parte.
@@ -16,62 +17,83 @@ import {
  * Os números chegam prontos do servidor, lidos do Sistur a cada exibição; este
  * componente só decide o que está à mostra. Nenhum valor nasce aqui.
  *
+ * Dentro da aba, um seletor de tipo de dia só, e todas as faixas de ingresso
+ * (inteira, meia, isento) listadas juntas, cada uma com a idade a que se
+ * aplica. Um estado para ler qualquer preço, em vez de um por linha.
+ *
  * As abas seguem o padrão de tabs do WAI-ARIA: setas trocam de aba, Tab entra
- * no painel. O seletor de faixa de dia é um grupo de rádio pela mesma razão —
- * quem navega por teclado ou leitor de tela precisa saber que são opções
- * exclusivas, não botões soltos.
+ * no painel. O seletor de dia é um grupo de rádio pela mesma razão — são
+ * opções exclusivas, não botões soltos.
  */
 
-function Tarifas({ linha }: { linha: LinhaValor }) {
-  const [ativa, setAtiva] = useState(0);
-  const tarifa = linha.tarifas[ativa] ?? linha.tarifas[0];
+const valor = (v: number) => (v === 0 ? "Grátis" : formatarBRL(v));
+
+function Aba({ aba }: { aba: AbaValores }) {
+  const [dia, setDia] = useState(aba.dias[0]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div>
-        <h3 className="text-lg font-semibold text-[var(--c-on-panel)]">{linha.titulo}</h3>
-        {linha.detalhe && (
-          <p className="text-sm text-[var(--c-on-panel)] opacity-80">{linha.detalhe}</p>
-        )}
-      </div>
-
-      {linha.tarifas.length > 1 && (
+    <>
+      {aba.dias.length > 1 && (
         <div
           role="radiogroup"
-          aria-label={`Tipo de dia — ${linha.titulo}`}
+          aria-label={`Tipo de dia — ${aba.nome}`}
           className="flex flex-wrap gap-2"
         >
-          {linha.tarifas.map((t, i) => (
+          {aba.dias.map((d) => (
             <button
-              key={t.dia}
+              key={d}
               type="button"
               role="radio"
-              aria-checked={i === ativa}
-              onClick={() => setAtiva(i)}
+              aria-checked={d === dia}
+              onClick={() => setDia(d)}
               className={[
                 "min-h-[44px] rounded-full px-4 text-sm font-semibold transition-colors",
                 "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--c-on-panel)]",
-                i === ativa
+                d === dia
                   ? "bg-[var(--c-on-panel)] text-[var(--c-panel)]"
                   : "border border-[var(--c-on-panel)]/40 text-[var(--c-on-panel)] hover:bg-[var(--c-on-panel)]/10",
               ].join(" ")}
             >
-              {ROTULO_DIA[t.dia]}
+              {ROTULO_DIA[d]}
             </button>
           ))}
         </div>
       )}
 
-      <p
-        className="text-4xl font-bold text-[var(--c-on-panel)] tabular-nums"
-        aria-live="polite"
-      >
-        {linha.prefixo && (
-          <span className="mr-2 text-base font-normal">{linha.prefixo}</span>
-        )}
-        {formatarBRL(tarifa.valor)}
-      </p>
-    </div>
+      <ul className="divide-y divide-[var(--c-on-panel)]/20" aria-live="polite">
+        {aba.linhas.map((l) => {
+          const t = tarifaDoDia(l, dia);
+          if (!t) return null;
+          return (
+            <li
+              key={l.slug}
+              // Grade, não flex-wrap: com wrap, a faixa de descrição longa
+              // empurrava o preço para baixo e à esquerda, e as três linhas
+              // saíam com dois alinhamentos. Aqui o texto quebra na coluna
+              // dele e o preço fica sempre à direita.
+              className="grid grid-cols-[1fr_auto] items-start gap-x-4 py-4 first:pt-0 last:pb-0"
+            >
+              <div className="min-w-0">
+                <p className="text-lg font-semibold text-[var(--c-on-panel)]">
+                  {l.titulo}
+                </p>
+                {l.detalhe && (
+                  <p className="text-sm text-[var(--c-on-panel)] opacity-85">
+                    {l.detalhe}
+                  </p>
+                )}
+              </div>
+              <p className="text-right text-2xl font-bold whitespace-nowrap text-[var(--c-on-panel)] tabular-nums sm:text-3xl">
+                {l.prefixo && t.valor !== 0 && (
+                  <span className="mr-1 text-sm font-normal">{l.prefixo}</span>
+                )}
+                {valor(t.valor)}
+              </p>
+            </li>
+          );
+        })}
+      </ul>
+    </>
   );
 }
 
@@ -99,7 +121,7 @@ export function PainelValores({
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="mx-auto flex max-w-2xl flex-col gap-6">
       {aba && (
         <div>
           {abas.length > 1 && (
@@ -136,17 +158,28 @@ export function PainelValores({
             </div>
           )}
 
+          {/* O desconto é alavanca de venda, não letra miúda: fica em cima do
+              preço. Borda amarela e não fundo amarelo — fundo amarelo cheio é
+              a cor do botão de reserva, e isto não se clica. */}
+          {nota && (
+            <p className="mb-6 flex items-start gap-3 rounded-xl border-l-4 border-[var(--c-primary)] bg-[var(--c-bg)] px-4 py-3 text-sm font-semibold text-[var(--c-fg)] shadow-sm">
+              <Icone
+                nome="calendario"
+                className="mt-0.5 h-5 w-5 shrink-0 text-[var(--c-accent-dark)]"
+              />
+              {nota}
+            </p>
+          )}
+
           <div
             role={abas.length > 1 ? "tabpanel" : undefined}
             id={`${base}-painel`}
             aria-labelledby={abas.length > 1 ? `${base}-aba-${ativa}` : undefined}
-            className="mx-auto flex max-w-2xl flex-col gap-8 rounded-2xl bg-[var(--c-panel)] p-6 shadow-lg sm:p-10"
+            className="flex flex-col gap-6 rounded-2xl bg-[var(--c-panel)] p-6 shadow-lg sm:p-10"
           >
-            {aba.linhas.map((l) => (
-              // A chave inclui a aba: ao trocar de aba o seletor de dia volta
-              // para a primeira faixa, em vez de herdar a escolha da outra.
-              <Tarifas key={`${aba.id}-${l.slug}`} linha={l} />
-            ))}
+            {/* A chave troca com a aba: o seletor de dia volta para a primeira
+                faixa em vez de herdar a escolha da outra experiência. */}
+            <Aba key={aba.id} aba={aba} />
             <Link
               href={aba.href}
               className="inline-flex min-h-[48px] items-center justify-center self-start rounded-full bg-[var(--c-primary)] px-8 text-sm font-bold tracking-wide text-[var(--c-on-primary)] uppercase transition-colors hover:bg-[var(--c-primary-dark)]"
@@ -158,7 +191,7 @@ export function PainelValores({
       )}
 
       {adicionais.length > 0 && (
-        <div className="mx-auto w-full max-w-2xl">
+        <div className="w-full">
           <h3 className="mb-3 text-sm font-semibold tracking-wide text-[var(--c-muted)] uppercase">
             Adicionais para a sua reserva
           </h3>
@@ -185,8 +218,6 @@ export function PainelValores({
           </p>
         </div>
       )}
-
-      {nota && <p className="text-center text-xs text-[var(--c-muted)]">{nota}</p>}
     </div>
   );
 }
