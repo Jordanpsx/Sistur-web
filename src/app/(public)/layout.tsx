@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Navbar } from "@/components/imersivo/navbar";
+import { WhatsAppFlutuante } from "@/components/imersivo/whatsapp-flutuante";
 import { DadosEstruturados } from "@/components/seo/dados-estruturados";
 import { getNav } from "@/lib/sistur/pages";
 import { CONTATO, ENDERECO, MAPS_FICHA } from "@/lib/local";
@@ -38,12 +39,18 @@ export default async function PublicLayout({
           home, onde a hero começa no topo de propósito e passa por trás. */}
       {children}
 
+      <WhatsAppFlutuante />
+
       <footer className="bg-[var(--c-footer-bg)] text-[var(--c-footer-fg)]">
+        {/* Um h2 só, invisível, e h3 nas colunas: com h2 em cada coluna o
+            rodapé aparecia no mesmo nível das seções da página para quem
+            navega por títulos. */}
+        <h2 className="sr-only">Informações da Cachoeira do Girassol</h2>
         <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-4 py-14 sm:grid-cols-3">
           <div>
-            <h2 className="mb-4 text-lg text-[var(--c-primary)] uppercase">
+            <h3 className="mb-4 text-lg text-[var(--c-primary)] uppercase">
               Localização
-            </h2>
+            </h3>
             <p className="text-sm leading-relaxed">
               Distrito de Girassol
               <br />
@@ -55,16 +62,18 @@ export default async function PublicLayout({
               href={MAPS_FICHA}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-5 inline-flex min-h-[44px] items-center rounded-full bg-[var(--c-info)] px-5 text-sm font-medium text-white"
+              // Contorno, não cheio: abrir o mapa é ação de apoio, e o azul de
+              // aviso (--c-info) não é cor da marca.
+              className="mt-5 inline-flex min-h-[44px] items-center rounded-full border border-white/40 px-5 text-sm font-medium text-white transition-colors hover:bg-white/10"
             >
               Ver no Google Maps
             </a>
           </div>
 
           <div>
-            <h2 className="mb-4 text-lg text-[var(--c-primary)] uppercase">
+            <h3 className="mb-4 text-lg text-[var(--c-primary)] uppercase">
               Atendimento
-            </h2>
+            </h3>
             <p className="text-sm leading-relaxed">
               WhatsApp: {CONTATO.whatsapp}
               <br />
@@ -76,14 +85,14 @@ export default async function PublicLayout({
               rel="noopener noreferrer"
               className="mt-5 inline-flex min-h-[44px] items-center rounded-full bg-[var(--c-accent-dark)] px-5 text-sm font-medium text-[var(--c-on-accent)]"
             >
-              Falar com Consultor
+              Falar no WhatsApp
             </a>
           </div>
 
           <div>
-            <h2 className="mb-4 text-lg text-[var(--c-primary)] uppercase">
+            <h3 className="mb-4 text-lg text-[var(--c-primary)] uppercase">
               Institucional
-            </h2>
+            </h3>
             <ul className="space-y-2 text-sm">
               {nav.map((item) => (
                 <li key={item.href}>

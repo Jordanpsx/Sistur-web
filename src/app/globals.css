@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Onde o hover existe de verdade: ponteiro fino E capaz de pairar. Só
+   `pointer: fine` deixa passar caneta e híbridos sem hover — ali o que se
+   recolhe esperando o hover ficaria recolhido para sempre. */
+@custom-variant com-mouse (@media (hover: hover) and (pointer: fine));
+
 /* Open Sans em todo lugar — páginas de apresentação e formulários. A variável
    vem do `next/font` no layout raiz; a pilha depois dela é o que aparece nos
    milissegundos até a fonte carregar, e nas raras vezes em que ela falha. */
@@ -117,6 +122,31 @@ body {
 button,
 a[class*="min-h-[44px]"] {
   touch-action: manipulation;
+}
+
+/* Foco visível em tudo que se alcança pelo teclado. Antes só os campos de
+   formulário tinham — quem navegava por Tab não via onde estava. `:where()`
+   zera a especificidade: o componente que define o próprio foco (o botão da
+   hero, o seletor de dia) continua valendo sobre este. */
+:where(a, button, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--c-accent-dark);
+  outline-offset: 2px;
+}
+
+/* No rodapé escuro o verde some (1,9:1 sobre #1a1a1a); o amarelo aparece. */
+footer :where(a, button):focus-visible {
+  outline-color: var(--c-primary);
+}
+
+/* Menu do celular: a folha sobe do rodapé da tela. Só com movimento
+   permitido — ver a classe motion-safe no componente. */
+@keyframes folha-sobe {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 /*
