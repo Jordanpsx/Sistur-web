@@ -49,6 +49,7 @@ const DetalhesSchema = z.object({
         rating: z.number().optional(),
         text: z.object({ text: z.string() }).optional(),
         relativePublishTimeDescription: z.string().optional(),
+        publishTime: z.string().optional(),
         authorAttribution: z
           .object({ displayName: z.string().optional(), uri: z.string().optional() })
           .optional(),
@@ -68,16 +69,23 @@ function linkSeguro(uri: string | undefined): string | null {
  * contagem, devolve `null`: meia informação ("4,8" sem saber de quantas
  * pessoas) não é algo que se deva anunciar.
  *
- * As avaliações vêm na ordem de relevância do próprio Google, sem filtro por
- * nota — escolher só as de 5 estrelas ao lado da média seria maquiar a média.
- * Ficam as que têm texto, até três.
+ * Trechos: só avaliações de 4 e 5 estrelas, das mais recentes para as mais
+ * antigas, até três com texto — decisão da casa para a vitrine. A média e o
+ * total ao lado continuam os reais, com todas as notas, e o botão leva à ficha
+ * completa no Google; o filtro escolhe o que se cita, não o número anunciado.
+ *
+ * O Google entrega no máximo 5 avaliações ("mais relevantes") e a API nova não
+ * aceita outra ordem. Então o filtro atua sobre essas 5: se nenhuma tiver 4
+ * estrelas ou mais, não aparece trecho — só a nota e o total.
  */
 export function normalizarAvaliacoes(d: RespostaDetalhes): ResumoAvaliacoes | null {
   if (typeof d.rating !== "number" || typeof d.userRatingCount !== "number") return null;
   if (d.userRatingCount <= 0) return null;
 
+  const quando = (r: { publishTime?: string }) => Date.parse(r.publishTime ?? "") || 0;
   const avaliacoes: Avaliacao[] = (d.reviews ?? [])
-    .filter((r) => r.text?.text?.trim())
+    .filter((r) => (r.rating ?? 0) >= 4 && r.text?.text?.trim())
+    .sort((a, b) => quando(b) - quando(a))
     .slice(0, 3)
     .map((r) => ({
       autor: r.authorAttribution?.displayName?.trim() || "Visitante do Google",
