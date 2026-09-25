@@ -58,7 +58,8 @@ const BlockSchema = z.discriminatedUnion("type", [
     type: z.literal("gallery"),
     props: z.object({
       title: z.string().optional(),
-      resource_id: z.number().int(),
+      subtitle: z.string().optional(),
+      tag: z.string(),
     }),
   }),
   z.object({

@@ -8,6 +8,8 @@ import { resolverPreco, getCatalog, getExperiencias } from "@/lib/sistur/catalog
 import { CarrosselFotos } from "@/components/imersivo/carrossel-fotos";
 import { PainelValores } from "@/components/imersivo/painel-valores";
 import { PerguntasFrequentes } from "@/components/imersivo/perguntas-frequentes";
+import { ImmersiveGallery } from "@/components/imersivo/immersive-gallery";
+import { listarMidia, paraGaleria } from "@/lib/sistur/midia";
 import { Icone, ehIcone } from "@/components/ui/icone";
 import { agruparValores, type LinhaResolvida } from "@/lib/reserva/tabela-valores";
 
@@ -302,14 +304,15 @@ async function LocationReviews({ title, subtitle }: PropsOf<"location_reviews">)
   );
 }
 
-/** Gallery pulls images from the reservas API, keyed by resource_id. */
-function Gallery({ title, resource_id }: PropsOf<"gallery">) {
+/**
+ * Photo gallery fed by the media library: every item carrying the block's tag,
+ * newest first. Uploading or deleting a tagged photo changes the gallery
+ * without touching the page. An empty tag renders nothing.
+ */
+async function Gallery({ title, subtitle, tag }: PropsOf<"gallery">) {
+  const itens = await listarMidia({ tag });
   return (
-    <section className="mx-auto max-w-5xl px-4 py-14">
-      {title && <SectionTitle>{title}</SectionTitle>}
-      {/* Rendered by a child RSC that fetches ResourceImage rows for this id. */}
-      <div data-resource-id={resource_id} />
-    </section>
+    <ImmersiveGallery titulo={title} subtitulo={subtitle} itens={paraGaleria(itens)} />
   );
 }
 
