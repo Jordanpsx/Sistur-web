@@ -94,10 +94,45 @@ const BlockSchema = z.discriminatedUnion("type", [
     }),
   }),
   z.object({
-    type: z.literal("location_reviews"),
+    type: z.literal("google_reviews"),
     props: z.object({
       title: z.string().optional(),
       subtitle: z.string().optional(),
+    }),
+  }),
+  z.object({
+    type: z.literal("plan_visit"),
+    props: z.object({
+      title: z.string().optional(),
+      subtitle: z.string().optional(),
+      rules_title: z.string().optional(),
+      items: z
+        .array(
+          z.object({
+            question: z.string(),
+            answer: z.string(),
+            icon: z.string().optional(),
+          }),
+        )
+        .max(12),
+    }),
+  }),
+  z.object({
+    type: z.literal("attractions"),
+    props: z.object({
+      title: z.string().optional(),
+      subtitle: z.string().optional(),
+      items: z
+        .array(
+          z.object({
+            title: z.string(),
+            description: z.string().optional(),
+            image: HrefSchema.optional(),
+            icon: z.string().optional(),
+            selo: z.string().optional(),
+          }),
+        )
+        .max(12),
     }),
   }),
   z.object({

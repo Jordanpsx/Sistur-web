@@ -1,6 +1,10 @@
 import { ExperienceChoice } from "@/components/imersivo/experience-choice";
 import { HeroBanner } from "@/components/imersivo/hero-banner";
-import { LocalizacaoAvaliacoes } from "@/components/imersivo/localizacao-avaliacoes";
+import {
+  CartaoAvaliacoes,
+  CartaoLocalizacao,
+} from "@/components/imersivo/localizacao-avaliacoes";
+import { Atracoes } from "@/components/imersivo/atracoes";
 import { obterAvaliacoes } from "@/lib/google/avaliacoes";
 import Link from "next/link";
 import type { Block } from "@/lib/sistur/pages";
@@ -283,14 +287,14 @@ async function ExperienceSelector({ title, subtitle }: PropsOf<"experience_selec
 }
 
 /**
- * Location and Google reviews, side by side. Only the heading is CMS content:
- * the address is fixed in lib/local.ts and the rating comes from Google at
- * render time, so neither can drift from the truth inside the editor.
+ * Google reviews on their own, high on the page: social proof is for whoever is
+ * still deciding. Only the heading is CMS content; rating, count and excerpts
+ * come from Google at render time.
  */
-async function LocationReviews({ title, subtitle }: PropsOf<"location_reviews">) {
+async function GoogleReviews({ title, subtitle }: PropsOf<"google_reviews">) {
   const avaliacoes = await obterAvaliacoes();
   return (
-    <section className="py-14">
+    <section className="py-16">
       <div className="mx-auto max-w-6xl px-4">
         {title && <SectionTitle>{title}</SectionTitle>}
         {subtitle && (
@@ -298,7 +302,55 @@ async function LocationReviews({ title, subtitle }: PropsOf<"location_reviews">)
             {subtitle}
           </p>
         )}
-        <LocalizacaoAvaliacoes avaliacoes={avaliacoes} />
+        <CartaoAvaliacoes dados={avaliacoes} />
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Plan your visit: map, address and routes (fixed in lib/local.ts) next to the
+ * house rules, which are content. Both answer the questions of someone who has
+ * already decided to come — how to get there and what to bring.
+ */
+function PlanVisit({ title, subtitle, rules_title, items }: PropsOf<"plan_visit">) {
+  return (
+    <section className="bg-[var(--c-surface)] py-16">
+      <div className="mx-auto max-w-6xl px-4">
+        {title && <SectionTitle>{title}</SectionTitle>}
+        {subtitle && (
+          <p className="mx-auto -mt-4 mb-10 max-w-2xl text-center text-base text-[var(--c-muted)]">
+            {subtitle}
+          </p>
+        )}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <CartaoLocalizacao />
+          <div>
+            {rules_title && (
+              <h3 className="mb-5 text-sm font-semibold tracking-wide text-[var(--c-muted)] uppercase">
+                {rules_title}
+              </h3>
+            )}
+            <dl className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+              {items.map((item, i) => (
+                <div key={i} className="flex gap-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--c-bg)] text-[var(--c-accent-dark)] shadow-sm">
+                    <Icone
+                      nome={ehIcone(item.icon) ? item.icon : "info"}
+                      className="h-5 w-5"
+                    />
+                  </span>
+                  <div className="text-sm">
+                    <dt className="font-semibold text-[var(--c-fg)]">{item.question}</dt>
+                    <dd className="mt-1 leading-relaxed text-[var(--c-muted)]">
+                      {item.answer}
+                    </dd>
+                  </div>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -351,8 +403,25 @@ export function renderBlock(block: Block, key: number) {
       return <PriceTable key={key} {...block.props} />;
     case "experience_selector":
       return <ExperienceSelector key={key} {...block.props} />;
-    case "location_reviews":
-      return <LocationReviews key={key} {...block.props} />;
+    case "google_reviews":
+      return <GoogleReviews key={key} {...block.props} />;
+    case "plan_visit":
+      return <PlanVisit key={key} {...block.props} />;
+    case "attractions":
+      return (
+        <Atracoes
+          key={key}
+          titulo={block.props.title}
+          subtitulo={block.props.subtitle}
+          itens={block.props.items.map((i) => ({
+            titulo: i.title,
+            descricao: i.description,
+            imagem: i.image,
+            icone: i.icon,
+            selo: i.selo,
+          }))}
+        />
+      );
     case "perguntas_frequentes":
       return (
         <PerguntasFrequentes
