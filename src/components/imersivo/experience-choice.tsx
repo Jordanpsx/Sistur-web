@@ -58,7 +58,7 @@ export function ExperienceChoice({
   if (experiencias.length === 0) return null;
 
   return (
-    <section id="experiencias" className="mx-auto max-w-5xl px-4 py-20">
+    <section id="experiencias" className="mx-auto max-w-5xl px-4 py-16">
       {/* Mesmo título das outras seções (.sec-title). Era peso 800 e menor
           que os demais — a seção da decisão principal parecia de outro site. */}
       <h2 className="sec-title text-3xl sm:text-4xl">{titulo}</h2>
@@ -73,7 +73,7 @@ export function ExperienceChoice({
           <li key={e.slug}>
             <Link
               href={`/reservar/${e.slug}/`}
-              className="group relative flex aspect-[3/4] w-full items-end overflow-hidden rounded-3xl shadow-xl shadow-black/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--c-primary)]"
+              className="group relative flex aspect-[4/5] w-full items-end overflow-hidden rounded-3xl shadow-xl shadow-black/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--c-primary)] md:aspect-[3/4]"
             >
               {/* Sem foto o cartão não inventa uma: fica um painel neutro,
                   com a mesma forma e o mesmo comportamento. A ausência aparece

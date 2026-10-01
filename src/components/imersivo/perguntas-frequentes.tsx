@@ -39,7 +39,7 @@ export function PerguntasFrequentes({
   };
 
   return (
-    <section className="mx-auto max-w-3xl px-4 py-16">
+    <section className="mx-auto max-w-3xl px-4 py-14">
       {titulo && <h2 className="sec-title mb-6 text-3xl sm:text-4xl">{titulo}</h2>}
       {subtitulo && (
         <p className="mx-auto mb-10 max-w-xl text-center text-[var(--c-muted)]">
@@ -47,14 +47,14 @@ export function PerguntasFrequentes({
         </p>
       )}
 
-      <ul className="flex flex-col gap-3">
+      <ul className="flex flex-col gap-2">
         {perguntas.map((p, i) => (
           <li
             key={i}
             className="overflow-hidden rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg)]"
           >
             <details className="group">
-              <summary className="flex min-h-[56px] cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-left font-semibold text-[var(--c-fg)] transition-colors hover:bg-[var(--c-surface)] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--c-primary)] [&::-webkit-details-marker]:hidden">
+              <summary className="flex min-h-[52px] cursor-pointer list-none items-center justify-between gap-4 px-5 py-3 text-left font-semibold text-[var(--c-fg)] transition-colors hover:bg-[var(--c-surface)] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--c-primary)] [&::-webkit-details-marker]:hidden">
                 {p.question}
                 <svg
                   viewBox="0 0 24 24"
